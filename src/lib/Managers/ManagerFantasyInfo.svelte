@@ -247,15 +247,17 @@
         </div>
     {/if}
     <!-- Rival -->
-    <div class="infoSlot infoRival" on:click={() => gotoRival(viewManager.rival.link)}>
-        <div class="infoLabel">
-            Rival
+    {#if viewManager.mode}
+        <div class="infoSlot infoRival" on:click={() => gotoRival(viewManager.rival.link)}>
+            <div class="infoLabel">
+                Rival
+            </div>
+            <div class="infoIcon">
+                <img class="rival" src="{viewManager.rival.image}" alt="rival"/>
+            </div>
+            <div class="infoAnswer">
+                {viewManager.rival.name}
+            </div>
         </div>
-        <div class="infoIcon">
-            <img class="rival" src="{viewManager.rival.image}" alt="rival"/>
-        </div>
-        <div class="infoAnswer">
-            {viewManager.rival.name}
-        </div>
-    </div>
+    {/if}
 </div>

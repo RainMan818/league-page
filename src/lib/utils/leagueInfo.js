@@ -18,73 +18,173 @@ https://github.com/nmelhado/league-page/blob/master/TRAINING_WHEELS.md#ii-adding
 // To omit an optional field, set it's value to null
 
 export const managers = [
-    {
-      "roster": 5,  // ID of the roster that the manager manages (look at the order of the power rankings graph)
-      "name": "Raymond C.",
+  {
+    roster: 5, // ID of the roster that the manager manages (look at the order of the power rankings graph)
+    name: "Raymond C.",
     //   "tookOver": 2020, // (optional) used if a manager took over a team, delete this line or change to null otherwise
-      "location": "San Jose, CA, USA", // (optional)
-      "bio": "Lorem ipsum...",
-      "photo": "/managers/question.jpg", // square ratio recommended (no larger than 500x500)
-      "fantasyStart": 2014, // (optional) when did the manager start playing fantasy football
-      "favoriteTeam": "lar", // (optional) favorite NFL team, (follows convention: nyj, sea, mia, etc.) MUST BE LOWERCASE
+    location: "San Jose, CA", // (optional)
+    bio: "Lorem ipsum...",
+    photo: "/managers/question.jpg", // square ratio recommended (no larger than 500x500)
+    fantasyStart: 2014, // (optional) when did the manager start playing fantasy football
+    favoriteTeam: "lar", // (optional) favorite NFL team, (follows convention: nyj, sea, mia, etc.) MUST BE LOWERCASE
     //   "mode": "Win Now", // (optional) 'Win Now', 'Dynasty', or 'Rebuild' (anything else and you will need to add a new png to /static/ similar to the 'Rebuild.png' and 'Win Now.png' currently in there)
-      "rival": {
-        name: "Rival name", // Can be anything (usually your rival's name)
-        link: 6, // manager array number within this array, or null to link back to all managers page
-        image: "/managers/question.jpg", // either a specific manager photo or '/managers/everyone.png' or '/managers/question.png'
-      },
-    //   "favoritePlayer": 1426, // (optional) this corresponds to the Sleeper player ID (https://api.sleeper.app/v1/players/nfl)
-    //   "valuePosition": "WR", // (optional) Favorite position (QB, WR, RB, TE, etc.)
-    //   "rookieOrVets": "Rookies", // (optional) 'Rookies' or 'Vets' (anything else and you will need to add a new png to /static/ similar to the 'Rookies.png' and 'Vets.png' currently in there)
-      "philosophy": "Your fantasy team's philosophy",
-      "tradingScale": 10, // 1 - 10
-      "preferredContact": "Sleeper", // 'Text', 'WhatsApp', 'Sleeper', 'Email', 'Phone', 'Discord', and 'Carrier Pigeon' are currently supplied in the template
+    rival: {
+      name: "Rival name", // Can be anything (usually your rival's name)
+      link: 6, // manager array number within this array, or null to link back to all managers page
+      image: "/managers/question.jpg", // either a specific manager photo or '/managers/everyone.png' or '/managers/question.png'
     },
-    // {
-    //   "roster": 2,  // ID of the roster that the manager manages (look at the order of the power rankings graph)
-    //   "name": "Your Name",
-    //   "tookOver": 2020, // (optional) used if a manager took over a team, delete this line or change to null otherwise
-    //   "location": "Brooklyn", // (optional)
-    //   "bio": "Lorem ipsum...",
-    //   "photo": "/managers/name.jpg", // square ratio recommended (no larger than 500x500)
-    //   "fantasyStart": 2014, // (optional) when did the manager start playing fantasy football
-    //   "favoriteTeam": "nyj", // (optional) favorite NFL team, (follows convention: nyj, sea, mia, etc.) MUST BE LOWERCASE
-    //   "mode": "Win Now", // (optional) 'Win Now', 'Dynasty', or 'Rebuild' (anything else and you will need to add a new png to /static/ similar to the 'Rebuild.png' and 'Win Now.png' currently in there)
-    //   "rival": {
-    //     name: "Rival", // Can be anything (usually your rival's name)
-    //     link: 6, // manager array number within this array, or null to link back to all managers page
-    //     image: "/managers/rival.jpg", // either a specific manager photo or '/managers/everyone.png' or '/managers/question.png'
-    //   },
     //   "favoritePlayer": 1426, // (optional) this corresponds to the Sleeper player ID (https://api.sleeper.app/v1/players/nfl)
     //   "valuePosition": "WR", // (optional) Favorite position (QB, WR, RB, TE, etc.)
     //   "rookieOrVets": "Rookies", // (optional) 'Rookies' or 'Vets' (anything else and you will need to add a new png to /static/ similar to the 'Rookies.png' and 'Vets.png' currently in there)
-    //   "philosophy": "Your fantasy team's philosophy",
-    //   "tradingScale": 10, // 1 - 10
-    //   "preferredContact": "Text", // 'Text', 'WhatsApp', 'Sleeper', 'Email', 'Phone', 'Discord', and 'Carrier Pigeon' are currently supplied in the template
-    // },
-    // {
-    //   "roster": 3,  // ID of the roster that the manager manages (look at the order of the power rankings graph)
-    //   "name": "Your Name",
-    //   "tookOver": 2020, // (optional) used if a manager took over a team, delete this line or change to null otherwise
-    //   "location": "Brooklyn", // (optional)
-    //   "bio": "Lorem ipsum...",
-    //   "photo": "/managers/name.jpg", // square ratio recommended (no larger than 500x500)
-    //   "fantasyStart": 2014, // (optional) when did the manager start playing fantasy football
-    //   "favoriteTeam": "nyj", // (optional) favorite NFL team, (follows convention: nyj, sea, mia, etc.) MUST BE LOWERCASE
-    //   "mode": "Win Now", // (optional) 'Win Now', 'Dynasty', or 'Rebuild' (anything else and you will need to add a new png to /static/ similar to the 'Rebuild.png' and 'Win Now.png' currently in there)
-    //   "rival": {
-    //     name: "Rival", // Can be anything (usually your rival's name)
-    //     link: 6, // manager array number within this array, or null to link back to all managers page
-    //     image: "/managers/rival.jpg", // either a specific manager photo or '/managers/everyone.png' or '/managers/question.png'
-    //   },
-    //   "favoritePlayer": 1426, // (optional) this corresponds to the Sleeper player ID (https://api.sleeper.app/v1/players/nfl)
-    //   "valuePosition": "WR", // (optional) Favorite position (QB, WR, RB, TE, etc.)
-    //   "rookieOrVets": "Rookies", // (optional) 'Rookies' or 'Vets' (anything else and you will need to add a new png to /static/ similar to the 'Rookies.png' and 'Vets.png' currently in there)
-    //   "philosophy": "Your fantasy team's philosophy",
-    //   "tradingScale": 10, // 1 - 10
-    //   "preferredContact": "Text", // 'Text', 'WhatsApp', 'Sleeper', 'Email', 'Phone', 'Discord', and 'Carrier Pigeon' are currently supplied in the template
-    // },
-  ]
+    philosophy: "Your fantasy team's philosophy",
+    tradingScale: 10, // 1 - 10
+    preferredContact: "Sleeper", // 'Text', 'WhatsApp', 'Sleeper', 'Email', 'Phone', 'Discord', and 'Carrier Pigeon' are currently supplied in the template
+  },
+  {
+    roster: 1,
+    name: "Ian P.",
+    location: "Reno, NV",
+    bio: "Lorem ipsum...",
+    photo: "/managers/question.jpg",
+    fantasyStart: 2012,
+    favoriteTeam: "lv",
+    favoritePlayer: 1426, // Austin Ekeler
+    philosophy: "Always moving players on and off roster",
+    tradingScale: 10,
+    preferredContact: "Sleeper",
+  },
+  {
+    roster: 2,
+    name: "Lucien Miller",
+    location: "Corvallis, Oregon",
+    bio:
+      "I play a ton of League of Legends! If anyone wants to climb solo/duo hit me up @LucienNotLucian",
+    photo: "/managers/question.jpg",
+    fantasyStart: 2014,
+    favoriteTeam: "sea",
+    favoritePlayer: 1426, // Kam Chancellor
+    philosophy: "Get your guys and start your studs",
+    tradingScale: 4,
+    preferredContact: "Text",
+  },
+  {
+    roster: 3,
+    name: "Ryan Hunt",
+    location: "San Jose, CA",
+    bio: "I enjoy long walks and short piers. ",
+    photo: "/managers/question.jpg",
+    fantasyStart: 2016,
+    favoriteTeam: "sf",
+    favoritePlayer: 1426, // George Kittle
+    philosophy: "I just like to Gamble. No need for “research.”",
+    tradingScale: 5,
+    preferredContact: "Sleeper",
+  },
+  {
+    roster: 4,
+    name: "dlokk",
+    location: "Brooklyn",
+    bio: "Lorem ipsum...",
+    photo: "/managers/question.jpg",
+    fantasyStart: 2014,
+    favoriteTeam: "dal",
+    favoritePlayer: 1426,
+    philosophy: "Your fantasy team's philosophy",
+    tradingScale: 10,
+    preferredContact: "Sleeper",
+  },
+  {
+    roster: 6,
+    name: "joshhancock92",
+    location: "Brooklyn",
+    bio: "Lorem ipsum...",
+    photo: "/managers/question.jpg",
+    fantasyStart: 2014,
+    favoriteTeam: "nyj",
+    favoritePlayer: 1426,
+    philosophy: "Your fantasy team's philosophy",
+    tradingScale: 10,
+    preferredContact: "Sleeper",
+  },
+  {
+    roster: 7,
+    name: "jsamp",
+    location: "Brooklyn",
+    bio: "Lorem ipsum...",
+    photo: "/managers/question.jpg",
+    fantasyStart: 2014,
+    favoriteTeam: "nyj",
+    favoritePlayer: 1426,
+    philosophy: "Your fantasy team's philosophy",
+    tradingScale: 10,
+    preferredContact: "Sleeper",
+  },
+  {
+    roster: 8,
+    name: "GluteSloot",
+    location: "Brooklyn",
+    bio: "Lorem ipsum...",
+    photo: "/managers/question.jpg",
+    fantasyStart: 2014,
+    favoriteTeam: "nyj",
+    favoritePlayer: 1426,
+    philosophy: "Your fantasy team's philosophy",
+    tradingScale: 10,
+    preferredContact: "Sleeper",
+  },
+  {
+    roster: 9,
+    name: "brenlen",
+    location: "Brooklyn",
+    bio: "Lorem ipsum...",
+    photo: "/managers/question.jpg",
+    fantasyStart: 2014,
+    favoriteTeam: "nyj",
+    favoritePlayer: 1426,
+    philosophy: "Your fantasy team's philosophy",
+    tradingScale: 10,
+    preferredContact: "Sleeper",
+  },
+  {
+    roster: 10,
+    name: "Seanzie",
+    location: "Brooklyn",
+    bio: "Lorem ipsum...",
+    photo: "/managers/question.jpg",
+    fantasyStart: 2014,
+    favoriteTeam: "nyj",
+    favoritePlayer: 1426,
+    philosophy: "Your fantasy team's philosophy",
+    tradingScale: 10,
+    preferredContact: "Sleeper",
+  },
+  {
+    roster: 11,
+    name: "calarseneau",
+    location: "Brooklyn",
+    bio: "Lorem ipsum...",
+    photo: "/managers/question.jpg",
+    fantasyStart: 2014,
+    favoriteTeam: "nyj",
+    favoritePlayer: 1426,
+    philosophy: "Your fantasy team's philosophy",
+    tradingScale: 10,
+    preferredContact: "Sleeper",
+  },
+  {
+    roster: 12,
+    name: "James",
+    location: "Munich Bavaria Germany",
+    bio: "Bees can perceive time",
+    photo: "/managers/question.jpg",
+    fantasyStart: 2014,
+    favoriteTeam: "sf",
+    favoritePlayer: 1426, // Derrick Henry
+    philosophy: "What the fuck did you just fucking say about me, you little bitch? I'll have you know I graduated top of my class in the Navy Seals, and I've been involved in numerous secret raids on Al-Quaeda, and I have over 300 confirmed kills. I am trained in gorilla warfare and I'm the top sniper in the entire US armed forces. You are nothing to me but just another target. I will wipe you the fuck out with precision the likes of which has never been seen before on this Earth, mark my fucking words. You think you can get away with saying that shit to me over the Internet? Think again, fucker. As we speak I am contacting my secret network of spies across the USA and your IP is being traced right now so you better prepare for the storm, maggot. The storm that wipes out the pathetic little thing you call your life. You're fucking dead, kid. I can be anywhere, anytime, and I can kill you in over seven hundred ways, and that's just with my bare hands. Not only am I extensively trained in unarmed combat, but I have access to the entire arsenal of the United States Marine Corps and I will use it to its full extent to wipe your miserable ass off the face of the continent, you little shit. If only you could have known what unholy retribution your little 'clever' comment was about to bring down upon you, maybe you would have held your fucking tongue. But you couldn't, you didn't, and now you're paying the price, you goddamn idiot. I will shit fury all over you and you will drown in it. You're fucking dead, kiddo.",
+    tradingScale: 10,
+    preferredContact: "Sleeper",
+  },
+];
   
   
   /*   !!  !!  IMPORTANT  !!  !! */
