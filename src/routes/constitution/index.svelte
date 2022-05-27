@@ -100,8 +100,9 @@
 </style>
 
 <div class="constitution">
+    <h3>This is NOT updated for our league. Speak to Ian about league rules and regulations.</h3>
+    <!-- <hr/> -->
     <h1 class="noUnderscore">THE SUPER-FLEX, IDP DYNASTY LEAGUE CONSTITUTION</h1>
-    <p>Most of this is un-edited for our league. Speak to Ian about league rules and regulations.</p>
     
     <h2 class="noUnderscore">TABLE OF CONTENTS</h2>
     

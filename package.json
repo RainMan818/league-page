@@ -29,8 +29,8 @@
       "url": "https://github.com/OldNewsBlues-2"
     },
     {
-        "name": "RainMan818",
-        "url": "https://github.com/RainMan818"
+      "name": "RainMan818",
+      "url": "https://github.com/RainMan818"
     }
   ],
   "funding": {
@@ -68,8 +68,10 @@
     "eslint-plugin-svelte3": "^3.2.1",
     "prettier": "~2.2.1",
     "prettier-plugin-svelte": "^2.2.0",
+    "sass": "^1.52.1",
     "smui-theme": "6.0.0-beta.13",
-    "svelte": "^3.44.0"
+    "svelte": "^3.44.0",
+    "svelte-preprocess": "^4.10.6"
   },
   "type": "module",
   "dependencies": {

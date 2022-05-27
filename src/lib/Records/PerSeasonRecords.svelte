@@ -173,19 +173,19 @@
 </div>
 
 <RecordsAndRankings
-    waiversData={years[display].waiversData}
-    tradesData={years[display].tradesData}
-    weekRecords={years[display].weekRecords}
-    weekLows={years[display].weekLows}
-    seasonLongLows={years[display].seasonLongLows}
-    seasonLongRecords={years[display].seasonLongRecords}
-    showTies={years[display].showTies}
-    winPercentages={years[display].winPercentages}
-    fptsHistories={years[display].fptsHistories}
-    lineupIQs={years[display].lineupIQs}
-    blowouts={years[display].blowouts}
-    closestMatchups={years[display].closestMatchups}
-    prefix={years[display].year}
+    waiversData={years[display]?.waiversData}
+    tradesData={years[display]?.tradesData}
+    weekRecords={years[display]?.weekRecords}
+    weekLows={years[display]?.weekLows}
+    seasonLongLows={years[display]?.seasonLongLows}
+    seasonLongRecords={years[display]?.seasonLongRecords}
+    showTies={years[display]?.showTies}
+    winPercentages={years[display]?.winPercentages}
+    fptsHistories={years[display]?.fptsHistories}
+    lineupIQs={years[display]?.lineupIQs}
+    blowouts={years[display]?.blowouts}
+    closestMatchups={years[display]?.closestMatchups}
+    prefix={years[display]?.year}
     {currentManagers}
     {key}
 />

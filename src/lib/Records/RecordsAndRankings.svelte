@@ -143,13 +143,13 @@
         }
         const gs = [];
 
-        if(lineupIQs[0]?.potentialPoints) {
+        if(lineupIQs?.[0]?.potentialPoints) {
             gs.push(generateGraph(lineupIQGraph));
         }
         gs.push(generateGraph(winsGraph, 5));
         gs.push(generateGraph(winPercentagesGraph));
         gs.push(generateGraph(fptsHistoriesGraph));
-        if(lineupIQs[0]?.potentialPoints) {
+        if(lineupIQs?.[0]?.potentialPoints) {
             gs.push(generateGraph(potentialPointsGraph, 10, 0));
         }
         if(key == "regularSeasonData") {
@@ -162,7 +162,7 @@
     }
 
     const setTransactionsAndGraphs = (wD) => {
-        for(let i = 1; i <= waiversData.length; i++) {
+        for(let i = 1; i <= waiversData?.length; i++) {
             if(!tradesData.find(t => t.rosterID == i)) {
                 tradesData.push({
                     rosterID: i,
@@ -173,7 +173,7 @@
         }
         const transactions = [];
 
-        for(let i = 1; i <= wD.length; i++) {
+        for(let i = 1; i <= wD?.length; i++) {
             const waiver = wD.find(w => w.rosterID == i);
             const trades = tradesData.find(t => t.rosterID == i)?.trades || 0;
             const waivers = waiver?.waivers || 0;
@@ -198,7 +198,7 @@
         if(key == "regularSeasonData") {
             t.push("Transactions")
         }
-        if(!lIQs[0]?.potentialPoints) {
+        if(!lIQs?.[0]?.potentialPoints) {
             iqOffset = 1;
         } else {
             t.unshift('Lineup IQs');
