@@ -3,8 +3,8 @@
 	
 	export let player;
 
-	const playerSLotClass = player.slot.replace('/', '').replace('SUPER_', 'S-').replace('REC_', 'R-');
-	const playerSlot = player.slot.replace('SUPER_', 'S ').replace('REC_', 'R ');
+	const playerSLotClass = player.slot.replace('/', '').replace('SUPER_', 'S-').replace('REC_', 'R-').replace('IDP_FLEX', 'IDP');
+	const playerSlot = player.slot.replace('SUPER_', 'S ').replace('REC_', 'R ').replace('IDP_FLEX', 'IDP');
 </script>
 
 <style>
@@ -54,7 +54,7 @@
 	}
 
 	.S-FLEX {
-		background: linear-gradient(to right, var(--WR), var(--WR) 25%, var(--RB) 25%, var(--RB) 50%, var(--TE) 50%, var(--TE) 75%, var(--QB));
+		background: linear-gradient(to right, var(--WR), var(--WR) 25%, var(--RB) 25%, var(--RB) 50%, var(--TE) 50%, var(--TE) 75%, var(--QB) 75%, var(--QB) 100%);
 		background-color: #8f66ff;
 	}
 

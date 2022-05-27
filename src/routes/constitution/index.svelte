@@ -100,7 +100,8 @@
 </style>
 
 <div class="constitution">
-    <h1 class="noUnderscore">LEGENDS LEAGUE CONSTITUTION</h1>
+    <h1 class="noUnderscore">THE SUPER-FLEX, IDP DYNASTY LEAGUE CONSTITUTION</h1>
+    <p>Most of this is un-edited for our league. Speak to Ian about league rules and regulations.</p>
     
     <h2 class="noUnderscore">TABLE OF CONTENTS</h2>
     
@@ -153,7 +154,7 @@
     
     <h3 class="subSectionHeading" bind:this={oneOne}>1.1 Positional Breakdown</h3>
     
-    <p>28 Total Players</p>
+    <p>42 total players</p>
     
     <p class="underscore">Starters</p>
     <ul>
@@ -164,18 +165,29 @@
         <li>WR</li>
         <li>TE</li>
         <li>FLEX (RB/WR/TE)</li>
-        <li>FLEX (RB/WR)</li>
-        <li>D/ST</li>
-        <li>K</li>
+        <li>FLEX (RB/WR/TE)</li>
+        <li>FLEX (RB/WR/TE)</li>
+        <li>SUPER-FLEX (QB/RB/WR/TE)</li>
+        <li>IDP (DL/LB/DB)</li>
+        <li>DL</li>
+        <li>DL</li>
+        <li>DL</li>
+        <li>LB</li>
+        <li>LB</li>
+        <li>LB</li>
+        <li>DB</li>
+        <li>DB</li>
+        <li>DB</li>
     </ul>
-    
-    <p>18 Bench (Expanded by 5 between the keague draft and start of regular season)</p>
 
-    <p>1 IR Spots (Player must be labeled as IR, Out, or Covid in the Sleeper App)</p>
+    <p>22 Bench</p>
+
+    <p>3 IR Spots (Player must be labeled as IR, Out, or Covid in the Sleeper App)</p>
     
         <h4 bind:this={oneOneOne}>1.1.1 Position Maximums</h4>
         
-        <div class="subBlock">
+        <p>There are no position maximums.</p>
+        <!-- <div class="subBlock">
             <table class="positionMaximums">
                 <tr><td>QB</td><td class="right">3 active, 5 total</td></tr>
                 <tr><td>RB</td><td class="right">20</td></tr>
@@ -184,7 +196,7 @@
                 <tr><td>D/ST</td><td class="right">3</td></tr>
                 <tr><td>K</td><td class="right">3</td></tr>
             </table>
-        </div>
+        </div> -->
 
 
     <h3 class="subSectionHeading" bind:this={oneTwo}>1.2 Trading</h3>
