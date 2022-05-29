@@ -279,6 +279,7 @@
 
     <ManagerAwards tookOver={viewManager.tookOver} {awards} {records} {roster} />
 
+    <h3>Roster</h3>
     {#if loading}
         <!-- promise is pending -->
         <div class="loading">

@@ -16,6 +16,12 @@ Generate a custom league page for your Sleeper fantasy football league in just a
 <a href="https://www.legendsleagueff.com/" style="font-size:2em; text-decoration: underline;" >Live demo</a>
 </div>
 
+<h3>TODO</h3>
+<ul>
+    <li>Roster analysis</li>
+    <li>Manager icons</li>
+</ul>
+
 <br>
 <br>
 

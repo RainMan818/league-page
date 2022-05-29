@@ -1,6 +1,7 @@
 <script>
     import {getNflState, getLeagueRosters, getLeagueUsers, waitForAll, getLeagueRecords, loadPlayers, getLeagueData} from '$lib/utils/helper';
     import PowerRankingsDisplay from './PowerRankingsDisplay.svelte';
+    import RosterAnalysis from './RosterAnalysis.svelte';
     import LinearProgress from '@smui/linear-progress';
     
     const helperPromises = waitForAll(
@@ -31,6 +32,8 @@
     </div>
 {:then [nflState, rostersData, users, records, leagueData, playersInfo]}
     {#if leagueData.status != 'pre_draft'}
+        <RosterAnalysis {nflState} {rostersData} {users} {leagueData} {records} {playersInfo} />
+        <br />
         <PowerRankingsDisplay {nflState} {rostersData} {users} {leagueData} {records} {playersInfo} />
     {/if}
 {:catch error}
