@@ -1,6 +1,6 @@
 /*   STEP 1   */
-// export const leagueID = "776558166568747008"; // Dynasty IDP
-export const leagueID = "784390208228544512"; // Gang Attempts Dynasty FF
+export const leagueID = "776558166568747008"; // Dynasty IDP
+// export const leagueID = "784390208228544512"; // Gang Attempts Dynasty FF
 export const leagueName = "The Dynasty League IDP SF"; // your league name
 export const dues = 50; // (optional) used in template constitution page
 export const dynasty = true; // true for dynasty leagues, false for redraft and keeper

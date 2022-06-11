@@ -127,7 +127,7 @@ body {
   position: relative;
   margin: 0;
   background-color: theme.$surface;
-  color: theme.$on-surface;
+  color: theme.$on-surface !important;
   min-height: 100vh;
   background: #222;
   background: linear-gradient(to bottom right, #111,#222 );

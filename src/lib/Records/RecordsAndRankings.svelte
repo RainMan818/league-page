@@ -220,6 +220,7 @@
 <style>
     :global(.header) {
         text-align: center;
+        vertical-align: middle;
     }
     .italic {
         display: block;

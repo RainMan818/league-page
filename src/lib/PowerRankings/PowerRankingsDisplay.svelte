@@ -39,6 +39,7 @@
                 rosterPlayers.push({
                     name: players[rosterPlayer].ln,
                     pos: players[rosterPlayer].pos,
+                    positions: players[rosterPlayer].positions,
                     wi: players[rosterPlayer].wi
                 })
             }
@@ -47,10 +48,13 @@
                 rosterID: roster.roster_id,
                 manager: currentManagers[roster.roster_id],
                 powerScore: 0,
+                weeks: {},
             }
             const seasonEnd = 18;
             for(let i = week; i < seasonEnd; i++) {
-                rosterPower.powerScore += predictScores(rosterPlayers, i, leagueData);
+                const {powerScore, powerScores} = predictScores(rosterPlayers, i, leagueData, currentManagers[roster.roster_id].name)
+                rosterPower.powerScore += powerScore;
+                rosterPower.weeks[i] = powerScores;
             }
             if(rosterPower.powerScore > max) {
                 max = rosterPower.powerScore;
@@ -59,6 +63,7 @@
         }
 
         for(const rosterPower of rosterPowers) {
+            console.log(rosterPower.manager.name, rosterPower)
             rosterPower.powerScore = round(rosterPower.powerScore/max * 100);
         }
 

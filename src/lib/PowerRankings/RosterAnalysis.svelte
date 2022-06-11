@@ -2,14 +2,44 @@
   import Button, { Group, Label } from "@smui/button";
   import { gotoManager } from "$lib/utils/helper";
   import DataTable, { Head, Body, Row, Cell } from "@smui/data-table";
-  import { Icon } from "@smui/icon-button";
+  import ColorScale from "color-scales";
+  import Chart from "svelte-frappe-charts";
+
+  import "@carbon/styles/css/styles.css";
+  import "@carbon/charts/styles.css";
 
   // export let roster, users, startersAndReserve, players, rosterPositions, division, expanded;
   export let rostersData, users, leagueData, records, playersInfo;
 
+  const max = {
+    Team: 0,
+    Off: 0,
+    Def: 0,
+    QB: 0,
+    RB: 0,
+    WR: 0,
+    TE: 0,
+    DL: 0,
+    LB: 0,
+    DB: 0,
+  };
+  const min = {
+    Team: 100,
+    Off: 100,
+    Def: 100,
+    QB: 100,
+    RB: 100,
+    WR: 100,
+    TE: 100,
+    DL: 100,
+    LB: 100,
+    DB: 100,
+  };
   const digestData = (passedPlayers, rawPlayers) => {
-    let digestedRoster = {
+    let ageLists = {
       Team: [],
+      Off: [],
+      Def: [],
       QB: [],
       RB: [],
       WR: [],
@@ -19,8 +49,7 @@
       DB: [],
     };
 
-    console.log("rawPlayers", rawPlayers);
-    if (!rawPlayers) return digestedRoster;
+    if (!rawPlayers) return ageLists;
 
     for (const singlePlayer of rawPlayers) {
       let player = {};
@@ -30,59 +59,118 @@
       }
 
       const positions = passedPlayers[singlePlayer].positions;
-      const age = passedPlayers[singlePlayer].age;
+      const age = passedPlayers[singlePlayer].age || 22;
 
-      digestedRoster.Team.push(age);
+      ageLists.Team.push(age);
       if (positions.length === 2) {
         if (positions.includes("DL")) {
-          digestedRoster.DL.push(age);
+          ageLists.DL.push(age);
+          ageLists.Def.push(age);
           continue;
-        } else if (positions.includes("CB")) {
-          digestedRoster.CB.push(age);
+        } else if (positions.includes("DB")) {
+          ageLists.DB.push(age);
+          ageLists.Def.push(age);
           continue;
         }
       }
       if (positions.includes("QB")) {
-        digestedRoster.QB.push(age);
+        ageLists.QB.push(age);
+        ageLists.Off.push(age);
         continue;
       }
       if (positions.includes("RB")) {
-        digestedRoster.RB.push(age);
+        ageLists.RB.push(age);
+        ageLists.Off.push(age);
         continue;
       }
       if (positions.includes("WR")) {
-        digestedRoster.WR.push(age);
+        ageLists.WR.push(age);
+        ageLists.Off.push(age);
         continue;
       }
       if (positions.includes("TE")) {
-        digestedRoster.TE.push(age);
+        ageLists.TE.push(age);
+        ageLists.Off.push(age);
         continue;
       }
       if (positions.includes("DL")) {
-        digestedRoster.DL.push(age);
+        ageLists.DL.push(age);
+        ageLists.Off.push(age);
         continue;
       }
       if (positions.includes("LB")) {
-        digestedRoster.LB.push(age);
+        ageLists.LB.push(age);
+        ageLists.Def.push(age);
         continue;
       }
       if (positions.includes("DB")) {
-        digestedRoster.DB.push(age);
+        ageLists.DB.push(age);
+        ageLists.Def.push(age);
         continue;
       }
 
-      digestedRoster.push(player);
+      ageLists.push(player);
     }
 
-    return digestedRoster;
+    const ageTeam = getAverage(ageLists.Team);
+    const ageOff = getAverage(ageLists.Off);
+    const ageDef = getAverage(ageLists.Def);
+    const ageQB = getAverage(ageLists.QB);
+    const ageRB = getAverage(ageLists.RB);
+    const ageWR = getAverage(ageLists.WR);
+    const ageTE = getAverage(ageLists.TE);
+    const ageDL = getAverage(ageLists.DL);
+    const ageLB = getAverage(ageLists.LB);
+    const ageDB = getAverage(ageLists.DB);
+    // Set "max"
+    max.Team = Math.max(max.Team, ageTeam);
+    max.Off = Math.max(max.Off, ageOff);
+    max.Def = Math.max(max.Def, ageDef);
+    max.QB = Math.max(max.QB, ageQB);
+    max.RB = Math.max(max.RB, ageRB);
+    max.WR = Math.max(max.WR, ageWR);
+    max.TE = Math.max(max.TE, ageTE);
+    max.DL = Math.max(max.DL, ageDL);
+    max.LB = Math.max(max.LB, ageLB);
+    max.DB = Math.max(max.DB, ageDB);
+    // Set "min"
+    min.Team = Math.min(min.Team, ageTeam);
+    min.Off = Math.min(min.Off, ageOff);
+    min.Def = Math.min(min.Def, ageDef);
+    min.QB = Math.min(min.QB, ageQB);
+    min.RB = Math.min(min.RB, ageRB);
+    min.WR = Math.min(min.WR, ageWR);
+    min.TE = Math.min(min.TE, ageTE);
+    min.DL = Math.min(min.DL, ageDL);
+    min.LB = Math.min(min.LB, ageLB);
+    min.DB = Math.min(min.DB, ageDB);
+
+    const averages = {
+      Team: ageTeam,
+      Off: ageOff,
+      Def: ageDef,
+      QB: ageQB,
+      RB: ageRB,
+      WR: ageWR,
+      TE: ageTE,
+      DL: ageDL,
+      LB: ageLB,
+      DB: ageDB,
+    };
+
+    return {
+      averages,
+      ageLists,
+    };
   };
 
   const getAverage = (numArray) => {
-    const total = numArray.reduce((total, num) => {
+    const ages = numArray.filter(Boolean);
+    const total = ages.filter(Boolean).reduce((total, num) => {
       total += num;
       return total;
     }, 0);
-    const average = total / numArray.length;
+    const average = total / ages.length;
     if (isNaN(average)) {
       return 0;
     }
@@ -100,279 +188,451 @@
 
     roster.ownerName = name;
     roster.ownerAvatar = avatar;
-    const rosterData = digestData(playersInfo.players, roster.players);
+    const { averages, ageLists } = digestData(
+      playersInfo.players,
+      roster.players
+    );
+
     currentManagers[roster.roster_id] = {
       avatar,
       name,
       rosterId: roster.roster_id,
-      rosterData,
+      averages,
+      ageLists,
     };
   }
+
+  const colors = ["#57bb8a", "#ffd666", "#e67c73"];
+  const colorsTeam = new ColorScale(min.Team, max.Team, colors);
+  const colorsOff = new ColorScale(min.Off, max.Off, colors);
+  const colorsDef = new ColorScale(min.Def, max.Def, colors);
+  const colorsQB = new ColorScale(min.QB, max.QB, colors);
+  const colorsRB = new ColorScale(min.RB, max.RB, colors);
+  const colorsWR = new ColorScale(min.WR, max.WR, colors);
+  const colorsTE = new ColorScale(min.TE, max.TE, colors);
+  const colorsDL = new ColorScale(min.DL, max.DL, colors);
+  const colorsLB = new ColorScale(min.LB, max.LB, colors);
+  const colorsDB = new ColorScale(min.DB, max.DB, colors);
 
   let dataType = "age";
   const changeData = (type) => {
     dataType = type;
   };
 
-  const getAgeClass = (average) => {
-    if (Math.round(average) <= 20) return "age age-20";
-    if (Math.round(average) === 21) return "age age-21";
-    if (Math.round(average) === 22) return "age age-22";
-    if (Math.round(average) === 23) return "age age-23";
-    if (Math.round(average) === 24) return "age age-24";
-    if (Math.round(average) === 25) return "age age-25";
-    if (Math.round(average) === 26) return "age age-26";
-    if (Math.round(average) === 27) return "age age-27";
-    if (Math.round(average) === 28) return "age age-28";
-    if (Math.round(average) === 29) return "age age-29";
-    if (Math.round(average) === 30) return "age age-30";
-    if (Math.round(average) === 31) return "age age-31";
-    if (Math.round(average) === 32) return "age age-32";
-    if (Math.round(average) === 33) return "age age-33";
-    if (Math.round(average) === 34) return "age age-34";
-    if (Math.round(average) === 35) return "age age-35";
-    if (Math.round(average) === 36) return "age age-36";
-    if (Math.round(average) === 37) return "age age-37";
-    if (Math.round(average) === 38) return "age age-38";
-    if (Math.round(average) === 39) return "age age-39";
-    if (Math.round(average) >= 40) return "age age-40";
+  let chartType = "table"; // "stack", "group"
+  const changeChartType = (type) => {
+    chartType = type;
   };
+
+  // BAR CHART
+  const managerData = Object.values(currentManagers);
+  let ageData = {
+    labels: rosters.map(({ ownerName }) => ownerName),
+    datasets: [
+      {
+        name: "QB",
+        values: managerData.map(
+          (manager) => Math.round(manager.averages.QB * 100) / 100
+        ),
+      },
+      {
+        name: "RB",
+        values: managerData.map(
+          (manager) => Math.round(manager.averages.RB * 100) / 100
+        ),
+      },
+      {
+        name: "WR",
+        values: managerData.map(
+          (manager) => Math.round(manager.averages.WR * 100) / 100
+        ),
+      },
+      {
+        name: "TE",
+        values: managerData.map(
+          (manager) => Math.round(manager.averages.TE * 100) / 100
+        ),
+      },
+      {
+        name: "DL",
+        values: managerData.map(
+          (manager) => Math.round(manager.averages.DL * 100) / 100
+        ),
+      },
+      {
+        name: "LB",
+        values: managerData.map(
+          (manager) => Math.round(manager.averages.LB * 100) / 100
+        ),
+      },
+      {
+        name: "DB",
+        values: managerData.map(
+          (manager) => Math.round(manager.averages.DB * 100) / 100
+        ),
+      },
+    ],
+  };
+  const countData = {
+    labels: rosters.map(({ ownerName }) => ownerName),
+    datasets: [
+      {
+        name: "QB",
+        values: managerData.map((manager) => manager.ageLists.QB.length),
+      },
+      {
+        name: "RB",
+        values: managerData.map((manager) => manager.ageLists.RB.length),
+      },
+      {
+        name: "WR",
+        values: managerData.map((manager) => manager.ageLists.WR.length),
+      },
+      {
+        name: "TE",
+        values: managerData.map((manager) => manager.ageLists.TE.length),
+      },
+      {
+        name: "DL",
+        values: managerData.map((manager) => manager.ageLists.DL.length),
+      },
+      {
+        name: "LB",
+        values: managerData.map((manager) => manager.ageLists.LB.length),
+      },
+      {
+        name: "DB",
+        values: managerData.map((manager) => manager.ageLists.DB.length),
+      },
+    ],
+  };
+
+  const chartColors = [
+    "#ff2a6d",
+    "#00ceb8",
+    "#58a7ff",
+    "#ffae58",
+    "#ff795a",
+    "#6d7df5",
+    "#ff7cb6",
+  ];
 </script>
 
 <div class="team">
   <h6>Roster analysis</h6>
-  <div class="managerNav upper">
-    <Group variant="outlined">
-      {#if dataType == "age"}
-        <Button
-          disabled
-          class="selectionButtons"
-          on:click={() => changeData("age")}
-          variant="outlined"
-        >
-          <Label>Age</Label>
-        </Button>
-      {:else}
-        <Button
-          class="selectionButtons"
-          on:click={() => changeData("age")}
-          variant="outlined"
-        >
-          <Label>Age</Label>
-        </Button>
-      {/if}
-      {#if dataType == "count"}
-        <Button
-          disabled
-          class="selectionButtons"
-          on:click={() => changeData("count")}
-          variant="outlined"
-        >
-          <Label>Count</Label>
-        </Button>
-      {:else}
-        <Button
-          class="selectionButtons"
-          on:click={() => changeData("count")}
-          variant="outlined"
-        >
-          <Label>Count</Label>
-        </Button>
-      {/if}
-    </Group>
+  <div>
+    <div class="float-left">
+      <Group variant="outlined" class="vertical-align">
+        {#if dataType == "age"}
+          <Button
+            disabled
+            class="selectionButtons"
+            on:click={() => changeData("age")}
+            variant="outlined"
+          >
+            <Label>Age</Label>
+          </Button>
+        {:else}
+          <Button
+            class="selectionButtons"
+            on:click={() => changeData("age")}
+            variant="outlined"
+          >
+            <Label>Age</Label>
+          </Button>
+        {/if}
+        {#if dataType == "count"}
+          <Button
+            disabled
+            class="selectionButtons"
+            on:click={() => changeData("count")}
+            variant="outlined"
+          >
+            <Label>Count</Label>
+          </Button>
+        {:else}
+          <Button
+            class="selectionButtons"
+            on:click={() => changeData("count")}
+            variant="outlined"
+          >
+            <Label>Count</Label>
+          </Button>
+        {/if}
+      </Group>
+    </div>
+    <div class="float-right">
+      <Group variant="outlined">
+        {#if chartType == "table"}
+          <Button
+            disabled
+            class="selectionButtons"
+            on:click={() => changeChartType("table")}
+            variant="outlined"
+          >
+            <Label>Table</Label>
+          </Button>
+        {:else}
+          <Button
+            class="selectionButtons"
+            on:click={() => changeChartType("table")}
+            variant="outlined"
+          >
+            <Label>Table</Label>
+          </Button>
+        {/if}
+        {#if chartType == "stack"}
+          <Button
+            disabled
+            class="selectionButtons"
+            on:click={() => changeChartType("stack")}
+            variant="outlined"
+          >
+            <Label>Stack chart</Label>
+          </Button>
+        {:else}
+          <Button
+            class="selectionButtons"
+            on:click={() => changeChartType("stack")}
+            variant="outlined"
+          >
+            <Label>Stack chart</Label>
+          </Button>
+        {/if}
+        {#if chartType == "group"}
+          <Button
+            disabled
+            class="selectionButtons"
+            on:click={() => changeChartType("group")}
+            variant="outlined"
+          >
+            <Label>Group chart</Label>
+          </Button>
+        {:else}
+          <Button
+            class="selectionButtons"
+            on:click={() => changeChartType("group")}
+            variant="outlined"
+          >
+            <Label>Group chart</Label>
+          </Button>
+        {/if}
+      </Group>
+    </div>
+    <div class="age" style="clear: both;" />
   </div>
-  <DataTable class="teamInner" table$aria-label="Team Name">
-    <Head>
-      <Row>
-        <Cell class="header">Manager</Cell>
-        <Cell class="header">Team</Cell>
-        <Cell class="header">QB</Cell>
-        <Cell class="header">RB</Cell>
-        <Cell class="header">WR</Cell>
-        <Cell class="header">TE</Cell>
-        <Cell class="header">DL</Cell>
-        <Cell class="header">LB</Cell>
-        <Cell class="header">DB</Cell>
-      </Row>
-    </Head>
-    <Body>
-      {#each Object.values(currentManagers) as manager, ix}
-        <Row class="interactive">
-          <Cell>
-            <img class="avatar" alt="avatar" src={manager.avatar} />
-            {manager.name}
-          </Cell>
-          <Cell>
-            {#if dataType == "age"}
-              <div class={getAgeClass(getAverage(manager.rosterData.Team))}>
-                {getAverage(manager.rosterData.Team).toFixed(2)}
-              </div>
-            {:else}
-              <div class={getAgeClass(getAverage(manager.rosterData.Team))}>
-                {manager.rosterData.Team.length}
-              </div>
-            {/if}
-          </Cell>
-          <Cell>
-            {#if dataType == "age"}
-              <div class={getAgeClass(getAverage(manager.rosterData.QB))}>
-                {getAverage(manager.rosterData.QB).toFixed(2)}
-              </div>
-            {:else}
-              {manager.rosterData.QB.length}
-            {/if}
-          </Cell>
-          <Cell>
-            {#if dataType == "age"}
-              <div class={getAgeClass(getAverage(manager.rosterData.RB))}>
-                {getAverage(manager.rosterData.RB).toFixed(2)}
-              </div>
-            {:else}
-              {manager.rosterData.RB.length}
-            {/if}
-          </Cell>
-          <Cell>
-            {#if dataType == "age"}
-              <div class={getAgeClass(getAverage(manager.rosterData.WR))}>
-                {getAverage(manager.rosterData.WR).toFixed(2)}
-              </div>
-            {:else}
-              {manager.rosterData.WR.length}
-            {/if}
-          </Cell>
-          <Cell>
-            {#if dataType == "age"}
-              <div class={getAgeClass(getAverage(manager.rosterData.TE))}>
-                {getAverage(manager.rosterData.TE).toFixed(2)}
-              </div>
-            {:else}
-              {manager.rosterData.TE.length}
-            {/if}
-          </Cell>
-          <Cell>
-            {#if dataType == "age"}
-              <div class={getAgeClass(getAverage(manager.rosterData.DL))}>
-                {getAverage(manager.rosterData.DL).toFixed(2)}
-              </div>
-            {:else}
-              {manager.rosterData.DL.length}
-            {/if}
-          </Cell>
-          <Cell>
-            {#if dataType == "age"}
-              <div class={getAgeClass(getAverage(manager.rosterData.LB))}>
-                {getAverage(manager.rosterData.LB).toFixed(2)}
-              </div>
-            {:else}
-              {manager.rosterData.LB.length}
-            {/if}
-          </Cell>
-          <Cell>
-            {#if dataType == "age"}
-              <div class={getAgeClass(getAverage(manager.rosterData.DB))}>
-                {getAverage(manager.rosterData.DB).toFixed(2)}
-              </div>
-            {:else}
-              {manager.rosterData.DB.length}
-            {/if}
-          </Cell>
+  {#if chartType == "table"}
+    <DataTable class="teamInner" table$aria-label="Team Name">
+      <Head>
+        <Row>
+          <Cell class="header">Manager</Cell>
+          <Cell class="header">Team</Cell>
+          <Cell class="header">Off.</Cell>
+          <Cell class="header">QB</Cell>
+          <Cell class="header">RB</Cell>
+          <Cell class="header">WR</Cell>
+          <Cell class="header">TE</Cell>
+          <Cell class="header">Def.</Cell>
+          <Cell class="header">DL</Cell>
+          <Cell class="header">LB</Cell>
+          <Cell class="header">DB</Cell>
         </Row>
-      {/each}
-    </Body>
-  </DataTable>
+      </Head>
+      <Body>
+        {#each Object.values(currentManagers) as manager, ix}
+          <Row>
+            <Cell class="interactive" on:click={() => gotoManager(ix)}>
+              <img class="avatar" alt="avatar" src={manager.avatar} />
+              {manager.name}
+            </Cell>
+            <Cell class="age-cell">
+              {#if dataType == "age"}
+                <div
+                  class="age"
+                  style={`background-color: ${colorsTeam
+                    .getColor(manager.averages.Team.toFixed(2))
+                    .toHexString()}`}
+                >
+                  {manager.averages.Team.toFixed(2)}
+                </div>
+              {:else}
+                <div
+                  class="age"
+                  style={`background-color: ${
+                    manager.ageLists.Team.length === 48 ? "#57bb8a" : "#e67c73"
+                  }`}
+                >
+                  {manager.ageLists.Team.length}
+                </div>
+              {/if}
+            </Cell>
+            <Cell class="age-cell">
+              {#if dataType == "age"}
+                <div
+                  class="age"
+                  style={`background-color: ${colorsOff
+                    .getColor(manager.averages.Off.toFixed(2))
+                    .toHexString()}`}
+                >
+                  {manager.averages.Off.toFixed(2)}
+                </div>
+              {:else}
+                {manager.ageLists.Off.length}
+              {/if}
+            </Cell>
+            <Cell class="age-cell">
+              {#if dataType == "age"}
+                <div
+                  class="age"
+                  style={`background-color: ${colorsQB
+                    .getColor(manager.averages.QB.toFixed(2))
+                    .toHexString()}`}
+                >
+                  {manager.averages.QB.toFixed(2)}
+                </div>
+              {:else}
+                {manager.ageLists.QB.length}
+              {/if}
+            </Cell>
+            <Cell class="age-cell">
+              {#if dataType == "age"}
+                <div
+                  class="age"
+                  style={`background-color: ${colorsRB
+                    .getColor(manager.averages.RB.toFixed(2))
+                    .toHexString()}`}
+                >
+                  {manager.averages.RB.toFixed(2)}
+                </div>
+              {:else}
+                {manager.ageLists.RB.length}
+              {/if}
+            </Cell>
+            <Cell class="age-cell">
+              {#if dataType == "age"}
+                <div
+                  class="age"
+                  style={`background-color: ${colorsWR
+                    .getColor(manager.averages.WR.toFixed(2))
+                    .toHexString()}`}
+                >
+                  {manager.averages.WR.toFixed(2)}
+                </div>
+              {:else}
+                {manager.ageLists.WR.length}
+              {/if}
+            </Cell>
+            <Cell class="age-cell">
+              {#if dataType == "age"}
+                <div
+                  class="age"
+                  style={`background-color: ${colorsTE
+                    .getColor(manager.averages.TE.toFixed(2))
+                    .toHexString()}`}
+                >
+                  {manager.averages.TE.toFixed(2)}
+                </div>
+              {:else}
+                {manager.ageLists.TE.length}
+              {/if}
+            </Cell>
+            <Cell class="age-cell">
+              {#if dataType == "age"}
+                <div
+                  class="age"
+                  style={`background-color: ${colorsDef
+                    .getColor(manager.averages.Def.toFixed(2))
+                    .toHexString()}`}
+                >
+                  {manager.averages.Def.toFixed(2)}
+                </div>
+              {:else}
+                {manager.ageLists.Def.length}
+              {/if}
+            </Cell>
+            <Cell class="age-cell">
+              {#if dataType == "age"}
+                <div
+                  class="age"
+                  style={`background-color: ${colorsDL
+                    .getColor(manager.averages.DL.toFixed(2))
+                    .toHexString()}`}
+                >
+                  {manager.averages.DL.toFixed(2)}
+                </div>
+              {:else}
+                {manager.ageLists.DL.length}
+              {/if}
+            </Cell>
+            <Cell class="age-cell">
+              {#if dataType == "age"}
+                <div
+                  class="age"
+                  style={`background-color: ${colorsLB
+                    .getColor(manager.averages.LB.toFixed(2))
+                    .toHexString()}`}
+                >
+                  {manager.averages.LB.toFixed(2)}
+                </div>
+              {:else}
+                {manager.ageLists.LB.length}
+              {/if}
+            </Cell>
+            <Cell class="age-cell">
+              {#if dataType == "age"}
+                <div
+                  class="age"
+                  style={`background-color: ${colorsDB
+                    .getColor(manager.averages.DB.toFixed(2))
+                    .toHexString()}`}
+                >
+                  {manager.averages.DB.toFixed(2)}
+                </div>
+              {:else}
+                {manager.ageLists.DB.length}
+              {/if}
+            </Cell>
+          </Row>
+        {/each}
+      </Body>
+    </DataTable>
+  {:else if chartType === "stack"}
+    <Chart
+      data={dataType == "age" ? ageData : countData}
+      type="bar"
+      barOptions={{ stacked: 1 }}
+      height={500}
+      colors={chartColors}
+    />
+  {:else}
+    <Chart
+      data={dataType == "age" ? ageData : countData}
+      type="bar"
+      barOptions={{ stacked: 0 }}
+      height={500}
+      colors={chartColors}
+    />
+  {/if}
 </div>
 
 <style>
+  .float-left {
+    float: left;
+  }
+  .float-right {
+    float: right;
+  }
+
+  :global(.age-cell) {
+    vertical-align: middle;
+  }
+
   .age {
     padding: 1px 2px;
     text-align: center;
     border-radius: 3px;
     color: black;
     font-weight: bold;
-  }
-  .age-20 {
-    /* background-color: rgb(87, 187, 138); */
-    background-color: var(--age20);
-  }
-  .age-21 {
-    /* background-color: rgb(103, 189, 135); */
-    background-color: var(--age21);
-  }
-  .age-22 {
-    /* background-color: rgb(120, 192, 131); */
-    background-color: var(--age22);
-  }
-  .age-23 {
-    /* background-color: rgb(137, 195, 128); */
-    background-color: var(--age23);
-  }
-  .age-24 {
-    /* background-color: rgb(154, 197, 124); */
-    background-color: var(--age24);
-  }
-  .age-25 {
-    /* background-color: rgb(171, 200, 120); */
-    background-color: var(--age25);
-  }
-  .age-26 {
-    /* background-color: rgb(187, 203, 117); */
-    background-color: var(--age26);
-  }
-  .age-27 {
-    /* background-color: rgb(204, 205, 113); */
-    background-color: var(--age27);
-  }
-  .age-28 {
-    /* background-color: rgb(221, 208, 110); */
-    background-color: var(--age28);
-  }
-  .age-29 {
-    /* background-color: rgb(238, 211, 106); */
-    background-color: var(--age29);
-  }
-  .age-30 {
-    /* background-color: rgb(255, 214, 102); */
-    background-color: var(--age30);
-  }
-  .age-31 {
-    /* background-color: rgb(253, 205, 103); */
-    background-color: var(--age31);
-  }
-  .age-32 {
-    /* background-color: rgb(251, 197, 104); */
-    background-color: var(--age32);
-  }
-  .age-33 {
-    /* background-color: rgb(248, 187, 105); */
-    background-color: var(--age33);
-  }
-  .age-34 {
-    /* background-color: rgb(246, 179, 107); */
-    background-color: var(--age34);
-  }
-  .age-35 {
-    /* background-color: rgb(243, 169, 108); */
-    background-color: var(--age35);
-  }
-  .age-36 {
-    /* background-color: rgb(240, 160, 109); */
-    background-color: var(--age36);
-  }
-  .age-37 {
-    /* background-color: rgb(238, 152, 111); */
-    background-color: var(--age37);
-  }
-  .age-38 {
-    /* background-color: rgb(235, 142, 112); */
-    background-color: var(--age38);
-  }
-  .age-39 {
-    /* background-color: rgb(233, 134, 113); */
-    background-color: var(--age39);
-  }
-  .age-40 {
-    /* background-color: rgb(230, 124, 115); */
-    background-color: var(--age40);
   }
 
   .avatar {
