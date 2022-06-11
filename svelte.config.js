@@ -1,8 +1,8 @@
-import vercel from '@sveltejs/adapter-vercel';
-import node from '@sveltejs/adapter-node';
+import vercel from "@sveltejs/adapter-vercel";
+import node from "@sveltejs/adapter-node";
 import sveltePreprocess from "svelte-preprocess";
 
-const dockerBuild = process.env.DOCKER_BUILD
+const dockerBuild = process.env.DOCKER_BUILD;
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -12,7 +12,7 @@ const config = {
     target: "#svelte",
     adapter: dockerBuild ? node() : vercel(),
   },
-  preprocess: sveltePreprocess()
+  preprocess: sveltePreprocess(),
   //   preprocess: sveltePreprocess(),
   //   plugins: [
   //     svelte({

@@ -1,5 +1,5 @@
 <script>
-    console.log("logo");
+  console.log("logo");
 </script>
 
 <div>

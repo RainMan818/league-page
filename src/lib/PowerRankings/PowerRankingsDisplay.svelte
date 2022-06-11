@@ -1,131 +1,143 @@
 <script>
-    import BarChart from '$lib/BarChart.svelte';
-    import { generateGraph, round, predictScores, loadPlayers } from '$lib/utils/helper';
-    export let nflState, rostersData, users, playersInfo, leagueData;
+  import BarChart from "$lib/BarChart.svelte";
+  import {
+    generateGraph,
+    round,
+    predictScores,
+    loadPlayers,
+  } from "$lib/utils/helper";
+  export let nflState, rostersData, users, playersInfo, leagueData;
 
-    const rosters = rostersData.rosters;
+  const rosters = rostersData.rosters;
 
-    const currentManagers = {};
+  const currentManagers = {};
 
-    for(const roster of rosters) {
-        const user = users[roster.owner_id];
-        currentManagers[roster.roster_id] = {
-            avatar: `https://sleepercdn.com/avatars/thumbs/${user.avatar}`,
-            name: user.metadata.team_name ? user.metadata.team_name : user.display_name,
-        }
+  for (const roster of rosters) {
+    const user = users[roster.owner_id];
+    currentManagers[roster.roster_id] = {
+      avatar: `https://sleepercdn.com/avatars/thumbs/${user.avatar}`,
+      name: user.metadata.team_name
+        ? user.metadata.team_name
+        : user.display_name,
+    };
+  }
+
+  let validGraph = false;
+
+  let graphs = [];
+
+  const buildRankings = () => {
+    const rosterPowers = [];
+    let week = nflState.week;
+    if (week == 0) {
+      week = 1;
+    }
+    let max = 0;
+
+    for (const roster of rosters) {
+      // make sure the roster has players on it
+      if (!roster.players) continue;
+      // if at least one team has players, create the graph
+      validGraph = true;
+
+      const rosterPlayers = [];
+
+      for (const rosterPlayer of roster.players) {
+        rosterPlayers.push({
+          name: players[rosterPlayer].ln,
+          pos: players[rosterPlayer].pos,
+          positions: players[rosterPlayer].positions,
+          wi: players[rosterPlayer].wi,
+        });
+      }
+
+      const rosterPower = {
+        rosterID: roster.roster_id,
+        manager: currentManagers[roster.roster_id],
+        powerScore: 0,
+        weeks: {},
+      };
+      const seasonEnd = 18;
+      for (let i = week; i < seasonEnd; i++) {
+        const { powerScore, powerScores } = predictScores(
+          rosterPlayers,
+          i,
+          leagueData,
+          currentManagers[roster.roster_id].name
+        );
+        rosterPower.powerScore += powerScore;
+        rosterPower.weeks[i] = powerScores;
+      }
+      if (rosterPower.powerScore > max) {
+        max = rosterPower.powerScore;
+      }
+      rosterPowers.push(rosterPower);
     }
 
-    let validGraph = false;
-
-    let graphs = [];
-
-    const buildRankings = () => {
-        const rosterPowers = [];
-        let week = nflState.week;
-        if(week == 0) {
-            week = 1;
-        }
-        let max = 0;
-
-        for(const roster of rosters) {
-            // make sure the roster has players on it
-            if(!roster.players) continue;
-            // if at least one team has players, create the graph
-            validGraph = true;
-
-            const rosterPlayers = [];
-
-            for(const rosterPlayer of roster.players) {
-                rosterPlayers.push({
-                    name: players[rosterPlayer].ln,
-                    pos: players[rosterPlayer].pos,
-                    positions: players[rosterPlayer].positions,
-                    wi: players[rosterPlayer].wi
-                })
-            }
-
-            const rosterPower = {
-                rosterID: roster.roster_id,
-                manager: currentManagers[roster.roster_id],
-                powerScore: 0,
-                weeks: {},
-            }
-            const seasonEnd = 18;
-            for(let i = week; i < seasonEnd; i++) {
-                const {powerScore, powerScores} = predictScores(rosterPlayers, i, leagueData, currentManagers[roster.roster_id].name)
-                rosterPower.powerScore += powerScore;
-                rosterPower.weeks[i] = powerScores;
-            }
-            if(rosterPower.powerScore > max) {
-                max = rosterPower.powerScore;
-            }
-            rosterPowers.push(rosterPower);
-        }
-
-        for(const rosterPower of rosterPowers) {
-            console.log(rosterPower.manager.name, rosterPower)
-            rosterPower.powerScore = round(rosterPower.powerScore/max * 100);
-        }
-
-        const powerGraph = {
-            stats: rosterPowers,
-            x: "Manager",
-            y: "Power Ranking",
-            stat: "",
-            header: "Rest of Season Power Rankings",
-            field: "powerScore",
-            short: "ROS Power Ranking"
-        };
-
-        graphs = [
-            generateGraph(powerGraph, 10)
-        ]
+    for (const rosterPower of rosterPowers) {
+      console.log(rosterPower.manager.name, rosterPower);
+      rosterPower.powerScore = round((rosterPower.powerScore / max) * 100);
     }
 
-    let players = playersInfo.players;
+    const powerGraph = {
+      stats: rosterPowers,
+      x: "Manager",
+      y: "Power Ranking",
+      stat: "",
+      header: "Rest of Season Power Rankings",
+      field: "powerScore",
+      short: "ROS Power Ranking",
+    };
 
+    graphs = [generateGraph(powerGraph, 10)];
+  };
+
+  let players = playersInfo.players;
+
+  buildRankings();
+
+  const refreshPlayers = async () => {
+    const newPlayersInfo = await loadPlayers(true);
+    players = newPlayersInfo.players;
     buildRankings();
+  };
 
-    const refreshPlayers = async () => {
-        const newPlayersInfo = await loadPlayers(true);
-        players = newPlayersInfo.players;
-        buildRankings();
-    }
+  if (playersInfo.stale) {
+    refreshPlayers();
+  }
 
-    if(playersInfo.stale) {
-        refreshPlayers();
-    }
+  let curGraph = 0;
 
-    let curGraph = 0;
+  let el;
+  let maxWidth = 620;
 
-    let el;
-    let maxWidth = 620;
+  const resize = (w) => {
+    const left = el?.getBoundingClientRect()
+      ? el?.getBoundingClientRect().left
+      : 0;
+    const right = el?.getBoundingClientRect()
+      ? el?.getBoundingClientRect().right
+      : 0;
 
+    maxWidth = right - left;
+  };
+  let innerWidth;
 
-    const resize = (w) => {
-        const left = el?.getBoundingClientRect() ? el?.getBoundingClientRect().left  : 0;
-        const right = el?.getBoundingClientRect() ? el?.getBoundingClientRect().right  : 0;
-
-        maxWidth = right - left;
-    }
-    let innerWidth;
-
-    $: resize(innerWidth);
-
+  $: resize(innerWidth);
 </script>
 
-<svelte:window bind:innerWidth={innerWidth} />
-
-<style>
-    .enclosure {
-        display: block;
-        position: relative;
-        width: 100%;
-    }
-</style>
+<svelte:window bind:innerWidth />
 
 {#if validGraph}
-    <div class="enclosure" bind:this={el}>
-        <BarChart {maxWidth} {graphs} bind:curGraph={curGraph} />
-    </div>
+  <div class="enclosure" bind:this={el}>
+    <BarChart {maxWidth} {graphs} bind:curGraph />
+  </div>
 {/if}
+
+<style>
+  .enclosure {
+    display: block;
+    position: relative;
+    width: 100%;
+  }
+</style>

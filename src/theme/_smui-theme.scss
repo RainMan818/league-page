@@ -28,7 +28,7 @@
 //   mdc-typography--button
 //   mdc-typography--overline
 //   mdc-typography--body1
- 
+
 // Import the mixins.
 @use '@material/typography/index' as typography;
 
@@ -83,43 +83,43 @@
   --DLfade: #c392d3;
   --LBfade: #98c097;
 
-	--QB: #ff2a6d;
-	--WR: #58a7ff;
-	--RB: #00ceb8;
-	--TE: #ffae58;
-	--K: #bd66ff;
-	--DEF: #fff67a;
-	--DL: #ff795a;
-	--LB: #6d7df5;
-	--DB: #ff7cb6;
-	--BN: #b6d0eb;
+  --QB: #ff2a6d;
+  --WR: #58a7ff;
+  --RB: #00ceb8;
+  --TE: #ffae58;
+  --K: #bd66ff;
+  --DEF: #fff67a;
+  --DL: #ff795a;
+  --LB: #6d7df5;
+  --DB: #ff7cb6;
+  --BN: #b6d0eb;
 
-    // Ages
-    --age20: rgb(87, 187, 138);
-    --age21: rgb(103, 189, 135);
-    --age22: rgb(120, 192, 131);
-    --age23: rgb(137, 195, 128);
-    --age24: rgb(154, 197, 124);
-    --age25: rgb(171, 200, 120);
-    --age26: rgb(187, 203, 117);
-    --age27: rgb(204, 205, 113);
-    --age28: rgb(221, 208, 110);
-    --age29: rgb(238, 211, 106);
-    --age30: rgb(255, 214, 102);
-    --age31: rgb(253, 205, 103);
-    --age32: rgb(251, 197, 104);
-    --age33: rgb(248, 187, 105);
-    --age34: rgb(246, 179, 107);
-    --age35: rgb(243, 169, 108);
-    --age36: rgb(240, 160, 109);
-    --age37: rgb(238, 152, 111);
-    --age38: rgb(235, 142, 112);
-    --age39: rgb(233, 134, 113);
-    --age40: rgb(230, 124, 115);
+  // Ages
+  --age20: rgb(87, 187, 138);
+  --age21: rgb(103, 189, 135);
+  --age22: rgb(120, 192, 131);
+  --age23: rgb(137, 195, 128);
+  --age24: rgb(154, 197, 124);
+  --age25: rgb(171, 200, 120);
+  --age26: rgb(187, 203, 117);
+  --age27: rgb(204, 205, 113);
+  --age28: rgb(221, 208, 110);
+  --age29: rgb(238, 211, 106);
+  --age30: rgb(255, 214, 102);
+  --age31: rgb(253, 205, 103);
+  --age32: rgb(251, 197, 104);
+  --age33: rgb(248, 187, 105);
+  --age34: rgb(246, 179, 107);
+  --age35: rgb(243, 169, 108);
+  --age36: rgb(240, 160, 109);
+  --age37: rgb(238, 152, 111);
+  --age38: rgb(235, 142, 112);
+  --age39: rgb(233, 134, 113);
+  --age40: rgb(230, 124, 115);
 
-    // Roster count, over/under
-    --over: red;
-    --under: rgb(0, 190, 0);
+  // Roster count, over/under
+  --over: red;
+  --under: rgb(0, 190, 0);
 }
 
 html,
@@ -130,60 +130,60 @@ body {
   color: theme.$on-surface;
   min-height: 100vh;
   background: #f4f4f4;
-  background: linear-gradient(to bottom right, #f4f4f4,#ebebeb );
-  background: -webkit-linear-gradient(to bottom right, #f4f4f4,#ebebeb );
+  background: linear-gradient(to bottom right, #f4f4f4, #ebebeb);
+  background: -webkit-linear-gradient(to bottom right, #f4f4f4, #ebebeb);
 }
- 
+
 //
 // Some defaults that may be helpful to you.
 // If you just want to use these, and not the classes, you can instead just
 // @use '@material/typography/index' as typography, and your CSS file will be smaller.
 //
 html {
-  @include typography.typography('body1');
+  @include typography.typography("body1");
 }
- 
+
 h1 {
-  @include typography.typography('headline1');
+  @include typography.typography("headline1");
 }
- 
+
 h2 {
-  @include typography.typography('headline2');
+  @include typography.typography("headline2");
 }
- 
+
 h3 {
-  @include typography.typography('headline3');
+  @include typography.typography("headline3");
 }
- 
+
 h4 {
-  @include typography.typography('headline4');
+  @include typography.typography("headline4");
 }
- 
+
 h5 {
-  @include typography.typography('headline5');
+  @include typography.typography("headline5");
 }
- 
+
 h6 {
-  @include typography.typography('headline6');
+  @include typography.typography("headline6");
 }
- 
+
 caption {
-  @include typography.typography('caption');
+  @include typography.typography("caption");
 }
- 
+
 code,
 pre {
-  font-family: 'Roboto Mono', monospace;
+  font-family: "Roboto Mono", monospace;
 }
- 
+
 small {
   font-size: 0.9em;
 }
- 
+
 big {
   font-size: 1.1em;
 }
- 
+
 b,
 strong {
   font-weight: bold;
