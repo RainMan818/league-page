@@ -1,5 +1,14 @@
 export const predictScores = (players, week, leagueData, name) => {
   const starterPositions = getStarterPositions(leagueData);
+  // Sort FLEX positions to last selection priority
+  starterPositions.sort((a, b) => {
+    if (a.includes("FLEX")) {
+        return 1;
+    } else if (b.includes("FLEX")) {
+        return -1;
+    }
+    return 0;
+  });
 
   // sort roster by highest projected points for that week
   const projectedPlayers = [...players].sort(
@@ -40,6 +49,7 @@ export const predictScores = (players, week, leagueData, name) => {
     SUPER_FLEX: 0,
     IDP_FLEX: 0,
   };
+  const starters = [];
   // next, use the roster configuration to grab the highest scorer at each position
   for (const starterPosition of starterPositions) {
     const qb = parseFloat(
@@ -65,97 +75,97 @@ export const predictScores = (players, week, leagueData, name) => {
     );
     switch (starterPosition) {
       case "QB":
-        qbs.shift();
+        starters.push(qbs.shift());
         powerScore += qb;
         powerScores.QB += qb;
         break;
       case "RB":
-        rbs.shift();
+        starters.push(rbs.shift());
         powerScore += rb;
         powerScores.RB += rb;
         break;
       case "WR":
-        wrs.shift();
+        starters.push(wrs.shift());
         powerScore += wr;
         powerScores.WR += wr;
         break;
       case "TE":
-        tes.shift();
+        starters.push(tes.shift());
         powerScore += te;
         powerScores.TE += te;
         break;
       case "DL":
-        dls.shift();
+        starters.push(dls.shift());
         powerScore += dl;
         powerScores.DL += dl;
         break;
       case "LB":
-        lbs.shift();
+        starters.push(lbs.shift());
         powerScore += lb;
         powerScores.LB += lb;
         break;
       case "DB":
-        dbs.shift();
+        starters.push(dbs.shift());
         powerScore += db;
         powerScores.DB += db;
         break;
       // Start of flex players
       case "FLEX":
         if (rb >= wr && rb >= te) {
-          rbs.shift();
+          starters.push(rbs.shift());
           powerScore += rb;
           powerScores.FLEX += rb;
         } else if (wr >= rb && wr >= te) {
-          wrs.shift();
+          starters.push(wrs.shift());
           powerScore += wr;
           powerScores.FLEX += wr;
         } else {
-          tes.shift();
+          starters.push(tes.shift());
           powerScore += te;
           powerScores.FLEX += te;
         }
         break;
       case "WRRB_FLEX":
         if (rb >= wr) {
-          rbs.shift();
+          starters.push(rbs.shift());
           powerScore += rb;
           powerScores.WRRB_FLEX += rb;
         } else {
-          wrs.shift();
+          starters.push(wrs.shift());
           powerScore += wr;
           powerScores.WRRB_FLEX += wr;
         }
         break;
       case "SUPER_FLEX":
         if (qb >= wr && qb >= te && qb >= rb) {
-          qbs.shift();
+          starters.push(qbs.shift());
           powerScore += qb;
           powerScores.SUPER_FLEX += qb;
         } else if (rb >= wr && rb >= te && rb >= qb) {
-          rbs.shift();
+          starters.push(rbs.shift());
           powerScore += rb;
           powerScores.SUPER_FLEX += rb;
         } else if (wr >= rb && wr >= te && wr >= qb) {
-          wrs.shift();
+          starters.push(wrs.shift());
           powerScore += wr;
           powerScores.SUPER_FLEX += wr;
         } else {
-          tes.shift();
+          starters.push(tes.shift());
           powerScore += te;
           powerScores.SUPER_FLEX += te;
         }
         break;
       case "IDP_FLEX":
         if (dl >= lb && dl >= db) {
-          dls.shift();
+          starters.push(dls.shift());
           powerScore += dl;
           powerScores.IDP_FLEX += dl;
         } else if (lb >= dl && lb >= db) {
-          lbs.shift();
+          starters.push(lbs.shift());
           powerScore += lb;
           powerScores.IDP_FLEX += lb;
         } else {
-          dbs.shift();
+          starters.push(dbs.shift());
           powerScore += db;
           powerScores.IDP_FLEX += db;
         }

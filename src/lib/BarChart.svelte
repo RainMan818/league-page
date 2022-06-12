@@ -97,7 +97,7 @@
 
 <svelte:window bind:innerWidth />
 
-<h6>{header}</h6>
+<h4>{header}</h4>
 <div class="chartWrapper" style="width: {width}px; height: {width * 0.7}px">
   <div class="barChart">
     <div
@@ -306,7 +306,7 @@
     transition: height 0.6s;
   }
 
-  h6 {
+  h4 {
     font-weight: 400;
     width: 100%;
     text-align: center;

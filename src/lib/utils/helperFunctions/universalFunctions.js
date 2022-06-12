@@ -77,6 +77,7 @@ export const parseDate = (rawDate) => {
 export const generateGraph = (
   { stats, x, y, stat, header, field, short, secondField = null },
   roundOverride = 10,
+  round = false,
   yMinOverride = null
 ) => {
   if (!stats) {
@@ -97,9 +98,11 @@ export const generateGraph = (
   const sortedStats = [...stats].sort((a, b) => a.powerScore - b.powerScore);
 
   for (const indivStat of sortedStats) {
-    graph.stats.push(Math.round(indivStat[field]));
+    graph.stats.push(round ? Math.round(indivStat[field]) : indivStat[field]);
     if (secondField) {
-      graph.secondStats.push(Math.round(indivStat[secondField]));
+      graph.secondStats.push(
+        round ? Math.round(indivStat[secondField]) : indivStat[secondField]
+      );
     }
     graph.managers.push(indivStat.manager);
     graph.rosterIDs.push(indivStat.rosterID);

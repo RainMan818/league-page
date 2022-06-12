@@ -1,4 +1,5 @@
 <script>
+  import Button, { Group, Label } from "@smui/button";
   import BarChart from "$lib/BarChart.svelte";
   import {
     generateGraph,
@@ -7,6 +8,9 @@
     loadPlayers,
   } from "$lib/utils/helper";
   export let nflState, rostersData, users, playersInfo, leagueData;
+
+  const weeksInSeason = 18;
+  const weeksRemaining = weeksInSeason - nflState.week;
 
   const rosters = rostersData.rosters;
 
@@ -24,7 +28,9 @@
 
   let validGraph = false;
 
-  let graphs = [];
+  let baselineGraphs = [];
+  let rawGraphs = [];
+  let avgGraphs = [];
 
   const buildRankings = () => {
     const rosterPowers = [];
@@ -55,10 +61,11 @@
         rosterID: roster.roster_id,
         manager: currentManagers[roster.roster_id],
         powerScore: 0,
+        rawScore: 0,
+        avgRawScore: 0,
         weeks: {},
       };
-      const seasonEnd = 18;
-      for (let i = week; i < seasonEnd; i++) {
+      for (let i = week; i < weeksInSeason; i++) {
         const { powerScore, powerScores } = predictScores(
           rosterPlayers,
           i,
@@ -66,6 +73,7 @@
           currentManagers[roster.roster_id].name
         );
         rosterPower.powerScore += powerScore;
+        rosterPower.rawScore += powerScore;
         rosterPower.weeks[i] = powerScores;
       }
       if (rosterPower.powerScore > max) {
@@ -75,8 +83,8 @@
     }
 
     for (const rosterPower of rosterPowers) {
-      console.log(rosterPower.manager.name, rosterPower);
       rosterPower.powerScore = round((rosterPower.powerScore / max) * 100);
+      rosterPower.avgRawScore = rosterPower.rawScore / weeksRemaining;
     }
 
     const powerGraph = {
@@ -88,12 +96,30 @@
       field: "powerScore",
       short: "ROS Power Ranking",
     };
+    const rawGraph = {
+      stats: rosterPowers,
+      x: "Manager",
+      y: "Power Ranking",
+      stat: "",
+      header: "Rest of Season Power Rankings",
+      field: "rawScore",
+      short: "ROS Power Ranking",
+    };
+    const avgGraph = {
+      stats: rosterPowers,
+      x: "Manager",
+      y: "Power Ranking",
+      stat: "",
+      header: "Rest of Season Power Rankings",
+      field: "avgRawScore",
+      short: "ROS Power Ranking",
+    };
 
-    graphs = [generateGraph(powerGraph, 10)];
+    baselineGraphs = [generateGraph(powerGraph, 10)];
+    rawGraphs = [generateGraph(rawGraph, 10, true)];
+    avgGraphs = [generateGraph(avgGraph, 10, true)];
   };
-
   let players = playersInfo.players;
-
   buildRankings();
 
   const refreshPlayers = async () => {
@@ -101,16 +127,13 @@
     players = newPlayersInfo.players;
     buildRankings();
   };
-
   if (playersInfo.stale) {
     refreshPlayers();
   }
 
   let curGraph = 0;
-
   let el;
   let maxWidth = 620;
-
   const resize = (w) => {
     const left = el?.getBoundingClientRect()
       ? el?.getBoundingClientRect().left
@@ -122,15 +145,89 @@
     maxWidth = right - left;
   };
   let innerWidth;
-
   $: resize(innerWidth);
+
+  let dataType = "scaled"; // "raw", "average"
+  const changeDataType = (type) => {
+    dataType = type;
+  };
 </script>
 
 <svelte:window bind:innerWidth />
 
 {#if validGraph}
+  <div>
+    <div class="float-left">
+      <Group variant="outlined" class="vertical-align">
+        {#if dataType == "scaled"}
+          <Button
+            disabled
+            class="selectionButtons"
+            on:click={() => changeDataType("scaled")}
+            variant="outlined"
+          >
+            <Label>Scaled</Label>
+          </Button>
+        {:else}
+          <Button
+            class="selectionButtons"
+            on:click={() => changeDataType("scaled")}
+            variant="outlined"
+          >
+            <Label>Scaled</Label>
+          </Button>
+        {/if}
+        {#if dataType == "raw"}
+          <Button
+            disabled
+            class="selectionButtons"
+            on:click={() => changeDataType("raw")}
+            variant="outlined"
+          >
+            <Label>Raw</Label>
+          </Button>
+        {:else}
+          <Button
+            class="selectionButtons"
+            on:click={() => changeDataType("raw")}
+            variant="outlined"
+          >
+            <Label>Raw</Label>
+          </Button>
+        {/if}
+        {#if dataType == "average"}
+          <Button
+            disabled
+            class="selectionButtons"
+            on:click={() => changeDataType("average")}
+            variant="outlined"
+          >
+            <Label>Average</Label>
+          </Button>
+        {:else}
+          <Button
+            class="selectionButtons"
+            on:click={() => changeDataType("average")}
+            variant="outlined"
+          >
+            <Label>Average</Label>
+          </Button>
+        {/if}
+      </Group>
+    </div>
+    <h6 class="float-right">
+      Weeks remaining: {weeksRemaining}
+    </h6>
+    <div style="clear: both;" />
+  </div>
   <div class="enclosure" bind:this={el}>
-    <BarChart {maxWidth} {graphs} bind:curGraph />
+    {#if dataType == "scaled"}
+      <BarChart {maxWidth} graphs={baselineGraphs} bind:curGraph />
+    {:else if dataType == "raw"}
+      <BarChart {maxWidth} graphs={rawGraphs} bind:curGraph />
+    {:else}
+      <BarChart {maxWidth} graphs={avgGraphs} bind:curGraph />
+    {/if}
   </div>
 {/if}
 
@@ -139,5 +236,13 @@
     display: block;
     position: relative;
     width: 100%;
+  }
+
+  .float-left {
+    float: left;
+  }
+  .float-right {
+    padding: 10px 20px;
+    float: right;
   }
 </style>
