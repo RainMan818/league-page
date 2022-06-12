@@ -87,8 +87,8 @@ export function getCountData(managerData, rosters) {
 }
 
 export function getColorScales(min, max) {
-//   const colors = ["#57bb8a", "#ffd666", "#e67c73"];
-  const colorsGYR = ["#0b8148", "#fccf55", "#f75c4d"];
+  const colorsGYR = ["#57bb8a", "#ffd666", "#e67c73"];
+//   const colorsGYR = ["#0b8148", "#fccf55", "#f75c4d"]; // brighter
   return {
     colorsTeam: new ColorScale(min.Team, max.Team, colorsGYR),
     colorsOff: new ColorScale(min.Off, max.Off, colorsGYR),
