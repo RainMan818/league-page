@@ -87,6 +87,8 @@ export function getCountData(managerData, rosters) {
 }
 
 export function getColorScales(min, max) {
+    console.log("min", min);
+    console.log("max", max);
   const colorsGYR = ["#57bb8a", "#ffd666", "#e67c73"];
 //   const colorsGYR = ["#0b8148", "#fccf55", "#f75c4d"]; // brighter
   return {
@@ -140,7 +142,7 @@ export function digestData(passedPlayers, rawPlayers) {
     }
 
     const positions = passedPlayers[singlePlayer].positions;
-    const age = passedPlayers[singlePlayer].age || 22;
+    const age = passedPlayers[singlePlayer].age;
 
     ageLists.Team.push(age);
     if (positions.length === 2) {
@@ -203,28 +205,6 @@ export function digestData(passedPlayers, rawPlayers) {
   const ageDL = getAverage(ageLists.DL);
   const ageLB = getAverage(ageLists.LB);
   const ageDB = getAverage(ageLists.DB);
-  // Set "max"
-//   max.Team = Math.max(max.Team, ageTeam);
-//   max.Off = Math.max(max.Off, ageOff);
-//   max.Def = Math.max(max.Def, ageDef);
-//   max.QB = Math.max(max.QB, ageQB);
-//   max.RB = Math.max(max.RB, ageRB);
-//   max.WR = Math.max(max.WR, ageWR);
-//   max.TE = Math.max(max.TE, ageTE);
-//   max.DL = Math.max(max.DL, ageDL);
-//   max.LB = Math.max(max.LB, ageLB);
-//   max.DB = Math.max(max.DB, ageDB);
-//   // Set "min"
-//   min.Team = Math.min(min.Team, ageTeam);
-//   min.Off = Math.min(min.Off, ageOff);
-//   min.Def = Math.min(min.Def, ageDef);
-//   min.QB = Math.min(min.QB, ageQB);
-//   min.RB = Math.min(min.RB, ageRB);
-//   min.WR = Math.min(min.WR, ageWR);
-//   min.TE = Math.min(min.TE, ageTE);
-//   min.DL = Math.min(min.DL, ageDL);
-//   min.LB = Math.min(min.LB, ageLB);
-//   min.DB = Math.min(min.DB, ageDB);
 
   const averages = {
     Team: ageTeam,

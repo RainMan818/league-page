@@ -64,26 +64,26 @@
       ageLists,
     };
 
-    minAges.Team = Math.min(...ageLists.Team);
-    maxAges.Team = Math.max(...ageLists.Team);
-    minAges.Off = Math.min(...ageLists.Off);
-    maxAges.Off = Math.max(...ageLists.Off);
-    minAges.Def = Math.min(...ageLists.Def);
-    maxAges.Def = Math.max(...ageLists.Def);
-    minAges.QB = Math.min(...ageLists.QB);
-    maxAges.QB = Math.max(...ageLists.QB);
-    minAges.RB = Math.min(...ageLists.RB);
-    maxAges.RB = Math.max(...ageLists.RB);
-    minAges.WR = Math.min(...ageLists.WR);
-    maxAges.WR = Math.max(...ageLists.WR);
-    minAges.TE = Math.min(...ageLists.TE);
-    maxAges.TE = Math.max(...ageLists.TE);
-    minAges.DL = Math.min(...ageLists.DL);
-    maxAges.DL = Math.max(...ageLists.DL);
-    minAges.LB = Math.min(...ageLists.LB);
-    maxAges.LB = Math.max(...ageLists.LB);
-    minAges.DB = Math.min(...ageLists.DB);
-    maxAges.DB = Math.max(...ageLists.DB);
+    maxAges.Team = Math.max(averages.Team, maxAges.Team);
+    minAges.Team = Math.min(averages.Team, minAges.Team);
+    maxAges.Off = Math.max(averages.Off, maxAges.Off);
+    minAges.Off = Math.min(averages.Off, minAges.Off);
+    maxAges.Def = Math.max(averages.Def, maxAges.Def);
+    minAges.Def = Math.min(averages.Def, minAges.Def);
+    maxAges.QB = Math.max(averages.QB, maxAges.QB);
+    minAges.QB = Math.min(averages.QB, minAges.QB);
+    maxAges.RB = Math.max(averages.RB, maxAges.RB);
+    minAges.RB = Math.min(averages.RB, minAges.RB);
+    maxAges.WR = Math.max(averages.WR, maxAges.WR);
+    minAges.WR = Math.min(averages.WR, minAges.WR);
+    maxAges.TE = Math.max(averages.TE, maxAges.TE);
+    minAges.TE = Math.min(averages.TE, minAges.TE);
+    maxAges.DL = Math.max(averages.DL, maxAges.DL);
+    minAges.DL = Math.min(averages.DL, minAges.DL);
+    maxAges.LB = Math.max(averages.LB, maxAges.LB);
+    minAges.LB = Math.min(averages.LB, minAges.LB);
+    maxAges.DB = Math.max(averages.DB, maxAges.DB);
+    minAges.DB = Math.min(averages.DB, minAges.DB);
   }
 
   let dataType = "age";

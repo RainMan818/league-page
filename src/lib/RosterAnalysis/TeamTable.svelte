@@ -6,6 +6,8 @@
 //   import "@carbon/charts/styles.css";
 
   export let currentManagers, dataType, colorScales;
+  console.log("colorScales", colorScales)
+  console.log("currentManagers", currentManagers)
 </script>
 
 <DataTable class="teamInner" table$aria-label="Team Name">
@@ -44,9 +46,7 @@
           {:else}
             <div
               class="age"
-              style={`background-color: ${
-                manager.ageLists.Team.length === 48 ? "#57bb8a" : "#e67c73"
-              }`}
+              style={`background-color: ${"#CCC"}`}
             >
               {manager.ageLists.Team.length}
             </div>
