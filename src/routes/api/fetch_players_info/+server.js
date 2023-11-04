@@ -58,10 +58,13 @@ const computePlayers = (playerData, weeklyData, scoringSettings) => {
     for(const id in playerData) {
         const projPlayer = playerData[id];
         const player = {
-            // injury_notes: projPlayer.injury_notes,
-            fn: projPlayer.first_name,
-            ln: projPlayer.last_name,
-            pos: projPlayer.position,
+          // injury_notes: projPlayer.injury_notes,
+          fn: projPlayer.first_name,
+          ln: projPlayer.last_name,
+          pos: projPlayer.position,
+          positions: projPlayer.fantasy_positions,
+          age: projPlayer.age,
+          experience: projPlayer.years_exp
         };
         if(projPlayer.team) {
             player.t = projPlayer.team;

@@ -85,6 +85,11 @@
     "cookie": "^0.4.1",
     "fast-xml-parser": "^4.2.5",
     "fuzzyjs": "^5.0.1",
+    "carbon-components": "^10.56.0",
+    "color-scales": "^3.0.2",
+    "i": "^0.3.7",
+    "npm": "^8.12.1",
+    "svelte-frappe-charts": "^1.9.2",
     "svelte": "^3.50.1"
   }
 }
