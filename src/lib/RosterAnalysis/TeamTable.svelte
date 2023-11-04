@@ -2,12 +2,7 @@
   import { gotoManager } from "$lib/utils/helper";
   import DataTable, { Head, Body, Row, Cell } from "@smui/data-table";
 
-//   import "@carbon/styles/css/styles.css";
-//   import "@carbon/charts/styles.css";
-
   export let currentManagers, dataType, colorScales;
-  console.log("colorScales", colorScales)
-  console.log("currentManagers", currentManagers)
 </script>
 
 <DataTable class="teamInner" table$aria-label="Team Name">

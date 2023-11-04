@@ -5,16 +5,7 @@
   import TeamTable from "./TeamTable.svelte";
   import {getAgeData, getCountData, getColorScales, digestData} from "./utils";
 
-//   import "@carbon/styles/css/styles.css";
-//   import "@carbon/charts/styles.css";
-
   export let rostersData, leagueData, playersInfo, nflState, leagueTeamManagers
-  
-    console.log("rostersData", rostersData);
-    console.log("leagueData", leagueData);
-    console.log("playersInfo", playersInfo);
-    console.log("nflState", nflState);
-    console.log("leagueTeamManagers", leagueTeamManagers);
 
   let maxAges = {
     Team: 0,
