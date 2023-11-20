@@ -229,6 +229,7 @@
     }
 </style>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="manager" style="{retired ? "background-image: url(/retired.png); background-color: var(--ddd)": ""}" on:click={() => goto(`/manager?manager=${key}`)}>
     <div class="avatarHolder">
         <img class="photo" src="{manager.photo}" alt="{manager.name}" />
@@ -246,7 +247,14 @@
         <div class="infoSlot infoTeam">
             {#if manager.favoriteTeam}
                 <div class="infoIcon">
-                    <img class="infoImg" src="https://sleepercdn.com/images/team_logos/nfl/{manager.favoriteTeam}.png" alt="favorite team"/>
+                    {#if manager.favoriteTeam == "miam"}
+                        <img class="infoImg" src="/Marlins.png" alt="{manager.preferredContact}"/>
+                    {:else}
+                        <img class="infoImg" src="https://sleepercdn.com/images/team_logos/nfl/{manager.favoriteTeam}.png" alt="favorite team"/>
+                    {/if}
+                </div>
+                <div class="infoAnswer">
+                    {manager.favoriteTeam.toUpperCase()}
                 </div>
             {:else}
                 <div class="infoIcon question">
