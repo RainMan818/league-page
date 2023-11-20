@@ -1,7 +1,9 @@
 <script>
     import Button, { Group, Label } from '@smui/button';
     import {round} from '$lib/utils/helper'
+    import { page } from '$app/stores';	
   	import RecordsAndRankings from './RecordsAndRankings.svelte';
+  	import JustRankings from './JustRankings.svelte';
 
     export let leagueRosterRecords, seasonWeekRecords, leagueTeamManagers, currentYear, lastYear, transactionTotals, key;
 
@@ -106,7 +108,7 @@
             
             // sort rankings
             yearsObj[key].winPercentages.sort((a, b) => b.percentage - a.percentage);
-            yearsObj[key].lineupIQs.sort((a, b) => b.iq - a.iq);
+            yearsObj[key].lineupIQs.sort((a, b) => b.potentialPoints - a.potentialPoints);
             yearsObj[key].fptsHistories.sort((a, b) => b.fptsFor - a.fptsFor);
             yearsObj[key].tradesData.sort((a, b) => b.trades - a.trades);
             yearsObj[key].waiversData.sort((a, b) => b.waivers - a.waivers);
@@ -155,30 +157,50 @@
     /* End button resizing */
 </style>
 
-<div class="buttonHolder">
-    <Group variant="outlined">
-        {#each years as {year}, ix}
-            <Button class="selectionButtons" on:click={() => display = ix} variant="{display == ix ? "raised" : "outlined"}">
-                <Label>{year}</Label>
-            </Button>
-        {/each}
-    </Group>
-</div>
+{#if $page.url.pathname == "/standings"}
+    <JustRankings
+        waiversData={years[display].waiversData}
+        tradesData={years[display].tradesData}
+        weekRecords={years[display].weekRecords}
+        weekLows={years[display].weekLows}
+        seasonLongLows={years[display].seasonLongLows}
+        seasonLongRecords={years[display].seasonLongRecords}
+        showTies={years[display].showTies}
+        winPercentages={years[display].winPercentages}
+        fptsHistories={years[display].fptsHistories}
+        lineupIQs={years[display].lineupIQs}
+        blowouts={years[display].blowouts}
+        closestMatchups={years[display].closestMatchups}
+        prefix={years[display].year}
+        {leagueTeamManagers}
+        {key}
+    />
+{:else}
+    <div class="buttonHolder">
+        <Group variant="outlined">
+            {#each years as {year}, ix}
+                <Button class="selectionButtons" on:click={() => display = ix} variant="{display == ix ? "raised" : "outlined"}">
+                    <Label>{year}</Label>
+                </Button>
+            {/each}
+        </Group>
+    </div>
+    <RecordsAndRankings
+        waiversData={years[display].waiversData}
+        tradesData={years[display].tradesData}
+        weekRecords={years[display].weekRecords}
+        weekLows={years[display].weekLows}
+        seasonLongLows={years[display].seasonLongLows}
+        seasonLongRecords={years[display].seasonLongRecords}
+        showTies={years[display].showTies}
+        winPercentages={years[display].winPercentages}
+        fptsHistories={years[display].fptsHistories}
+        lineupIQs={years[display].lineupIQs}
+        blowouts={years[display].blowouts}
+        closestMatchups={years[display].closestMatchups}
+        prefix={years[display].year}
+        {leagueTeamManagers}
+        {key}
+    />
+{/if}
 
-<RecordsAndRankings
-    waiversData={years[display].waiversData}
-    tradesData={years[display].tradesData}
-    weekRecords={years[display].weekRecords}
-    weekLows={years[display].weekLows}
-    seasonLongLows={years[display].seasonLongLows}
-    seasonLongRecords={years[display].seasonLongRecords}
-    showTies={years[display].showTies}
-    winPercentages={years[display].winPercentages}
-    fptsHistories={years[display].fptsHistories}
-    lineupIQs={years[display].lineupIQs}
-    blowouts={years[display].blowouts}
-    closestMatchups={years[display].closestMatchups}
-    prefix={years[display].year}
-    {leagueTeamManagers}
-    {key}
-/>

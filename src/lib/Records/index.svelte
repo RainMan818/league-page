@@ -1,6 +1,7 @@
 <script>
     import Button, { Group, Label } from '@smui/button';
     import { getLeagueRecords, getLeagueTransactions } from '$lib/utils/helper';
+    import { page } from '$app/stores';	
     import AllTimeRecords from './AllTimeRecords.svelte';
     import PerSeasonRecords from './PerSeasonRecords.svelte';
 
@@ -50,7 +51,7 @@
         refreshRecords();
     }
 
-    let display = "allTime"
+    let display = "season"
 
 </script>
 
@@ -99,6 +100,7 @@
 
 <div class="rankingsWrapper">
 
+    {#if $page.url.pathname != "/standings"}
     <div class="buttonHolder">
         <Group variant="outlined">
             <Button class="selectionButtons" on:click={() => key = "regularSeasonData"} variant="{key == "regularSeasonData" ? "raised" : "outlined"}">
@@ -118,6 +120,7 @@
             </Button>
         </Group>
     </div>
+    {/if}
 
     {#if display == "allTime"}
         {#if leagueWeekHighs?.length}

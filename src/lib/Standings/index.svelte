@@ -1,12 +1,14 @@
 <script>
     import { leagueName, round } from '$lib/utils/helper';
 	import { getTeamFromTeamManagers } from '$lib/utils/helperFunctions/universalFunctions';
+    import { Records } from '$lib/components';
   	import DataTable, { Head, Body, Row, Cell } from '@smui/data-table';
 	import LinearProgress from '@smui/linear-progress';
     import { onMount } from 'svelte';
     import Standing from './Standing.svelte';
 
-    export let standingsData, leagueTeamManagersData;
+
+    export let standingsData, leagueTeamManagersData, leagueRecords, leagueTransactions;
 
     // Least important to most important (i.e. the most important [usually wins] goes last)
     // Edit this to match your leagues settings
@@ -18,7 +20,11 @@
     let loading = true;
     let preseason = false;
     let standings, year, leagueTeamManagers;
+    let leagueRecords2, leagueTransactions2;
     onMount(async () => {
+        leagueRecords2 = await leagueRecords;
+        leagueTransactions2 = await leagueTransactions;
+
         const asyncStandingsData = await standingsData;
         if(!asyncStandingsData) {
             loading = false;
@@ -71,6 +77,10 @@
         margin: 1.5em 0 2em;
     }
 
+    .potential-points {
+        margin: 0;
+    }
+
     .standingsTable {
         max-width: 100%;
         overflow-x: scroll;
@@ -109,4 +119,7 @@
             </Body>
         </DataTable>
     </div>
+
+    <h4 class="potential-points">Potential points</h4>
+    <Records leagueData={leagueRecords2} totals={leagueTransactions2.totals} stale={leagueTransactions2.stale} {leagueTeamManagers} />
 {/if}
