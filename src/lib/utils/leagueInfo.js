@@ -8,7 +8,7 @@ export const enableBlog = false; // requires VITE_CONTENTFUL_ACCESS_TOKEN and VI
 /*   STEP 2   */
 export const homepageText = `
   <div style="text-align: center;">
-  <i>2024 12-Team Dynasty Half-PPR</i>
+  <i>2025 12-Team Dynasty Half-PPR</i>
   </div>
 `;
 
