@@ -27,7 +27,7 @@ export const managers = [
     name: "Raymond C.",
     //   "tookOver": 2020, // (optional) used if a manager took over a team, delete this line or change to null otherwise
     location: "San Jose, CA", // (optional)
-    bio: "Lorem ipsum...",
+    bio: "Lorem ipsum... ",
     photo: "https://sleepercdn.com/avatars/thumbs/80645f1579d945dba38b2bc0a70fb881", // square ratio recommended (no larger than 500x500)
     fantasyStart: 2014, // (optional) when did the manager start playing fantasy football
     favoriteTeam: "lar", // (optional) favorite NFL team, (follows convention: nyj, sea, mia, etc.) MUST BE LOWERCASE
