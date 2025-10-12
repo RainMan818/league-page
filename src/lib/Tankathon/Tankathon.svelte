@@ -2,10 +2,11 @@
   import { gotoManager } from "$lib/utils/helper";
   import { Row, Cell } from "@smui/data-table";
 
-  export let columnOrder, team, standing, leagueTeamManagers;
+  export let columnOrder, team, standing, leagueTeamManagers, colorScales, index;
 </script>
 
 <Row class="contrastRow">
+  <Cell class="">{index + 1}</Cell>
   <Cell class="">
     <div
       class="clickable team"
@@ -19,7 +20,18 @@
     </div>
   </Cell>
   {#each columnOrder as column}
-    <Cell class="center">{standing[column.field]}</Cell>
+    {#if column.field == "potentialPoints"}
+      <Cell class="center">
+        <div
+          class="potentialPoints"
+          style={`background-color: ${colorScales[standing.rosterID]}`}
+        >
+          {standing[column.field]}
+        </div>
+      </Cell>
+    {:else}
+      <Cell class="center">{standing[column.field]}</Cell>
+    {/if}
   {/each}
 </Row>
 
@@ -28,6 +40,13 @@
     cursor: pointer;
   }
 
+  .potentialPoints {
+    padding: 1px 2px;
+    text-align: center;
+    border-radius: 3px;
+    color: black;
+    font-weight: bold;
+  }
   .teamAvatar {
     vertical-align: middle;
     border-radius: 50%;

@@ -6,6 +6,7 @@ import { waitForAll } from './multiPromise';
 import { get } from 'svelte/store';
 import {standingsStore} from '$lib/stores';
 import { round } from './universalFunctions';
+import ColorScale from "color-scales";
 
 export const getLeagueStandings = async () => {
 	if(get(standingsStore).standingsInfo) {
@@ -29,8 +30,11 @@ export const getLeagueStandings = async () => {
 	}
 
 	let standings = {};
+    let minPotentialPoints = 100000000;
+    let maxPotentialPoints = 0;
     for(const rosterID in rosters) {
         const roster = rosters[rosterID];
+        const potentialPoints = roster.settings.ppts + (roster.settings.ppts_decimal / 100);
         standings[rosterID] = {
             rosterID,
             wins: roster.settings.wins,
@@ -38,12 +42,14 @@ export const getLeagueStandings = async () => {
             ties: roster.settings.ties,
             fpts: round(roster.settings.fpts + (roster.settings.fpts_decimal / 100)),
             fptsAgainst: round(roster.settings.fpts_against + (roster.settings.fpts_against_decimal / 100)),
-            potentialPoints:  roster.settings.ppts + (roster.settings.ppts_decimal / 100),
+            potentialPoints,
             streak: roster.metadata?.streak || 0,
             divisionWins: divisions ? 0 : null,
             divisionLosses: divisions ? 0 : null,
             divisionTies: divisions ? 0 : null,
         }
+        minPotentialPoints = Math.min(minPotentialPoints, potentialPoints);
+        maxPotentialPoints = Math.max(maxPotentialPoints, potentialPoints);
     }
 
     if(divisions) {
@@ -84,9 +90,11 @@ export const getLeagueStandings = async () => {
         }
     }
 
+    const colorsGYR = ["#57bb8a", "#ffd666", "#e67c73"];
 	const response = {
-		standingsInfo: standings,
+        standingsInfo: standings,
 		yearData,
+        colorsScale: new ColorScale(minPotentialPoints, maxPotentialPoints, colorsGYR),
 	}
 	
 	standingsStore.update(() => response);

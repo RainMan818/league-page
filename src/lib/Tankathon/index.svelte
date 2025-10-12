@@ -37,6 +37,7 @@
   let loading = true;
   let preseason = false;
   let standings, year, leagueTeamManagers;
+  let colorScales = {};
   onMount(async () => {
     const asyncStandingsData = await standingsData;
     if (!asyncStandingsData) {
@@ -44,12 +45,16 @@
       preseason = true;
       return;
     }
-    const { standingsInfo, yearData } = asyncStandingsData;
+    const { standingsInfo, yearData, colorsScale } = asyncStandingsData;
+    console.log("standingsInfo", standingsInfo)
     leagueTeamManagers = await leagueTeamManagersData;
     year = yearData;
 
     let finalStandings = Object.keys(standingsInfo).map(
-      (key) => standingsInfo[key]
+      (key) => {
+        colorScales[key] = colorsScale.getColor(standingsInfo[key].potentialPoints).toHexString();
+        return standingsInfo[key];
+      }
     );
 
     for (const sortType of sortOrder) {
@@ -60,7 +65,6 @@
         .sort((a, b) => b[sortType] - a[sortType])
         .reverse();
     }
-
     standings = finalStandings;
     loading = false;
   });
@@ -83,11 +87,12 @@
     <p>Preseason, No Standings Yet</p>
   </div>
 {:else}
-  <div class="standingsTable">
+  <div class="tankathonTable">
     <DataTable table$aria-label="League Standings">
       <Head>
         <!-- Team name  -->
         <Row>
+          <Cell class="center">#</Cell>
           <Cell class="center">Team</Cell>
           {#each columnOrder as column}
             <Cell class="center wrappable">{column.name}</Cell>
@@ -95,9 +100,11 @@
         </Row>
       </Head>
       <Body>
-        <!-- 	Standing	 -->
-        {#each standings as standing}
+        <!-- 	Tankathon	 -->
+        {#each standings as standing, index}
           <Tankathon
+            {index}
+            {colorScales}
             {columnOrder}
             {standing}
             {leagueTeamManagers}
@@ -136,9 +143,9 @@
     margin: 0 0 1em;
   }
 
-  .standingsTable {
+  .tankathonTable {
     max-width: 100%;
-    overflow-x: scroll;
+    /* overflow-x: scroll; */
     margin: 0.5em 0 5em;
   }
 </style>

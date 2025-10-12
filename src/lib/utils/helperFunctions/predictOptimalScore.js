@@ -3,7 +3,6 @@ export const predictScores = (players, week, leagueData) => {
 
     // sort roster by highest projected points for that week
     const projectedPlayers = [...players].sort((a, b) => (b.wi && b.wi[week] ? b.wi[week].p : 0) - (a.wi && a.wi[week] ? a.wi[week].p : 0));
-    console.log("players", players);
 
     // now that the players are sorted, grab the QBs
     const qbs = projectedPlayers.filter(p => p.pos == 'QB');
