@@ -139,11 +139,11 @@ export function digestData(passedPlayers, rawPlayers) {
       continue;
     }
 
-    const positions = passedPlayers[singlePlayer].positions;
+    const positions = passedPlayers[singlePlayer]?.pos || passedPlayers[singlePlayer]?.positions;
     const age = passedPlayers[singlePlayer].age;
 
     ageLists.Team.push(age);
-    if (positions.length === 2) {
+    if (positions?.length === 2) {
       if (positions.includes("DL")) {
         ageLists.DL.push(age);
         ageLists.Def.push(age);
@@ -190,7 +190,7 @@ export function digestData(passedPlayers, rawPlayers) {
       continue;
     }
 
-    ageLists.push(player);
+    // ageLists.push(player);
   }
 
   const ageTeam = getAverage(ageLists.Team);

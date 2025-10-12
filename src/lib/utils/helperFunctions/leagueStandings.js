@@ -31,7 +31,6 @@ export const getLeagueStandings = async () => {
 	let standings = {};
     for(const rosterID in rosters) {
         const roster = rosters[rosterID];
-        console.log("roster", roster)
         standings[rosterID] = {
             rosterID,
             wins: roster.settings.wins,
