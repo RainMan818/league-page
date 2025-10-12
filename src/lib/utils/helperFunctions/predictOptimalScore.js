@@ -3,6 +3,7 @@ export const predictScores = (players, week, leagueData) => {
 
     // sort roster by highest projected points for that week
     const projectedPlayers = [...players].sort((a, b) => (b.wi && b.wi[week] ? b.wi[week].p : 0) - (a.wi && a.wi[week] ? a.wi[week].p : 0));
+    console.log("players", players);
 
     // now that the players are sorted, grab the QBs
     const qbs = projectedPlayers.filter(p => p.pos == 'QB');
@@ -17,15 +18,15 @@ export const predictScores = (players, week, leagueData) => {
     // and the Ks
     const ks = projectedPlayers.filter(p => p.pos == 'K');
     // and the DLs
-    const dls = projectedPlayers.filter(p => p.pos == 'DL');
+    const dls = projectedPlayers.filter(p => p.pos == 'DL' || p.pos == 'DE' || p.pos == 'DT');
     // and the LBs
     const lbs = projectedPlayers.filter(p => p.pos == 'LB');
     // and the DBs
-    const dbs = projectedPlayers.filter(p => p.pos == 'DB');
+    const dbs = projectedPlayers.filter(p => p.pos == 'DB' || p.pos == 'CB');
 
     let powerScore = 0;
     // next, use the roster configuration to grab the highest scorer at each position
-    for(const starterPosition of starterPositions) {
+    for (const starterPosition of starterPositions) {
         const qb = parseFloat(qbs[0]?.wi && qbs[0]?.wi[week] ? qbs[0].wi[week].p : 0);
         const rb = parseFloat(rbs[0]?.wi && rbs[0]?.wi[week] ? rbs[0].wi[week].p : 0);
         const wr = parseFloat(wrs[0]?.wi && wrs[0]?.wi[week] ? wrs[0].wi[week].p : 0);
@@ -74,7 +75,7 @@ export const predictScores = (players, week, leagueData) => {
                 break;
             // Start of flex players
             case 'FLEX':
-                if(rb >= wr && rb >= te) {
+                if (rb >= wr && rb >= te) {
                     rbs.shift();
                     powerScore += rb;
                 } else if (wr >= rb && wr >= te) {
@@ -86,7 +87,7 @@ export const predictScores = (players, week, leagueData) => {
                 }
                 break;
             case 'WRRB_FLEX':
-                if(rb >= wr) {
+                if (rb >= wr) {
                     rbs.shift();
                     powerScore += rb;
                 } else {
@@ -95,7 +96,7 @@ export const predictScores = (players, week, leagueData) => {
                 }
                 break;
             case 'SUPER_FLEX':
-                if(qb >= wr && qb >= te && qb >= rb) {
+                if (qb >= wr && qb >= te && qb >= rb) {
                     qbs.shift();
                     powerScore += qb;
                 } else if (rb >= wr && rb >= te && rb >= qb) {
@@ -110,7 +111,7 @@ export const predictScores = (players, week, leagueData) => {
                 }
                 break;
             case 'IDP':
-                if(dl >= lb && dl >= db) {
+                if (dl >= lb && dl >= db) {
                     dls.shift();
                     powerScore += dl;
                 } else if (lb >= dl && lb >= db) {

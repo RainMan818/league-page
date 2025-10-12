@@ -33,6 +33,7 @@
                 rosterPlayers.push({
                     name: players[rosterPlayer].ln,
                     pos: players[rosterPlayer].pos,
+                    positions: players[rosterPlayer].positions,
                     wi: players[rosterPlayer].wi
                 })
             }
