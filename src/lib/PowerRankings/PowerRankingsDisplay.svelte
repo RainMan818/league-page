@@ -1,6 +1,7 @@
 <script>
 	import BarChart from '$lib/BarChart.svelte';
-    import { generateGraph, getTeamFromTeamManagers, round, predictScores, loadPlayers } from '$lib/utils/helper';
+    import { generateGraph, getTeamFromTeamManagers, round, loadPlayers } from '$lib/utils/helper';
+    import { predictScores } from "$lib/AAA-Raymond/utils/predictOptimalScore";
     export let nflState, rostersData, leagueTeamManagers, playersInfo, leagueData;
 
     const rosters = rostersData.rosters;
@@ -29,10 +30,11 @@
             const rosterPlayers = [];
 
             for(const rosterPlayer of roster.players) {
-                if(!players[rosterPlayer]) contnue;
+                if(!players[rosterPlayer]) continue;
                 rosterPlayers.push({
                     name: players[rosterPlayer].ln,
                     pos: players[rosterPlayer].pos,
+                    positions: players[rosterPlayer].positions,
                     wi: players[rosterPlayer].wi
                 })
             }
@@ -41,6 +43,7 @@
                 rosterID,
                 manager: getTeamFromTeamManagers(leagueTeamManagers, rosterID),
                 powerScore: 0,
+                rawPowerScore: 0,
             }
             const seasonEnd = 18;
             if(week >= seasonEnd) {
@@ -48,6 +51,7 @@
             }
             for(let i = week; i < seasonEnd; i++) {
                 rosterPower.powerScore += predictScores(rosterPlayers, i, leagueData);
+                rosterPower.rawPowerScore += predictScores(rosterPlayers, i, leagueData);
             }
             if(rosterPower.powerScore > max) {
                 max = rosterPower.powerScore;
@@ -57,6 +61,7 @@
 
         for(const rosterPower of rosterPowers) {
             rosterPower.powerScore = round(rosterPower.powerScore/max * 100);
+            rosterPower.rawPowerScore = round(rosterPower.rawPowerScore);
         }
 
         const powerGraph = {
@@ -66,11 +71,12 @@
             stat: "",
             header: "Rest of Season Power Rankings",
             field: "powerScore",
-            short: "ROS Power Ranking"
+            short: "Power Rankings"
         };
 
         graphs = [
             generateGraph(powerGraph, leagueData.season),
+            generateGraph({...powerGraph, field: "rawPowerScore", short: "Raw Projections"}, leagueData.season),
         ]
     }
 

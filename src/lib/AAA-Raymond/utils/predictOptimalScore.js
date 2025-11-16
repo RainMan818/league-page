@@ -1,4 +1,4 @@
-export const predictScoresOld = (players, week, leagueData) => {
+export const predictScores = (players, week, leagueData) => {
     const starterPositions = getStarterPositions(leagueData);
 
     // sort roster by highest projected points for that week

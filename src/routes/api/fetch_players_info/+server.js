@@ -2,6 +2,7 @@ import { leagueID } from "$lib/utils/leagueInfo"
 import { round } from "$lib/utils/helperFunctions/universalFunctions"
 import { waitForAll } from "$lib/utils/helperFunctions/multiPromise"
 import { json, error } from '@sveltejs/kit';
+import { computePlayersHelper } from "$lib/AAA-Raymond/utils/fetchPlayersUtils";
 
 export async function GET() {
     // get NFL state from sleeper (week and year)
@@ -62,6 +63,7 @@ const computePlayers = (playerData, weeklyData, scoringSettings) => {
             fn: projPlayer.first_name,
             ln: projPlayer.last_name,
             pos: projPlayer.position,
+            ...computePlayersHelper(projPlayer)
         };
         if(projPlayer.team) {
             player.t = projPlayer.team;

@@ -18,6 +18,10 @@ import HomePost from './BlogPosts/HomePost.svelte';
 import FullPost from './BlogPosts/FullPost.svelte';
 import Posts from './BlogPosts/Posts.svelte';
 import Standings from './Standings/index.svelte';
+import RosterAnalysis from "./RosterAnalysis/index.svelte";
+import Tankathon from "./Tankathon/index.svelte";
+
+import RaymondHome from "./AAA-Raymond/components/RayHome/index.svelte";
 
 export {
     Nav,
@@ -34,10 +38,13 @@ export {
     Drafts,
     Records,
     Manager,
+    RosterAnalysis,
+    Tankathon,
     AllManagers,
     PowerRankings,
     HomePost,
     Posts,
     FullPost,
     Standings,
+    RaymondHome
 };
