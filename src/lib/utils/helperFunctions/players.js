@@ -28,7 +28,6 @@ export const loadPlayers = async (servFetch, refresh = false) => {
     }
     
     if(!playersInfo || !expiration || now > expiration) {
-        debugger;
         const res = await smartFetch(`/api/fetch_players_info`, {compress: true});
         const data = await res.json();
 
