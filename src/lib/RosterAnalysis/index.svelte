@@ -3,6 +3,8 @@
     import RosterAnalysis from './RosterAnalysis.svelte';
     import LinearProgress from '@smui/linear-progress';
     
+    export let standingsData;
+    
     const helperPromises = waitForAll(
         getNflState(),
         getLeagueRosters(),
@@ -30,7 +32,7 @@
     </div>
 {:then [nflState, rostersData, leagueTeamManagers, leagueData, playersInfo]}
     {#if leagueData.status != 'pre_draft' && leagueData.status != 'complete'}
-        <RosterAnalysis {nflState} {rostersData} {leagueTeamManagers} {leagueData} {playersInfo} />
+        <RosterAnalysis {standingsData} {nflState} {rostersData} {leagueTeamManagers} {leagueData} {playersInfo} />
     {/if}
 {:catch error}
 	<!-- promise was rejected -->

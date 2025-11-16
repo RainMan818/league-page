@@ -1,5 +1,6 @@
 <script>
     import {getNflState, getLeagueRosters, getLeagueTeamManagers, waitForAll, loadPlayers, getLeagueData} from '$lib/utils/helper';
+  import { onMount } from 'svelte';
     import PowerRankingsDisplay from './PowerRankingsDisplay.svelte';
     import LinearProgress from '@smui/linear-progress';
     
@@ -11,6 +12,7 @@
         loadPlayers(null),
     );
 
+onMount(async () => {})
 </script>
 
 <style>

@@ -59,9 +59,14 @@ const computePlayers = (playerData, weeklyData, scoringSettings) => {
         const projPlayer = playerData[id];
         const player = {
             // injury_notes: projPlayer.injury_notes,
+            id: projPlayer.player_id,
             fn: projPlayer.first_name,
             ln: projPlayer.last_name,
             pos: projPlayer.position,
+            positions: projPlayer.fantasy_positions,
+            experience: projPlayer.years_exp,
+            number: projPlayer.number,
+            age: projPlayer.age
         };
         if(projPlayer.team) {
             player.t = projPlayer.team;
@@ -77,6 +82,7 @@ const computePlayers = (playerData, weeklyData, scoringSettings) => {
     // add weekly projections
     for(let week = 1; week <= weeklyData.length; week++) {
         for(const player of weeklyData[week - 1]) {
+            debugger;
             const id = player.player_id;
             
             // check if the player is active in the NFL

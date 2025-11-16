@@ -23,10 +23,11 @@
     getAvatarFromTeamManagers,
     getTeamFromTeamManagers,
   } from "$lib/utils/helperFunctions/universalFunctions";
+  export let data;
+  const { standingsData } = data;
   const nflState = getNflState();
   const podiumsData = getAwards();
   const leagueTeamManagersData = getLeagueTeamManagers();
-  const standingsData = getLeagueStandings();
 </script>
 
 <div id="home">
@@ -44,7 +45,7 @@
     <br />
     <Tankathon {standingsData} {leagueTeamManagersData} />
     <br />
-    <RosterAnalysis />
+    <RosterAnalysis {standingsData} />
   </div>
 
   <div class="leagueData">

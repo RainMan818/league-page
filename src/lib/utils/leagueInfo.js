@@ -209,16 +209,16 @@ export const managers = [
     preferredContact: "Sending",
   },
   {
-    managerID: "829864649708126208",
-    name: "Cal Arseneau",
-    location: "Brooklyn",
-    bio: "My my second and third toes are longer than my big toe on both feet",
-    photo: "https://sleepercdn.com/avatars/thumbs/8a8ae21a155784866b0ffde004c35b18",
-    fantasyStart: 1929,
-    favoriteTeam: "miam", // The marlins
-    favoritePlayer: 8371, // Chad Muma
-    philosophy: "If you’re not first you’re last",
-    tradingScale: 1,
+    managerID: "1126619401232424960",
+    name: "Zack Miller",
+    location: "Galt, CA",
+    bio: "TODO",
+    photo: "https://sleepercdn.com/avatars/thumbs/b3338675f635c2c1f42b469621d38ec6",
+    fantasyStart: 2010,
+    favoriteTeam: "sea", // The marlins
+    favoritePlayer: 11604, // Chad Muma
+    philosophy: "Take advantage of trades with James",
+    tradingScale: 10,
     rival: {
       name: "TBD",
       link: 6,

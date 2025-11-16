@@ -88,7 +88,7 @@ export function getCountData(managerData, rosters) {
 
 export function getColorScales(min, max) {
   const colorsGYR = ["#57bb8a", "#ffd666", "#e67c73"];
-//   const colorsGYR = ["#0b8148", "#fccf55", "#f75c4d"]; // brighter
+  //   const colorsGYR = ["#0b8148", "#fccf55", "#f75c4d"]; // brighter
   return {
     colorsTeam: new ColorScale(min.Team, max.Team, colorsGYR),
     colorsOff: new ColorScale(min.Off, max.Off, colorsGYR),
@@ -104,20 +104,39 @@ export function getColorScales(min, max) {
 }
 
 function getAverage(numArray) {
-  const ages = numArray.filter(Boolean);
-  const total = ages.filter(Boolean).reduce((total, num) => {
+  const total = numArray.reduce((total, num) => {
     total += num;
     return total;
   }, 0);
-  const average = total / ages.length;
+  const average = total / numArray.length;
   if (isNaN(average)) {
     return 0;
   }
   return average;
 }
 
-export function digestData(passedPlayers, rawPlayers) {
-  let ageLists = {
+function standardDeviation(arr) {
+  const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+  const squaredDiffs = arr.map(x => (x - mean) ** 2);
+  const avgSquareDiff = squaredDiffs.reduce((a, b) => a + b, 0) / arr.length;
+  const val = Math.sqrt(avgSquareDiff)
+  return val;
+}
+
+export function digestData(passedPlayers, rawPlayers, playerScores) {
+  const ageLists = {
+    Team: [],
+    Off: [],
+    Def: [],
+    QB: [],
+    RB: [],
+    WR: [],
+    TE: [],
+    DL: [],
+    LB: [],
+    DB: [],
+  };
+  const cvData = {
     Team: [],
     Off: [],
     Def: [],
@@ -139,58 +158,84 @@ export function digestData(passedPlayers, rawPlayers) {
       continue;
     }
 
-    const positions = passedPlayers[singlePlayer]?.pos || passedPlayers[singlePlayer]?.positions;
+    let coefficientOfVariation;
+    if (playerScores[singlePlayer]) {
+      const singePlayerScores = playerScores[singlePlayer]
+      const stdDeviation = standardDeviation(singePlayerScores);
+      const averagePoints = Math.max(getAverage(singePlayerScores), 0);
+      coefficientOfVariation = stdDeviation / averagePoints;
+    } else {
+      console.error("singlePlayer err", singlePlayer)
+    }
+    const positions = passedPlayers[singlePlayer]?.positions || passedPlayers[singlePlayer]?.pos;
     const age = passedPlayers[singlePlayer].age;
 
     ageLists.Team.push(age);
+    if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Team.push(coefficientOfVariation);
     if (positions?.length === 2) {
       if (positions.includes("DL")) {
         ageLists.DL.push(age);
+        if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.DL.push(coefficientOfVariation);
         ageLists.Def.push(age);
+        if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Def.push(coefficientOfVariation);
         continue;
       } else if (positions.includes("DB")) {
         ageLists.DB.push(age);
+        if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.DB.push(coefficientOfVariation);
         ageLists.Def.push(age);
+        if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Def.push(coefficientOfVariation);
         continue;
       }
     }
     if (positions.includes("QB")) {
       ageLists.QB.push(age);
+      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.QB.push(coefficientOfVariation);
       ageLists.Off.push(age);
+      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Off.push(coefficientOfVariation);
       continue;
     }
     if (positions.includes("RB")) {
       ageLists.RB.push(age);
+      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.RB.push(coefficientOfVariation);
       ageLists.Off.push(age);
+      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Off.push(coefficientOfVariation);
       continue;
     }
     if (positions.includes("WR")) {
       ageLists.WR.push(age);
+      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.WR.push(coefficientOfVariation);
       ageLists.Off.push(age);
+      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Off.push(coefficientOfVariation);
       continue;
     }
     if (positions.includes("TE")) {
       ageLists.TE.push(age);
+      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.TE.push(coefficientOfVariation);
       ageLists.Off.push(age);
+      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Off.push(coefficientOfVariation);
       continue;
     }
     if (positions.includes("DL")) {
       ageLists.DL.push(age);
+      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.DL.push(coefficientOfVariation);
       ageLists.Off.push(age);
+      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Off.push(coefficientOfVariation);
       continue;
     }
     if (positions.includes("LB")) {
       ageLists.LB.push(age);
+      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.LB.push(coefficientOfVariation);
       ageLists.Def.push(age);
+      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Def.push(coefficientOfVariation);
       continue;
     }
     if (positions.includes("DB")) {
       ageLists.DB.push(age);
+      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.DB.push(coefficientOfVariation);
       ageLists.Def.push(age);
+      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Def.push(coefficientOfVariation);
       continue;
     }
-
-    // ageLists.push(player);
   }
 
   const ageTeam = getAverage(ageLists.Team);
@@ -220,5 +265,17 @@ export function digestData(passedPlayers, rawPlayers) {
   return {
     averages,
     ageLists,
+    cvAverages: {
+      Team: getAverage(cvData.Team),
+      Off: getAverage(cvData.Off),
+      Def: getAverage(cvData.Def),
+      QB: getAverage(cvData.QB),
+      RB: getAverage(cvData.RB),
+      WR: getAverage(cvData.WR),
+      TE: getAverage(cvData.TE),
+      DL: getAverage(cvData.DL),
+      LB: getAverage(cvData.LB),
+      DB: getAverage(cvData.DB),
+    }
   };
 }

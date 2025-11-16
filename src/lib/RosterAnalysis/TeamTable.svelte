@@ -38,11 +38,17 @@
             >
               {manager.averages.Team.toFixed(2)}
             </div>
-          {:else}
+          {:else if dataType === "stdDev"}
             <div
               class="age"
-              style={`background-color: ${"#CCC"}`}
+              style={`background-color: ${colorScales.colorsTeam
+                .getColor(manager.cvAverages.Team.toFixed(2))
+                .toHexString()}`}
             >
+              {manager.cvAverages.Team.toFixed(4)}
+            </div>
+          {:else}
+            <div class="age" style={`background-color: ${"#CCC"}`}>
               {manager.ageLists.Team.length}
             </div>
           {/if}
@@ -56,6 +62,15 @@
                 .toHexString()}`}
             >
               {manager.averages.Off.toFixed(2)}
+            </div>
+          {:else if dataType === "stdDev"}
+            <div
+              class="age"
+              style={`background-color: ${colorScales.colorsOff
+                .getColor(manager.cvAverages.Off.toFixed(4))
+                .toHexString()}`}
+            >
+              {manager.cvAverages.Off.toFixed(4)}
             </div>
           {:else}
             {manager.ageLists.Off.length}
@@ -71,6 +86,15 @@
             >
               {manager.averages.QB.toFixed(2)}
             </div>
+          {:else if dataType === "stdDev"}
+            <div
+              class="age"
+              style={`background-color: ${colorScales.colorsOff
+                .getColor(manager.cvAverages.QB.toFixed(4))
+                .toHexString()}`}
+            >
+              {manager.cvAverages.QB.toFixed(4)}
+            </div>
           {:else}
             {manager.ageLists.QB.length}
           {/if}
@@ -84,6 +108,15 @@
                 .toHexString()}`}
             >
               {manager.averages.RB.toFixed(2)}
+            </div>
+          {:else if dataType === "stdDev"}
+            <div
+              class="age"
+              style={`background-color: ${colorScales.colorsOff
+                .getColor(manager.cvAverages.RB.toFixed(4))
+                .toHexString()}`}
+            >
+              {manager.cvAverages.RB.toFixed(4)}
             </div>
           {:else}
             {manager.ageLists.RB.length}
@@ -99,6 +132,15 @@
             >
               {manager.averages.WR.toFixed(2)}
             </div>
+          {:else if dataType === "stdDev"}
+            <div
+              class="age"
+              style={`background-color: ${colorScales.colorsOff
+                .getColor(manager.cvAverages.WR.toFixed(4))
+                .toHexString()}`}
+            >
+              {manager.cvAverages.WR.toFixed(4)}
+            </div>
           {:else}
             {manager.ageLists.WR.length}
           {/if}
@@ -112,6 +154,15 @@
                 .toHexString()}`}
             >
               {manager.averages.TE.toFixed(2)}
+            </div>
+          {:else if dataType === "stdDev"}
+            <div
+              class="age"
+              style={`background-color: ${colorScales.colorsOff
+                .getColor(manager.cvAverages.TE.toFixed(4))
+                .toHexString()}`}
+            >
+              {manager.cvAverages.TE.toFixed(4)}
             </div>
           {:else}
             {manager.ageLists.TE.length}
@@ -127,6 +178,15 @@
             >
               {manager.averages.Def.toFixed(2)}
             </div>
+          {:else if dataType === "stdDev"}
+            <div
+              class="age"
+              style={`background-color: ${colorScales.colorsOff
+                .getColor(manager.cvAverages.Def.toFixed(4))
+                .toHexString()}`}
+            >
+              {manager.cvAverages.Def.toFixed(4)}
+            </div>
           {:else}
             {manager.ageLists.Def.length}
           {/if}
@@ -140,6 +200,15 @@
                 .toHexString()}`}
             >
               {manager.averages.DL.toFixed(2)}
+            </div>
+          {:else if dataType === "stdDev"}
+            <div
+              class="age"
+              style={`background-color: ${colorScales.colorsOff
+                .getColor(manager.cvAverages.DL.toFixed(4))
+                .toHexString()}`}
+            >
+              {manager.cvAverages.DL.toFixed(4)}
             </div>
           {:else}
             {manager.ageLists.DL.length}
@@ -155,6 +224,15 @@
             >
               {manager.averages.LB.toFixed(2)}
             </div>
+          {:else if dataType === "stdDev"}
+            <div
+              class="age"
+              style={`background-color: ${colorScales.colorsOff
+                .getColor(manager.cvAverages.LB.toFixed(4))
+                .toHexString()}`}
+            >
+              {manager.cvAverages.LB.toFixed(4)}
+            </div>
           {:else}
             {manager.ageLists.LB.length}
           {/if}
@@ -169,6 +247,15 @@
             >
               {manager.averages.DB.toFixed(2)}
             </div>
+          {:else if dataType === "stdDev"}
+            <div
+              class="age"
+              style={`background-color: ${colorScales.colorsOff
+                .getColor(manager.cvAverages.DB.toFixed(4))
+                .toHexString()}`}
+            >
+              {manager.cvAverages.DB.toFixed(4)}
+            </div>
           {:else}
             {manager.ageLists.DB.length}
           {/if}
@@ -180,8 +267,10 @@
 
 <style>
   :global(.teamInner) {
-    box-shadow: 0px 3px 3px -2px var(--boxShadowOne),
-      0px 3px 4px 0px var(--boxShadowTwo), 0px 1px 8px 0px var(--boxShadowThree);
+    box-shadow:
+      0px 3px 3px -2px var(--boxShadowOne),
+      0px 3px 4px 0px var(--boxShadowTwo),
+      0px 1px 8px 0px var(--boxShadowThree);
     display: block;
     margin: 0 auto;
   }

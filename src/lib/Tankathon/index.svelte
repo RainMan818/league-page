@@ -46,7 +46,6 @@
       return;
     }
     const { standingsInfo, yearData, colorsScale } = asyncStandingsData;
-    console.log("standingsInfo", standingsInfo)
     leagueTeamManagers = await leagueTeamManagersData;
     year = yearData;
 

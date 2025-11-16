@@ -42,6 +42,7 @@
                 rosterID,
                 manager: getTeamFromTeamManagers(leagueTeamManagers, rosterID),
                 powerScore: 0,
+                rawPowerScore: 0,
             }
             const seasonEnd = 18;
             if(week >= seasonEnd) {
@@ -49,6 +50,7 @@
             }
             for(let i = week; i < seasonEnd; i++) {
                 rosterPower.powerScore += predictScores(rosterPlayers, i, leagueData);
+                rosterPower.rawPowerScore += predictScores(rosterPlayers, i, leagueData);
             }
             if(rosterPower.powerScore > max) {
                 max = rosterPower.powerScore;
@@ -58,6 +60,7 @@
 
         for(const rosterPower of rosterPowers) {
             rosterPower.powerScore = round(rosterPower.powerScore/max * 100);
+            rosterPower.rawPowerScore = round(rosterPower.rawPowerScore);
         }
 
         const powerGraph = {
@@ -67,11 +70,12 @@
             stat: "",
             header: "Rest of Season Power Rankings",
             field: "powerScore",
-            short: "ROS Power Ranking"
+            short: "Power Rankings"
         };
 
         graphs = [
             generateGraph(powerGraph, leagueData.season),
+            generateGraph({...powerGraph, field: "rawPowerScore", short: "Raw Projections"}, leagueData.season),
         ]
     }
 
