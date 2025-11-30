@@ -1,13 +1,13 @@
 import { leagueID } from '$lib/utils/leagueInfo';
-import { getNflState } from "./nflState"
-import { getLeagueData } from "./leagueData"
-import { getLeagueRosters } from "./leagueRosters"
-import { waitForAll } from './multiPromise';
-import { get } from 'svelte/store';
 import { standingsStore } from '$lib/stores';
-import { round } from './universalFunctions';
+import { get } from 'svelte/store';
 import ColorScale from "color-scales";
-import { loadPlayers } from './players';
+import { getNflState } from "../../utils/helperFunctions/nflState"
+import { getLeagueData } from "../../utils/helperFunctions/leagueData"
+import { getLeagueRosters } from "../../utils/helperFunctions/leagueRosters"
+import { waitForAll } from '../../utils/helperFunctions/multiPromise';
+import { round } from '../../utils/helperFunctions/universalFunctions';
+import { loadPlayers } from '../../utils/helperFunctions/players';
 
 const rosterIDs = ['ianpeterson', 'LMiller', 'Roensb', 'DLokk', 'RainMan001', 'joshhancock92',
     'jsamp17', 'GluteSloot', 'brenlen', 'Seanzie', 'Fergilatr', 'Globo_Gym']

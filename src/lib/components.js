@@ -18,6 +18,11 @@ import HomePost from './BlogPosts/HomePost.svelte';
 import FullPost from './BlogPosts/FullPost.svelte';
 import Posts from './BlogPosts/Posts.svelte';
 import Standings from './Standings/index.svelte';
+import RosterAnalysis from "./AAA-Raymond/components/RosterAnalysis/index.svelte";
+import Tankathon from "./AAA-Raymond/components/Tankathon/index.svelte";
+
+import RayHome from "./AAA-Raymond/components/RayHome/index.svelte";
+import RayStandings from "./AAA-Raymond/components/RayStandings/index.svelte";
 
 export {
     Nav,
@@ -40,4 +45,8 @@ export {
     Posts,
     FullPost,
     Standings,
+    RosterAnalysis,
+    Tankathon,
+    RayHome,
+    RayStandings
 };
