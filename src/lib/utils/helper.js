@@ -13,7 +13,10 @@ import { getUpcomingDraft, getPreviousDrafts } from './helperFunctions/leagueDra
 import { getLeagueRecords } from './helperFunctions/leagueRecords'
 import { getAwards } from './helperFunctions/leagueAwards'
 import { cleanName, round, generateGraph, getTeamFromTeamManagers, gotoManager, getAuthor, parseDate, getAvatar } from './helperFunctions/universalFunctions';
-import { predictScores } from './helperFunctions/predictOptimalScore';
+import { getColorScale, getRanking } from "../AAA-Raymond/utils/colorScale";
+import { computePlayersHelper } from "../AAA-Raymond/utils/fetchPlayersUtils";
+import { getLeagueStandings as rayGetLeagueStandings } from "../AAA-Raymond/utils/leagueStandings";
+import { predictScores } from "../AAA-Raymond/utils/predictOptimalScore";
 import { getBrackets } from './helperFunctions/leagueBrackets';
 import { getBlogPosts, generateParagraph } from './helperFunctions/getBlogPosts';
 import { getLeagueStandings } from './helperFunctions/leagueStandings';
@@ -48,10 +51,11 @@ export {
     generateGraph,
     getBlogPosts,
     generateParagraph,
-    predictScores,
     getLeagueStandings,
     getAuthor,
     parseDate,
     getAvatar,
     getTeamFromTeamManagers,
+    predictScores,
+    rayGetLeagueStandings
 }

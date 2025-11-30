@@ -26,10 +26,15 @@
     }
 </style>
 
+<script lang="ts">
+	import { page } from '$app/state';
+</script>
+
 <div class="main">
     <h4>
         Hut, Hut, Blue 404!
     </h4>
+    <h5>{JSON.stringify(page.error)}</h5>
     <div class='footballHolder'>
         <img class='football' src='/deflated-football.png' alt='deflated football' />
     </div>
