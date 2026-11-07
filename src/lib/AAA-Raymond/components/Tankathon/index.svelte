@@ -59,9 +59,10 @@
       if (!finalStandings[0][sortType] && finalStandings[0][sortType] != 0) {
         continue;
       }
-      finalStandings = [...finalStandings]
-        .sort((a, b) => b[sortType] - a[sortType])
-        .reverse();
+      // ascending (worst first); a stable sort keeps the earlier tiebreakers in order
+      finalStandings = [...finalStandings].sort(
+        (a, b) => a[sortType] - b[sortType]
+      );
     }
     standings = finalStandings;
     loading = false;

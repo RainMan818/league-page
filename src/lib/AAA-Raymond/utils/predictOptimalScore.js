@@ -16,12 +16,10 @@ export const predictScores = (players, week, leagueData) => {
     const defs = projectedPlayers.filter(p => p.pos == 'DEF');
     // and the Ks
     const ks = projectedPlayers.filter(p => p.pos == 'K');
-    // and the DLs
-    const dls = projectedPlayers.filter(p => p.pos == 'DL' || p.pos == 'DE' || p.pos == 'DT');
-    // and the LBs
-    const lbs = projectedPlayers.filter(p => p.pos == 'LB');
-    // and the DBs
-    const dbs = projectedPlayers.filter(p => p.pos == 'DB' || p.pos == 'CB');
+    // and the IDPs (Sleeper lists some defenders by specific position, e.g. DE, CB, S)
+    const dls = projectedPlayers.filter(p => idpGroup(p) == 'DL');
+    const lbs = projectedPlayers.filter(p => idpGroup(p) == 'LB');
+    const dbs = projectedPlayers.filter(p => idpGroup(p) == 'DB');
 
     let powerScore = 0;
     // next, use the roster configuration to grab the highest scorer at each position
@@ -109,6 +107,17 @@ export const predictScores = (players, week, leagueData) => {
                     powerScore += te;
                 }
                 break;
+            case 'REC_FLEX':
+                if (wr >= te) {
+                    wrs.shift();
+                    powerScore += wr;
+                } else {
+                    tes.shift();
+                    powerScore += te;
+                }
+                break;
+            // Sleeper calls the IDP flex slot 'IDP_FLEX'
+            case 'IDP_FLEX':
             case 'IDP':
                 if (dl >= lb && dl >= db) {
                     dls.shift();
@@ -126,6 +135,19 @@ export const predictScores = (players, week, leagueData) => {
         }
     }
     return powerScore;
+}
+
+const IDP_POSITION_GROUPS = {
+    DL: 'DL', DE: 'DL', DT: 'DL', NT: 'DL',
+    LB: 'LB', OLB: 'LB', ILB: 'LB', MLB: 'LB',
+    DB: 'DB', CB: 'DB', S: 'DB', SS: 'DB', FS: 'DB',
+};
+
+// Map a player to DL, LB or DB (or undefined if they aren't a defender)
+const idpGroup = (player) => {
+    if (IDP_POSITION_GROUPS[player.pos]) return IDP_POSITION_GROUPS[player.pos];
+    const fantasyPosition = player.positions?.find(pos => IDP_POSITION_GROUPS[pos]);
+    return fantasyPosition ? IDP_POSITION_GROUPS[fantasyPosition] : undefined;
 }
 
 export const getStarterPositions = (leagueData) => {

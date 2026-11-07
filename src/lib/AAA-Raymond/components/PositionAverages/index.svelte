@@ -7,7 +7,7 @@
   import PositionAverages from "./PositionAverages.svelte";
   import Button, { Group, Label } from "@smui/button";
 
-  export let averagesData, rankings, week, columnOrder, headerLabel, colorScale;
+  export let averagesData, rankings, week, columnOrder, headerLabel, colorScale, leagueTeamManagers;
 
   let dataType = "averages"; // "ranking"
   const changeData = (type) => {
@@ -16,7 +16,7 @@
 
   let loading = true;
   let preseason = false;
-  let averages, year, leagueTeamManagers;
+  let averages, year;
   let formattedRankings;
   onMount(async () => {
     let finalAverages = Object.keys(averagesData).map(
@@ -111,7 +111,7 @@
             colorScale={colorScale[dataType]}
             standing={dataType == "averages" ? standing : formattedRankings[i]}
             {leagueTeamManagers}
-            team={Object.keys(averagesData)[i]}
+            rosterID={Object.keys(averagesData)[i]}
           />
         {/each}
       </Body>

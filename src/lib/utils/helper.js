@@ -19,7 +19,8 @@ import { getLeagueStandings as rayGetLeagueStandings } from "../AAA-Raymond/util
 import { predictScores } from "../AAA-Raymond/utils/predictOptimalScore";
 import { getBrackets } from './helperFunctions/leagueBrackets';
 import { getBlogPosts, generateParagraph } from './helperFunctions/getBlogPosts';
-import { getLeagueStandings } from './helperFunctions/leagueStandings';
+// Standings come from the custom AAA-Raymond version (adds division records and position averages)
+import { getLeagueStandings } from "../AAA-Raymond/utils/leagueStandings";
 
 export {
     enableBlog,

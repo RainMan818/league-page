@@ -1,12 +1,20 @@
 <script>
   import { Row, Cell } from "@smui/data-table";
+  import { getTeamFromTeamManagers } from "$lib/utils/helperFunctions/universalFunctions";
 
-  export let columnOrder, team, standing, leagueTeamManagers, colorScale;
+  export let columnOrder, rosterID, standing, leagueTeamManagers, colorScale;
+
+  $: team = leagueTeamManagers ? getTeamFromTeamManagers(leagueTeamManagers, rosterID) : null;
 </script>
 
 <Row class="contrastRow">
   <Cell class="">
-    <div>{team}</div>
+    <div class="team">
+      {#if team?.avatar}
+        <img alt="team avatar" class="teamAvatar" src={team.avatar} />
+      {/if}
+      {team?.name ?? `Team ${rosterID}`}
+    </div>
   </Cell>
   {#each columnOrder as column}
     <Cell class="center">
@@ -51,6 +59,8 @@
   }
 
   .team {
-    text-align: center;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
   }
 </style>

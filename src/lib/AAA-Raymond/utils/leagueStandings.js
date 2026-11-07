@@ -9,8 +9,6 @@ import { waitForAll } from '../../utils/helperFunctions/multiPromise';
 import { round } from '../../utils/helperFunctions/universalFunctions';
 import { loadPlayers } from '../../utils/helperFunctions/players';
 
-const rosterIDs = ['ianpeterson', 'LMiller', 'Roensb', 'DLokk', 'RainMan001', 'joshhancock92',
-    'jsamp17', 'GluteSloot', 'brenlen', 'Seanzie', 'Fergilatr', 'Globo_Gym']
 
 function addValue(map, roster_id, position, value) {
     if (!map[roster_id]) {
@@ -171,7 +169,7 @@ const updateRosterPositionAveragesData = ({ matchupsData, standings, rosters, we
         matchup.forEach((val) => {
             const scores = val['starters_points']
             const userId = val['roster_id']
-            const user = rosterIDs[userId - 1];
+            const user = userId; // keyed by roster ID; PositionAverages looks up the team name
             addValue(rosterPositionAveragesData, user, 'QB+Flex', scores[0])
             addValue(rosterPositionAveragesData, user, 'RB', scores[1])
             addValue(rosterPositionAveragesData, user, 'RB', scores[2])
@@ -199,7 +197,7 @@ const updateRosterPositionAveragesData = ({ matchupsData, standings, rosters, we
             scores.slice(0, 10).forEach((score) => {
                 addValue(rosterPositionAveragesData, user, "Off", score);
             })
-            scores.slice(11, 20).forEach((score) => {
+            scores.slice(10, 20).forEach((score) => {
                 addValue(rosterPositionAveragesData, user, "Def", score);
             })
         })
@@ -226,7 +224,7 @@ const updatePositionalData = ({ matchupsData, standings, rosters, week, players 
             const scores = matchup['starters_points']
             const starters = matchup['starters']
             const userId = matchup['roster_id']
-            const user = rosterIDs[userId - 1];
+            const user = userId; // keyed by roster ID; PositionAverages looks up the team name
             addValue(positionalData, user, 'QB', scores[0])
             addValue(positionalData, user, 'RB', scores[1])
             addValue(positionalData, user, 'RB', scores[2])
@@ -258,7 +256,7 @@ const updatePositionalData = ({ matchupsData, standings, rosters, week, players 
             scores.slice(0, 10).forEach((score) => {
                 addValue(positionalData, user, "Off", score);
             })
-            scores.slice(11, 20).forEach((score) => {
+            scores.slice(10, 20).forEach((score) => {
                 addValue(positionalData, user, "Def", score);
             })
         })
