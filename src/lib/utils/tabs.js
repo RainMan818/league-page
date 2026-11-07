@@ -14,10 +14,22 @@ export const tabs = [
         key: 'matchups',
     },
     {
+        icon: 'leaderboard',
+        label: 'Standings',
+        dest: '/standings',
+        key: 'standings',
+    },
+    {
         icon: 'swap_horiz',
         label: 'Trades & Waivers',
         dest: '/transactions',
         key: 'transactions',
+    },
+    {
+        icon: 'format_list_numbered',
+        label: 'Drafts',
+        dest: '/drafts',
+        key: 'drafts',
     },
     {
         icon: 'article',
@@ -47,16 +59,6 @@ export const tabs = [
                 dest: '/rivalry',
             },
             {
-                icon: 'leaderboard',
-                label: 'Standings',
-                dest: '/standings',
-            },
-            {
-                icon: 'view_comfy',
-                label: 'Drafts',
-                dest: '/drafts',
-            },
-            {
                 icon: 'emoji_events',
                 label: 'Trophy Room',
                 dest: '/awards',
@@ -72,16 +74,15 @@ export const tabs = [
                 dest: '/constitution',
             },
             {
+                icon: 'lightbulb',
+                label: 'Resources',
+                dest: '/resources',
+            },
+            {
                 icon: 'sports_football',
                 label: 'Go to Sleeper',
                 dest: `https://sleeper.app/leagues/${leagueID}`,
             },
         ]
-    },
-    {
-        icon: 'lightbulb',
-        label: 'Resources',
-        dest: '/resources',
-        key: 'resources',
     },
 ];
