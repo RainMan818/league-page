@@ -1,40 +1,20 @@
+<!-- Roster Analysis loader, shown at the top of the /rosters page (src/routes/rosters/+page.svelte). -->
 <script>
-    import {getNflState, getLeagueRosters, getLeagueTeamManagers, waitForAll, loadPlayers, getLeagueData} from '$lib/utils/helper';
+    import { loadLeagueBasics } from '../../utils/leagueContext.js';
+    import Loading from '../Shared/Loading.svelte';
     import RosterAnalysis from './RosterAnalysis.svelte';
-    import LinearProgress from '@smui/linear-progress';
-    
-    export let standingsData;
-    
-    const helperPromises = waitForAll(
-        getNflState(),
-        getLeagueRosters(),
-        getLeagueTeamManagers(),
-        getLeagueData(),
-        loadPlayers(null),
-    );
 
+    let { standingsData } = $props();
+
+    const basics = loadLeagueBasics();
 </script>
 
-<style>
-    .loading {
-        display: block;
-        width: 85%;
-        max-width: 500px;
-        margin: 80px auto;
-    }
-</style>
-
-{#await helperPromises}
-    <!-- promise is pending -->
-    <div class="loading">
-        <p>Gathering roster details...</p>
-        <LinearProgress indeterminate />
-    </div>
-{:then [nflState, rostersData, leagueTeamManagers, leagueData, playersInfo]}
+{#await basics}
+    <Loading message="Gathering roster details..." />
+{:then { nflState, rostersData, managers, leagueData, playersInfo }}
     {#if leagueData.status != 'pre_draft' && leagueData.status != 'complete'}
-        <RosterAnalysis {standingsData} {nflState} {rostersData} {leagueTeamManagers} {leagueData} {playersInfo} />
+        <RosterAnalysis {standingsData} {nflState} {rostersData} leagueTeamManagers={managers} {leagueData} {playersInfo} />
     {/if}
 {:catch error}
-	<!-- promise was rejected -->
-	<p>Something went wrong: {error.message}</p>
+    <Loading message="Something went wrong: {error.message}" progress={false} />
 {/await}

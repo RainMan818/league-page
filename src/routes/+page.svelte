@@ -3,7 +3,6 @@
   import { getNflState, leagueName, getAwards, getLeagueTeamManagers, homepageText, managers, gotoManager, enableBlog, waitForAll } from "$lib/utils/helper";
   import {
     Transactions,
-    PowerRankings,
     HomePost,
     RayHome,
   } from "$lib/components";
@@ -157,7 +156,7 @@
         <HomePost />
       {/if}
     </div>
-    <PowerRankings />
+    <!-- AAA-Raymond: weekly recap, Power Rankings, playoff projection, Team Breakdown -->
     <RayHome {standingsData} {leagueTeamManagersData} />
   </div>
 
@@ -236,4 +235,4 @@
       <Transactions />
     </div>
   </div>
-</div>
+</div>

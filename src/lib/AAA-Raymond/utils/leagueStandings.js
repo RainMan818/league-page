@@ -73,48 +73,55 @@ export const getLeagueStandings = async (servFetch) => {
     let rosterPositionAveragesData = {};
     let positionalData = {};
     let matchupsData = [];
+    // week = the current (not yet completed) week; weeks 1 to week - 1 are complete
     let week = 0;
-    // let week = 2;
-    if (divisions) {
-        if (nflState.season_type == 'regular') {
-            // max the week out at end of regular season
-            week = nflState.display_week > regularSeasonLength ? regularSeasonLength + 1 : nflState.display_week;
-        } else if (nflState.season_type == 'post') {
-            week = regularSeasonLength + 1;
+    if (nflState.season_type == 'regular') {
+        // max the week out at end of regular season
+        week = nflState.display_week > regularSeasonLength ? regularSeasonLength + 1 : nflState.display_week;
+    } else if (nflState.season_type == 'post') {
+        week = regularSeasonLength + 1;
+    }
+
+    // division records need at least one completed week
+    if (divisions && week < 2) {
+        return null;
+    }
+
+    if (week >= 2) {
+        // pull in all completed matchups for the season (index 0 = most recent week)
+        try {
+            const matchupsPromises = [];
+            for (let i = week - 1; i > 0; i--) {
+                matchupsPromises.push(fetch(`https://api.sleeper.app/v1/league/${leagueID}/matchups/${i}`, { compress: true }))
+            }
+            const matchupsRes = await waitForAll(...matchupsPromises);
+            for (const matchupRes of matchupsRes) {
+                if (!matchupRes.ok) {
+                    throw new Error(`Sleeper matchups request failed (${matchupRes.status})`);
+                }
+            }
+            matchupsData = await waitForAll(...matchupsRes.map((res) => res.json()));
+        } catch (err) {
+            // keep the basic standings if matchups can't be loaded
+            console.error(err);
+            matchupsData = [];
         }
 
-        // if at least one week hasn't been completed, then standings can't be created
-        if (week < 2) {
-            return null;
-        }
-
-        // pull in all matchup data for the season
-        const matchupsPromises = [];
-        for (let i = week - 1; i > 0; i--) {
-            matchupsPromises.push(fetch(`https://api.sleeper.app/v1/league/${leagueID}/matchups/${i}`, { compress: true }))
-        }
-        const matchupsRes = await waitForAll(...matchupsPromises);
-
-        // convert the json matchup responses
-        const matchupsJsonPromises = [];
-        for (const matchupRes of matchupsRes) {
-            const data = matchupRes.json();
-            matchupsJsonPromises.push(data)
-            if (!matchupRes.ok) {
-                throw new Error(data);
+        if (divisions) {
+            for (const weekMatchups of matchupsData) {
+                processStandings(weekMatchups, standings, rosters);
             }
         }
-        matchupsData = await waitForAll(...matchupsJsonPromises).catch((err) => { console.error(err); }).catch((err) => { console.error(err); });
 
-        rosterPositionAveragesData = updateRosterPositionAveragesData({ matchupsData, standings, rosters, week: week - 1 })
+        rosterPositionAveragesData = updateRosterPositionAveragesData({ matchupsData, week: week - 1 })
 
-        positionalData = updatePositionalData({ matchupsData, standings, rosters, week: week - 1, players: playersInfo.players })
-
+        positionalData = updatePositionalData({ matchupsData, week: week - 1, players: playersInfo.players })
     }
 
     const colorsGYR = ["#57bb8a", "#ffd666", "#e67c73"];
     const response = {
         week,
+        regularSeasonLength,
         matchups: matchupsData,
         standingsInfo: standings,
         yearData,
@@ -146,6 +153,7 @@ const processStandings = (matchup, standingsData, rosters) => {
     for (const matchupKey in matchups) {
         const teamA = matchups[matchupKey][0];
         const teamB = matchups[matchupKey][1];
+        if (!teamA || !teamB) continue;
 
         const divisionMatchup = teamA.division && teamB.division && teamA.division == teamB.division;
 
@@ -167,10 +175,9 @@ const processStandings = (matchup, standingsData, rosters) => {
     return standingsData;
 }
 
-const updateRosterPositionAveragesData = ({ matchupsData, standings, rosters, week }) => {
+const updateRosterPositionAveragesData = ({ matchupsData, week }) => {
     const rosterPositionAveragesData = {};
     for (const matchup of matchupsData) {
-        standings = processStandings(matchup, standings, rosters);
         matchup.forEach((val) => {
             const scores = val['starters_points']
             const userId = val['roster_id']
@@ -218,13 +225,11 @@ const updateRosterPositionAveragesData = ({ matchupsData, standings, rosters, we
     return rosterPositionAveragesData
 }
 
-const updatePositionalData = ({ matchupsData, standings, rosters, week, players }) => {
+const updatePositionalData = ({ matchupsData, week, players }) => {
     const positionalData = {};
     if (!players) return positionalData;
     // process all the matchups
     for (const matchups of matchupsData) {
-        standings = processStandings(matchups, standings, rosters);
-
         matchups.forEach((matchup) => {
             const scores = matchup['starters_points']
             const starters = matchup['starters']

@@ -1,13 +1,12 @@
 README.md
 
 # Progress
-- Refactoring all files to extract my custom logic from the existing code
-- Started from the bottom of the list
+- Custom logic lives in `src/lib/AAA-Raymond/`; upstream files only wire it in (see CLAUDE.md for the full list)
+- Homepage custom content is one component: `AAA-Raymond/components/RayHome`
+- Custom sections load data through `AAA-Raymond/utils/leagueContext.js`
 
 # Notes
-- All changes are now in one commit
 - All custom files are in AAA-Raymond directory
 
 # TODO
-- New, sortable, filterable table component
-- 
+- New, sortable, filterable table component (start from `AAA-Raymond/components/Insights/TeamBreakdown.svelte`)

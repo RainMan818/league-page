@@ -1,4 +1,4 @@
-import { getLeagueData, getLeagueRosters, getLeagueTeamManagers, loadPlayers, waitForAll } from '$lib/utils/helper';
+import { getLeagueData, getLeagueRosters, getLeagueTeamManagers, getLeagueStandings, loadPlayers, waitForAll } from '$lib/utils/helper';
 
 export async function load({fetch}) {
     const rostersInfo = waitForAll(
@@ -9,6 +9,8 @@ export async function load({fetch}) {
     )
 
     return {
-        rostersInfo
+        rostersInfo,
+        // used by Roster Analysis (AAA-Raymond) for weekly player scores
+        standingsData: getLeagueStandings(fetch),
     };
 }

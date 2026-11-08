@@ -97,7 +97,8 @@
 
   onMount(async () => {
     const asyncStandingsData = await standingsData;
-    const allMatchups = asyncStandingsData.matchups;
+    // standings are null before the season starts
+    const allMatchups = asyncStandingsData?.matchups ?? [];
 
     allMatchups.forEach((matchups, weekNum) => {
       matchups.forEach((matchup) => {

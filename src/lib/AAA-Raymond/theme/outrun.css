@@ -265,6 +265,7 @@ html:root[data-theme="day"] nav {
 }
 
 html:root .navBar {
+  box-sizing: border-box; /* keep the border inside the bar's width (no sideways page scroll) */
   background: var(--or-navbar-bg);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);

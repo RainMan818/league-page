@@ -108,6 +108,6 @@
 
 {#if validGraph && !seasonOver}
     <div class="enclosure">
-        <BarChart {graphs} bind:curGraph={curGraph} {leagueTeamManagers} />
+        <BarChart {graphs} bind:curGraph={curGraph} {leagueTeamManagers} controlsOnTop />
     </div>
 {/if}

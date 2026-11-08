@@ -1,6 +1,6 @@
 <script>
 	import LinearProgress from '@smui/linear-progress';
-	import { Rosters } from '$lib/components'
+	import { Rosters, RosterAnalysis } from '$lib/components'
 
 	export let data;
 	const rostersInfo = data.rostersInfo;
@@ -20,6 +20,8 @@
 </style>
 
 <div class="holder">
+	<RosterAnalysis standingsData={data.standingsData} />
+
 	{#await rostersInfo}
 		<div class="loading">
 			<p>Retrieving roster data...</p>

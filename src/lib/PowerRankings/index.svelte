@@ -1,6 +1,6 @@
 <script>
     import {getNflState, getLeagueRosters, getLeagueTeamManagers, waitForAll, loadPlayers, getLeagueData} from '$lib/utils/helper';
-    import PowerRankingsDisplay from '../AAA-Raymond/components/RayPowerRankings/PowerRankingsDisplay.svelte';
+    import PowerRankingsDisplay from './PowerRankingsDisplay.svelte';
     import LinearProgress from '@smui/linear-progress';
     
     const helperPromises = waitForAll(

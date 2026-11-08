@@ -1,11 +1,11 @@
 <script>
-  import { leagueName, round } from "$lib/utils/helper";
+  import { leagueName } from "$lib/utils/helper";
   import { getTeamFromTeamManagers } from "$lib/utils/helperFunctions/universalFunctions";
   import DataTable, { Head, Body, Row, Cell } from "@smui/data-table";
-  import LinearProgress from "@smui/linear-progress";
   import { onMount } from "svelte";
   import Standing from "../../../Standings/Standing.svelte";
   import PositionAverages from "../PositionAverages/index.svelte";
+  import Loading from "../Shared/Loading.svelte";
   import {
     colorsGYR,
     getColorScale,
@@ -117,24 +117,14 @@
         { averages: {}, ranking: {} }
       );
   });
-
-  let innerWidth;
 </script>
-
-<svelte:window bind:innerWidth />
 
 <h1>{year ?? ""} {leagueName} Standings</h1>
 
 {#if loading}
-  <!-- promise is pending -->
-  <div class="loading">
-    <p>Loading Standings...</p>
-    <LinearProgress indeterminate />
-  </div>
+  <Loading message="Loading Standings..." />
 {:else if preseason}
-  <div class="loading">
-    <p>Preseason, No Standings Yet</p>
-  </div>
+  <Loading message="Preseason, No Standings Yet" progress={false} />
 {:else}
   <div class="standingsTable">
     <DataTable table$aria-label="League Standings">
@@ -188,13 +178,6 @@
 {/if}
 
 <style>
-  .loading {
-    display: block;
-    width: 85%;
-    max-width: 500px;
-    margin: 80px auto;
-  }
-
   :global(.center) {
     text-align: center;
   }

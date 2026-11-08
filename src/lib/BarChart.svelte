@@ -3,6 +3,8 @@
 	import Bar from './Bar.svelte';
 
     export let graphs, leagueTeamManagers, curGraph = 0;
+    // show the graph-selection buttons between the header and the chart instead of below it
+    export let controlsOnTop = false;
 
     const colors = [
         "--barChartOne",
@@ -53,6 +55,10 @@
         margin: 1em 0 2em;
     }
 
+    .buttonHolderG.top {
+        margin: 0 0 1em;
+    }
+
     /* Start button resizing */
     @media (max-width: 1000px) {
         .chartWrapper {
@@ -97,7 +103,34 @@
     /* End button resizing */
 </style>
 
+{#snippet controls()}
+    {#if graphs.length > 1}
+        <div class="buttonHolderG" class:top={controlsOnTop}>
+            <Group variant="outlined">
+                {#each graphs as graph, ix}
+                    {#if ix < 4}
+                        <Button class="selectionButtons" onclick={() => curGraph = ix} variant="{curGraph == ix ? "raised" : "outlined"}">
+                            <Label>{graph.short}</Label>
+                        </Button>
+                    {/if}
+                {/each}
+            </Group>
+            <br />
+            <Group variant="outlined">
+                {#each graphs as graph, ix}
+                    {#if ix > 3}
+                        <Button class="selectionButtons" onclick={() => curGraph = ix} variant="{curGraph == ix ? "raised" : "outlined"}">
+                            <Label>{graph.short}</Label>
+                        </Button>
+                    {/if}
+                {/each}
+            </Group>
+        </div>
+    {/if}
+{/snippet}
+
 <h6>{header}</h6>
+{#if controlsOnTop}{@render controls()}{/if}
 <div class="chartWrapper">
     <div class="barChart" >
         {#each managerIDs as managerID, ix}
@@ -106,26 +139,4 @@
     </div>
 </div>
 
-{#if graphs.length > 1}
-    <div class="buttonHolderG">
-        <Group variant="outlined">
-            {#each graphs as graph, ix}
-                {#if ix < 4}
-                    <Button class="selectionButtons" onclick={() => curGraph = ix} variant="{curGraph == ix ? "raised" : "outlined"}">
-                        <Label>{graph.short}</Label>
-                    </Button>
-                {/if}
-            {/each}
-        </Group>
-        <br />
-        <Group variant="outlined">
-            {#each graphs as graph, ix}
-                {#if ix > 3}
-                    <Button class="selectionButtons" onclick={() => curGraph = ix} variant="{curGraph == ix ? "raised" : "outlined"}">
-                        <Label>{graph.short}</Label>
-                    </Button>
-                {/if}
-            {/each}
-        </Group>
-    </div>
-{/if}
+{#if !controlsOnTop}{@render controls()}{/if}

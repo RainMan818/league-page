@@ -1,132 +1,66 @@
+<!-- One position-averages table on the /standings page (used twice by RayStandings), with an averages / ranking toggle. -->
 <script>
-  import { leagueName, round } from "$lib/utils/helper";
-  import { getTeamFromTeamManagers } from "$lib/utils/helperFunctions/universalFunctions";
   import DataTable, { Head, Body, Row, Cell } from "@smui/data-table";
-  import LinearProgress from "@smui/linear-progress";
-  import { onMount } from "svelte";
-  import PositionAverages from "./PositionAverages.svelte";
   import Button, { Group, Label } from "@smui/button";
+  import PositionAverages from "./PositionAverages.svelte";
 
   export let averagesData, rankings, week, columnOrder, headerLabel, colorScale, leagueTeamManagers;
 
-  let dataType = "averages"; // "ranking"
-  const changeData = (type) => {
-    dataType = type;
-  };
+  let dataType = "averages"; // "averages" | "ranking"
 
-  let loading = true;
-  let preseason = false;
-  let averages, year;
-  let formattedRankings;
-  onMount(async () => {
-    let finalAverages = Object.keys(averagesData).map(
-      (key) => averagesData[key]
-    );
-
-    formattedRankings = Object.keys(averagesData).reduce((map, teamName, i) => {
-      map[i] = Object.entries(rankings).reduce((posMap, [position, arr]) => {
-        posMap[position] = arr[i];
-        return posMap;
-      }, {});
-      return map;
-    }, []);
-
-    averages = finalAverages;
-    loading = false;
-  });
-
-  let innerWidth;
+  $: rosterIDs = Object.keys(averagesData ?? {});
+  $: averages = rosterIDs.map((key) => averagesData[key]);
+  // per team: { [position]: rank }
+  $: formattedRankings = rosterIDs.map((_, i) =>
+    Object.entries(rankings ?? {}).reduce((posMap, [position, arr]) => {
+      posMap[position] = arr[i];
+      return posMap;
+    }, {})
+  );
 </script>
-
-<svelte:window bind:innerWidth />
 
 <h1>{headerLabel}</h1>
 <div>Last updated week: {week - 1}</div>
 
-{#if loading}
-  <!-- promise is pending -->
-  <div class="loading">
-    <p>Loading Standings...</p>
-    <LinearProgress indeterminate />
+<div class="standingsTable">
+  <div>
+    <Group variant="outlined" class="vertical-align">
+      {#each ["averages", "ranking"] as type}
+        <Button
+          disabled={dataType == type}
+          class="selectionButtons"
+          onclick={() => (dataType = type)}
+          variant="outlined"
+        >
+          <Label>{type}</Label>
+        </Button>
+      {/each}
+    </Group>
   </div>
-{:else if preseason}
-  <div class="loading">
-    <p>Preseason, No Standings Yet</p>
-  </div>
-{:else}
-  <div class="standingsTable">
-    <div>
-      <Group variant="outlined" class="vertical-align">
-        {#if dataType == "averages"}
-          <Button
-            disabled
-            class="selectionButtons"
-            onclick={() => changeData("averages")}
-            variant="outlined"
-          >
-            <Label>averages</Label>
-          </Button>
-        {:else}
-          <Button
-            class="selectionButtons"
-            onclick={() => changeData("averages")}
-            variant="outlined"
-          >
-            <Label>averages</Label>
-          </Button>
-        {/if}
-        {#if dataType == "ranking"}
-          <Button
-            disabled
-            class="selectionButtons"
-            onclick={() => changeData("ranking")}
-            variant="outlined"
-          >
-            <Label>ranking</Label>
-          </Button>
-        {:else}
-          <Button
-            class="selectionButtons"
-            onclick={() => changeData("ranking")}
-            variant="outlined"
-          >
-            <Label>ranking</Label>
-          </Button>
-        {/if}
-      </Group>
-    </div>
-    <DataTable table$aria-label="League Standings">
-      <Head>
-        <Row>
-          <Cell class="center">Team</Cell>
-          {#each columnOrder as column}
-            <Cell class="center wrappable">{column.name}</Cell>
-          {/each}
-        </Row>
-      </Head>
-      <Body>
-        {#each averages as standing, i}
-          <PositionAverages
-            {columnOrder}
-            colorScale={colorScale[dataType]}
-            standing={dataType == "averages" ? standing : formattedRankings[i]}
-            {leagueTeamManagers}
-            rosterID={Object.keys(averagesData)[i]}
-          />
+  <DataTable table$aria-label="League Standings">
+    <Head>
+      <Row>
+        <Cell class="center">Team</Cell>
+        {#each columnOrder as column}
+          <Cell class="center wrappable">{column.name}</Cell>
         {/each}
-      </Body>
-    </DataTable>
-  </div>
-{/if}
+      </Row>
+    </Head>
+    <Body>
+      {#each averages as standing, i}
+        <PositionAverages
+          {columnOrder}
+          colorScale={colorScale?.[dataType]}
+          standing={dataType == "averages" ? standing : formattedRankings[i]}
+          {leagueTeamManagers}
+          rosterID={rosterIDs[i]}
+        />
+      {/each}
+    </Body>
+  </DataTable>
+</div>
 
 <style>
-  .loading {
-    display: block;
-    width: 85%;
-    max-width: 500px;
-    margin: 80px auto;
-  }
-
   :global(.center) {
     text-align: center;
   }

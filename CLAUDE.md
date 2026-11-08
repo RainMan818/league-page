@@ -13,7 +13,8 @@ All data comes live from the public Sleeper API.
 
 ## League facts
 - Sleeper league ID `1314319869289717760`, set in `src/lib/utils/leagueInfo.js` with manager bios
-- 12 teams, dynasty, half-PPR, superflex, IDP, 2 divisions
+- 12 teams, dynasty, half-PPR, superflex, IDP, **3 divisions of 4** (Sleeper settings), plus a weekly
+  league-median game (records are 2 games per week). The constitution text still describes 2 divisions.
 - Starting lineup order (index into Sleeper `starters` / `starters_points`):
   0 QB, 1-2 RB, 3-4 WR, 5 TE, 6-8 FLEX, 9 SUPER_FLEX, 10 IDP_FLEX, 11-13 DL, 14-16 LB, 17-19 DB.
   `src/lib/AAA-Raymond/utils/leagueStandings.js` hardcodes these indexes; update it if the lineup changes.
@@ -25,13 +26,37 @@ All data comes live from the public Sleeper API.
 - `src/lib/version.js` must stay in sync with `package.json`; don't bump it by hand.
 
 Custom pieces:
-- `RayHome`: homepage block with Tankathon and RosterAnalysis
+- `RayHome/RecapAndRankings`: homepage block with the weekly recap (`Insights/RecapPanel`) and Power Rankings
+  below it, at every screen size. Replaces `<PowerRankings />` in `src/routes/+page.svelte`.
+- `RayHome`: homepage block below that: Insights. (Tankathon was merged into Team Breakdown; the old
+  `components/Tankathon/` files are unused but still exported from `src/lib/components.js`.)
+- `Insights`: playoff projection bracket and one sortable Team Breakdown table (record, division record, PF, PA,
+  streak, Tankathon pick + max PF, all-play, luck, efficiency). The weekly recap (`WeeklyRecap`, Sleeper-style
+  weekly report) renders in `RecapPanel`, which has previous/next arrows and a week picker for every completed
+  week (built from `standings.matchups`, no extra fetches; defaults to the latest week).
+- `Insights/config.js`: `SHOW_PLAYOFF_ODDS = false` hides all percentages, projected records and title odds
+  (bracket shows seeds only). Raymond doesn't want league mates seeing the odds yet.
+  `index.svelte` loads data in the browser and computes; `InsightsView` and the section components only render.
+  Logic lives in `utils/leagueInsights.js` (plain functions, no site imports).
 - `Tankathon`: draft order by potential points, worst first
-- `RosterAnalysis`: age, count and spread by position for each team
+- `RosterAnalysis`: age, count and spread by position for each team (top of the /rosters page)
 - `RayStandings` + `PositionAverages`: the /standings page
-- `RayPowerRankings`: rest-of-season projections using `utils/predictOptimalScore.js`
+- `RayPowerRankings`: rest-of-season projections using `utils/predictOptimalScore.js`. Uses upstream
+  `src/lib/BarChart.svelte` with `controlsOnTop` (Raymond's addition, default off) so the graph buttons sit
+  between the header and the chart.
 - `utils/leagueStandings.js`: standings, division records, position averages.
   `helper.js` exports it as `getLeagueStandings`.
+
+## Playoff projection
+- Monte Carlo (10,000 runs, fixed seed so numbers are stable between loads) of the remaining regular season and the playoffs.
+- Team strength: Sleeper projected best lineup (`predictScores`) scaled to the league's actual scoring, blended 70/30
+  with the team's season average; spread from each team's weekly scores shrunk toward the league's.
+- Seeding (league rule, per Raymond): division winners take the top seeds, the next seeds go to the best remaining
+  records, and the last seed goes to the highest points for among everyone not yet in, regardless of record.
+  With 3 divisions: 1-3 division winners, 4-5 records, 6 points for. Seeds 1-2 get byes. Record ties are broken by
+  points for. Settings: `DIVISION_WINNERS_GET_TOP_SEEDS`, `POINTS_WILDCARD_SEEDS` in `leagueInsights.js`. Toggle `DIVISION_WINNERS_GET_TOP_SEEDS` in `leagueInsights.js` if the rules change.
+  Playoff team count and start week come from Sleeper league settings. Median games are supported.
+- Hidden once the regular season ends (points to the Matchups bracket).
 
 ## Look and feel (outrun theme)
 - Theme lives in `src/lib/AAA-Raymond/theme/outrun.css`, imported in `src/routes/+layout.svelte`.
@@ -52,6 +77,13 @@ Custom pieces:
 - Position averages are keyed by roster ID; display names come from `getTeamFromTeamManagers`.
   Never hardcode usernames.
 - Files use Windows (CRLF) line endings; keep them.
+- Prefix class names in custom components (`rr-`): the template has global rules on generic names
+  (e.g. `.slot { width: 22px !important }`) that will break your layout.
+- Player projections in the players map are strings (`wi[week].p = "22.01"`); `parseFloat` before doing math.
+- Big computed objects held in Svelte state should use `$state.raw` (deep proxies break object identity).
+- Weekly recap numbers can differ slightly from Sleeper's own weekly report: Sleeper snapshots it before stat corrections.
+- Standings `matchups` is newest week first (index 0 = last completed week).
+- Division records are counted once in `getLeagueStandings` (they used to be double-counted).
 - `src/lib/utils/helperFunctions/leagueStandings.js` and `predictOptimalScore.js` are old, unused copies.
   They should eventually be restored to the upstream versions.
 

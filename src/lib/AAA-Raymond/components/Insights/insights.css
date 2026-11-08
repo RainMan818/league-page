@@ -1,0 +1,81 @@
+/* Shared styles for the homepage insight sections (scoped under .insights). */
+
+.insights {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 16px 4em;
+}
+
+.insights .section {
+  margin: 0 0 3.5em;
+}
+
+.insights h6 {
+  font-weight: 400;
+  text-align: center;
+  margin: 0 0 0.4em;
+}
+
+.insights .sub {
+  text-align: center;
+  font-size: 0.85em;
+  color: var(--or-muted, var(--g999));
+  margin: 0 auto 1.4em;
+  max-width: 640px;
+}
+
+.insights .tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--or-table-border, var(--ccc));
+  border-radius: 10px;
+  background: var(--fff);
+  box-shadow: 0 6px 24px var(--or-table-shadow, transparent);
+}
+
+.insights table.ins {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.insights table.ins th,
+.insights table.ins td {
+  padding: 9px 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.insights table.ins th {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--or-cyan, #0b8a9a);
+  border-bottom: 1px solid var(--or-table-border, var(--ccc));
+}
+
+/* rows are opaque so a sticky first column can cover cells scrolling under it */
+.insights table.ins tbody tr {
+  background: var(--fff);
+}
+
+.insights table.ins tbody tr:nth-child(odd) {
+  background: var(--f8f8f8);
+}
+
+.insights table.ins tbody tr:hover {
+  background: var(--or-row-hover, var(--eee));
+}
+
+.insights table.ins .left {
+  text-align: left;
+  max-width: 240px;
+}
+
+.insights table.ins .muted {
+  color: var(--or-muted, var(--g999));
+}
+
+.insights .note {
+  text-align: center;
+  font-size: 0.85em;
+  color: var(--or-muted, var(--g999));
+}

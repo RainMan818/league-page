@@ -13,9 +13,7 @@ import { getUpcomingDraft, getPreviousDrafts } from './helperFunctions/leagueDra
 import { getLeagueRecords } from './helperFunctions/leagueRecords'
 import { getAwards } from './helperFunctions/leagueAwards'
 import { cleanName, round, generateGraph, getTeamFromTeamManagers, gotoManager, getAuthor, parseDate, getAvatar } from './helperFunctions/universalFunctions';
-import { getColorScale, getRanking } from "../AAA-Raymond/utils/colorScale";
-import { computePlayersHelper } from "../AAA-Raymond/utils/fetchPlayersUtils";
-import { getLeagueStandings as rayGetLeagueStandings } from "../AAA-Raymond/utils/leagueStandings";
+// predictScores is part of the upstream helper API; it points at the custom version (adds IDP_FLEX / REC_FLEX)
 import { predictScores } from "../AAA-Raymond/utils/predictOptimalScore";
 import { getBrackets } from './helperFunctions/leagueBrackets';
 import { getBlogPosts, generateParagraph } from './helperFunctions/getBlogPosts';
@@ -57,6 +55,5 @@ export {
     parseDate,
     getAvatar,
     getTeamFromTeamManagers,
-    predictScores,
-    rayGetLeagueStandings
+    predictScores
 }
