@@ -25,12 +25,17 @@ export const getLeagueStandings = async (servFetch) => {
         return get(standingsStore);
     }
 
-    const [nflState, leagueData, rostersData, playersInfo] = await waitForAll(
+    const leagueInfo = await waitForAll(
         getNflState(),
         getLeagueData(),
         getLeagueRosters(),
         loadPlayers(servFetch || null),
-    ).catch((err) => { console.error(err); });
+    ).catch((err) => { console.error(err); return null; });
+    // if loading failed, show no standings rather than crashing the server
+    if (!leagueInfo) {
+        return null;
+    }
+    const [nflState, leagueData, rostersData, playersInfo] = leagueInfo;
 
     const yearData = leagueData.season;
     const regularSeasonLength = leagueData.settings.playoff_week_start - 1;

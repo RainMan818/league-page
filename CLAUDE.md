@@ -8,6 +8,8 @@ All data comes live from the public Sleeper API.
 - `npm run dev` — local dev server
 - `npm run build` / `npm run preview` — production build
 - Deploys to Vercel (default adapter). Docker build uses adapter-node (`npm run docker-run`).
+- Node is pinned to 24.x in `package.json` `engines`. Don't loosen it to `>=`: Vercel then jumps to the newest
+  Node, and Node 26 broke the `smui-theme` build step (yargs `require is not defined`).
 
 ## League facts
 - Sleeper league ID `1314319869289717760`, set in `src/lib/utils/leagueInfo.js` with manager bios
