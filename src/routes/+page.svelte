@@ -31,7 +31,6 @@
     flex-grow: 1;
     min-width: 320px;
     margin: 0 auto;
-    padding: 60px 0;
   }
 
   .text {
@@ -235,4 +234,4 @@
       <Transactions />
     </div>
   </div>
-</div>
+</div>
