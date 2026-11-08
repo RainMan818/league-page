@@ -1,0 +1,352 @@
+/*
+  Outrun theme — imported once in src/routes/+layout.svelte.
+
+  Night is the default. Sunset day mode applies when <html data-theme="day">,
+  which the light/dark toggle in src/lib/Nav/index.svelte sets (and remembers).
+
+  How it works:
+  - The template colors everything through the CSS variables below (--fff, --f8f8f8, ...).
+    Their names describe the original light-mode colors, not what they are now.
+  - SMUI components (tabs, buttons, tables, progress bars) read --mdc-theme-*.
+  - Selectors start with html:root so they beat the template's own styles
+    regardless of stylesheet order.
+*/
+
+/* ===================== NIGHT (default) ===================== */
+html:root {
+  color-scheme: dark;
+
+  /* outrun palette */
+  --or-pink: #ff2a6d;
+  --or-cyan: #05d9e8;
+  --or-purple: #b537f2;
+  --or-orange: #ff9e3d;
+  --or-text: #efe6ff;
+  --or-muted: #b7a6d9;
+  --or-heading: #ffeaf6;
+  --or-heading-glow: 0 0 10px rgba(255, 42, 109, 0.55), 0 0 2px rgba(255, 42, 109, 0.8);
+  --or-h1-gradient: linear-gradient(90deg, #05d9e8, #ff2a6d 55%, #ff9e3d);
+  --or-page-bg: linear-gradient(180deg, #0b0320 0%, #150630 55%, #23093d 100%);
+  --or-glow-pink: rgba(255, 42, 109, 0.55);
+  --or-link: #3ee6f2;
+  --or-link-visited: #d68bff;
+  --or-sky-top: #070114;
+  --or-navbar-bg: rgba(12, 3, 30, 0.62);
+  --or-navbar-border: rgba(255, 42, 109, 0.5);
+  --or-tab-text: #e6d9ff;
+  --or-tab-active: #ff5a8f;
+  --or-footer-bg: #0e0524;
+  --or-table-border: rgba(181, 55, 242, 0.38);
+  --or-table-shadow: rgba(255, 42, 109, 0.14);
+  --or-row-hover: rgba(255, 42, 109, 0.09);
+  --or-banner: linear-gradient(90deg, #c2185b, #8e24aa 50%, #0b8fa8);
+  --navAccent: #ff2a6d;
+
+  /* SMUI component colors */
+  --mdc-theme-primary: #ff2a6d;
+  --mdc-theme-secondary: #05d9e8;
+  --mdc-theme-surface: #150a30;
+  --mdc-theme-background: #0d0521;
+  --mdc-theme-on-primary: #ffffff;
+  --mdc-theme-on-secondary: #0d0521;
+  --mdc-theme-on-surface: #efe6ff;
+
+  /* template variables (names are the original light-mode colors) */
+  --fff: #120726;
+  --fffTransparent: rgba(18, 7, 38, 0);
+  --f8f8f8: #170b31;
+  --f3f3f3: #1b0e3a;
+  --eee: #29174f;
+  --ebebeb: #1a0c36;
+  --ddd: #3a2468;
+  --d7d7d7: #211243;
+  --ccc: #4a3380;
+  --bbb: #5a4390;
+  --aaa: #7a64aa;
+  --g999: #9a86c4;
+  --g555: #c3b2e6;
+  --g444: #d6c8f0;
+  --g333: #e4d9f7;
+  --g111: #f4eefe;
+  --g000: #ffffff;
+  --boxShadowOne: #05010f;
+  --boxShadowTwo: #2a1650;
+  --boxShadowThree: #0d0520;
+  --ir: #2a1846;
+  --champShadow: rgba(255, 42, 109, 0.45);
+  --transactHeader: #1f1140;
+  --draftSwapped: #24124a;
+  --waiverAdd: #0e3a40;
+  --waiverDrop: #4a1030;
+  --bracketMatch: #110627;
+  --matchupSelected: #2c1858;
+  --fadeOne: rgba(18, 7, 38, 0) 0%;
+  --fadeTwo: rgba(18, 7, 38, 0.7) 50%;
+  --fadeThree: rgba(18, 7, 38, 0.9) 90%;
+  --fadeFour: rgba(18, 7, 38, 1) 100%;
+  --blueOne: #d4145a;
+  --blueTwo: #2b0f55;
+  --r1: #1a0e36;
+  --r2: #22102f;
+  --r3: #0f1a33;
+  --headerPrimary: #2b1655;
+  --borderOverride: rgba(181, 55, 242, 0.35);
+  --rivalryBack: #1f1140;
+
+  /* bar charts: white labels sit on these, so they stay mid-dark */
+  --barChartOne: #c2185b;
+  --barChartTwo: #a3209f;
+  --barChartThree: #7b2fbe;
+  --barChartFour: #5940cc;
+  --barChartFive: #2c62c9;
+  --barChartSix: #0a8aa6;
+
+  --compBarOne: #c2185b;
+  --compBarTwo: #0a8aa6;
+  --compBarOneText: #ff8fb2;
+  --compBarTwoText: #7ff3fb;
+}
+
+/* ===================== SUNSET DAY ===================== */
+html:root[data-theme="day"] {
+  color-scheme: light;
+
+  --or-pink: #c2185b;
+  --or-cyan: #0b8a9a;
+  --or-purple: #7b1fa2;
+  --or-orange: #e8590c;
+  --or-text: #2a1230;
+  --or-muted: #6e4a6a;
+  --or-heading: #5a1450;
+  --or-heading-glow: none;
+  --or-h1-gradient: linear-gradient(90deg, #7b1fa2, #c2185b 50%, #e8590c);
+  --or-page-bg: linear-gradient(180deg, #fff4ea 0%, #ffe9ee 60%, #f6e8ff 100%);
+  --or-glow-pink: rgba(255, 94, 138, 0.45);
+  --or-link: #b0185a;
+  --or-link-visited: #6a1b9a;
+  --or-sky-top: #2c0b52;
+  --or-navbar-bg: rgba(255, 244, 236, 0.8);
+  --or-navbar-border: rgba(255, 179, 107, 0.7);
+  --or-tab-text: #4a1d4a;
+  --or-tab-active: #c2185b;
+  --or-footer-bg: #fff0e8;
+  --or-table-border: rgba(194, 24, 91, 0.22);
+  --or-table-shadow: rgba(232, 89, 12, 0.1);
+  --or-row-hover: rgba(194, 24, 91, 0.06);
+  --or-banner: linear-gradient(90deg, #7b1fa2, #c2185b 50%, #e8590c);
+  --navAccent: #c2185b;
+
+  --mdc-theme-primary: #c2185b;
+  --mdc-theme-secondary: #7b1fa2;
+  --mdc-theme-surface: #fffaf6;
+  --mdc-theme-background: #fff3ea;
+  --mdc-theme-on-primary: #ffffff;
+  --mdc-theme-on-secondary: #ffffff;
+  --mdc-theme-on-surface: #2a1230;
+
+  --fff: #fffaf6;
+  --fffTransparent: rgba(255, 250, 246, 0);
+  --f8f8f8: #fff1ea;
+  --f3f3f3: #ffece3;
+  --eee: #fbe1d6;
+  --ebebeb: #fde8de;
+  --ddd: #f2cdbf;
+  --d7d7d7: #f6d6ca;
+  --ccc: #e8b9a8;
+  --bbb: #d9a493;
+  --aaa: #b98b86;
+  --g999: #8f6a78;
+  --g555: #5e3a5c;
+  --g444: #4d2a4d;
+  --g333: #3a1d3c;
+  --g111: #24102a;
+  --g000: #160819;
+  --boxShadowOne: #f0c9bb;
+  --boxShadowTwo: #ecc2b4;
+  --boxShadowThree: #f5d3c6;
+  --ir: #f5d6cb;
+  --champShadow: rgba(255, 122, 89, 0.55);
+  --transactHeader: #fff0f4;
+  --draftSwapped: #fff3fa;
+  --waiverAdd: #e3fbf3;
+  --waiverDrop: #ffe3ea;
+  --bracketMatch: #fffaf7;
+  --matchupSelected: #ffffff;
+  --fadeOne: rgba(255, 250, 246, 0) 0%;
+  --fadeTwo: rgba(255, 250, 246, 0.7) 50%;
+  --fadeThree: rgba(255, 250, 246, 0.9) 90%;
+  --fadeFour: rgba(255, 250, 246, 1) 100%;
+  --blueOne: #c2185b;
+  --blueTwo: #ffe0ec;
+  --r1: #fff4f0;
+  --r2: #fff0f6;
+  --r3: #f3f6ff;
+  --headerPrimary: #ffe1ea;
+  --borderOverride: rgba(120, 30, 80, 0.18);
+  --rivalryBack: #fff1ea;
+
+  /* dark labels sit on these, so they stay light */
+  --barChartOne: #ffb3cf;
+  --barChartTwo: #f7b2e4;
+  --barChartThree: #ddb8ff;
+  --barChartFour: #c4c6ff;
+  --barChartFive: #aad8ff;
+  --barChartSix: #9fecf2;
+
+  --compBarOne: #ff9ec2;
+  --compBarTwo: #8fe3ef;
+  --compBarOneText: #9c1450;
+  --compBarTwoText: #0b6a78;
+}
+
+/* ===================== PAGE ===================== */
+html:root,
+html:root body {
+  background: var(--or-page-bg);
+  background-attachment: fixed;
+  color: var(--or-text);
+  scrollbar-color: var(--or-purple) transparent;
+}
+
+html:root ::selection {
+  background: var(--or-pink);
+  color: #fff;
+}
+
+html:root a {
+  color: var(--or-link);
+}
+
+html:root a:visited {
+  color: var(--or-link-visited);
+}
+
+/* ===================== HEADINGS ===================== */
+html:root :is(h1, h2, h3, h4, h5, h6) {
+  font-family: "Orbitron", "Eurostile", "Arial Black", sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--or-heading);
+  text-shadow: var(--or-heading-glow);
+}
+
+html:root :is(h1, h2) {
+  font-weight: 700;
+}
+
+html:root h1 {
+  background: var(--or-h1-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 8px var(--or-glow-pink));
+}
+
+html:root[data-theme="day"] h1 {
+  filter: none;
+}
+
+/* ===================== HEADER ===================== */
+html:root nav {
+  background: url("./horizon-night.svg") center bottom / 2400px auto no-repeat, var(--or-sky-top);
+  border-bottom: 2px solid var(--or-pink);
+  box-shadow: 0 0 22px var(--or-glow-pink), 0 3px 0 rgba(5, 217, 232, 0.35);
+}
+
+html:root[data-theme="day"] nav {
+  background-image: url("./horizon-day.svg");
+}
+
+@media (max-width: 950px) {
+  html:root nav {
+    background-size: 1500px auto;
+  }
+}
+
+html:root .navBar {
+  background: var(--or-navbar-bg);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--or-navbar-border);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+}
+
+html:root nav .mdc-tab .mdc-tab__text-label,
+html:root nav .mdc-tab .mdc-tab__icon {
+  color: var(--or-tab-text);
+}
+
+html:root nav .mdc-tab--active .mdc-tab__text-label,
+html:root nav .mdc-tab--active .mdc-tab__icon {
+  color: var(--or-tab-active);
+  text-shadow: 0 0 10px var(--or-glow-pink);
+}
+
+html:root nav .mdc-tab-indicator .mdc-tab-indicator__content--underline {
+  border-top-width: 3px;
+  box-shadow: 0 0 10px var(--or-pink);
+}
+
+/* light/dark toggle and mobile menu button sit on the dark sky in both modes */
+html:root nav .lightDark,
+html:root .menuIcon {
+  color: #ffd6f0;
+  text-shadow: 0 0 8px rgba(255, 42, 109, 0.8);
+}
+
+html:root .menuIcon:hover {
+  color: #7ff6ff;
+}
+
+html:root .nav-item {
+  color: var(--or-muted) !important;
+}
+
+/* ===================== CONTENT ===================== */
+html:root .homeBanner {
+  background: var(--or-banner);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+html:root .mdc-data-table {
+  border-color: var(--or-table-border);
+  box-shadow: 0 6px 24px var(--or-table-shadow);
+}
+
+html:root .mdc-data-table__header-cell {
+  color: var(--or-cyan);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+html:root .mdc-data-table__row:not(.mdc-data-table__row--selected):hover {
+  background-color: var(--or-row-hover);
+}
+
+html:root .mdc-button--outlined:not(:disabled) {
+  background-color: var(--fff) !important;
+  border-color: var(--or-pink);
+}
+
+/* SMUI hardcodes these two instead of using the theme variables */
+html:root .smui-button--color-secondary:not(:disabled) {
+  color: var(--or-cyan);
+}
+
+html:root .mdc-drawer .mdc-deprecated-list-item--activated .mdc-deprecated-list-item__graphic {
+  color: var(--or-pink);
+}
+
+/* ===================== FOOTER ===================== */
+html:root footer {
+  background: var(--or-footer-bg);
+  border-top: 2px solid var(--or-pink);
+  box-shadow: 0 -2px 18px var(--or-glow-pink);
+  color: var(--or-muted);
+}
+
+html:root footer .navLink:hover {
+  color: var(--or-cyan);
+}

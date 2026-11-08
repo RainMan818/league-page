@@ -33,6 +33,19 @@ Custom pieces:
 - `utils/leagueStandings.js`: standings, division records, position averages.
   `helper.js` exports it as `getLeagueStandings`.
 
+## Look and feel (outrun theme)
+- Theme lives in `src/lib/AAA-Raymond/theme/outrun.css`, imported in `src/routes/+layout.svelte`.
+  It overrides the template's color variables (`--fff`, `--f8f8f8`, ... named after the original
+  light colors) and SMUI's `--mdc-theme-*` variables. Selectors start with `html:root` to win over template styles.
+- Night is the default. Sunset day mode = `<html data-theme="day">`, set by the header toggle
+  (`src/lib/Nav/index.svelte`), saved in localStorage, applied before paint by the inline script in `src/app.html`.
+  Day mode also loads `/smui.css` on top of `/smui-dark.css`.
+- Header backdrop: `horizon-night.svg` / `horizon-day.svg` in the theme folder.
+- Logo: `src/lib/AAA-Raymond/components/OutrunLogo/` draws hand-built block letters (`glyphs.js`) as SVG,
+  so it doesn't depend on fonts. Change the words via the `title`/`subtitle` props; letters missing from
+  `glyphs.js` are skipped. Headings use the Orbitron web font (loaded in `app.html`).
+- Favicon and app icons: `static/outrun-icon.svg`, `static/favicons/outrun-*.png`.
+
 ## Gotchas
 - Sleeper roster slot names: `IDP_FLEX`, `SUPER_FLEX`, `FLEX`, `REC_FLEX`, `WRRB_FLEX`, `BN`.
   Defender `position` can be specific (DE, DT, CB, S), so group IDPs via `idpGroup()` in predictOptimalScore.

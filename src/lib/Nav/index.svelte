@@ -4,11 +4,15 @@
     import { page } from '$app/state';
 	import IconButton from '@smui/icon-button';
 	import { Icon } from '@smui/common';
+	import OutrunLogo from '$lib/AAA-Raymond/components/OutrunLogo/index.svelte';
+	import { leagueName } from '$lib/utils/leagueInfo';
 
-	// toggle dark mode
-	let darkTheme = $state(typeof window === "undefined" || window.matchMedia("(prefers-color-scheme: dark)").matches);
+	// toggle between outrun night (default) and sunset day; the choice is saved in localStorage
+	// and applied before first paint by the inline script in src/app.html
+	const savedTheme = () => { try { return localStorage.getItem('theme'); } catch (e) { return null; } };
+	let darkTheme = $state(typeof window === "undefined" || savedTheme() !== 'day');
 	function switchTheme(currentTheme) {
-		currentTheme = !currentTheme;
+		currentTheme = !currentTheme; // true = sunset day, false = night
 		let themeLink = document.head.querySelector("#theme");
 		if (!themeLink) {
 			themeLink = document.createElement("link");
@@ -19,11 +23,13 @@
 		document.head
 		.querySelector('link[href="/smui-dark.css"]')
 		.insertAdjacentElement("afterend", themeLink);
+		document.documentElement.dataset.theme = currentTheme ? 'day' : 'night';
+		try { localStorage.setItem('theme', currentTheme ? 'day' : 'night'); } catch (e) {}
 	}
 </script>
 
 <svelte:head>
-	<title>{!page.url.pathname[1] ? 'Home' : page.url.pathname[1].toUpperCase() + page.url.pathname.slice(2)} | League Page</title>
+	<title>{!page.url.pathname[1] ? 'Home' : page.url.pathname[1].toUpperCase() + page.url.pathname.slice(2)} | {leagueName}</title>
 </svelte:head>
 
 <style>
@@ -37,13 +43,6 @@
 		z-index: 2;
 		border-bottom: 1px solid #00316b;
 		box-shadow: 0 0 8px 0 #00316b;
-	}
-
-	#logo {
-		width: 80px;
-		display: block;
-		margin: 0 auto;
-		padding: 10px;
 	}
 
     .large {
@@ -76,7 +75,7 @@
 </style>
 
 <nav>
-	<a href="/"><img id="logo" alt="league logo" src="/badge.png" /></a>
+	<a href="/" aria-label="{leagueName} home"><OutrunLogo /></a>
 
 	<div class="container">
 		<IconButton
