@@ -10,7 +10,7 @@
   import StandingsTable from "./StandingsTable.svelte";
   import PositionAverages from "../PositionAverages/index.svelte";
   import { rosterPositionAveragesColumnOrder, playerPositionAveragesColumnOrder } from "./constants";
-  import "../Insights/insights.css";
+  import "../Shared/common.css";
 
   let { standingsData, leagueTeamManagersData } = $props();
 
@@ -81,8 +81,8 @@
 {:else if status === "error"}
   <Loading message="Couldn't load the standings: {errorMessage}" progress={false} />
 {:else}
-  <div class="insights rr-standingsPage">
-    <p class="sub">Ordered by playoff seed · click a column to sort · records include the weekly median game</p>
+  <div class="rr-standingsPage">
+    <p class="rr-pageSub">Ordered by playoff seed · click a column to sort · records include the weekly median game</p>
     <StandingsTable
       rows={view.rows}
       teams={view.teams}
@@ -134,6 +134,8 @@
 
   .rr-standingsPage {
     max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 16px 4em;
     text-align: left;
   }
 </style>

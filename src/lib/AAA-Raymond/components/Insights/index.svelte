@@ -5,8 +5,6 @@
 -->
 <script>
   import { onMount } from "svelte";
-  import { waitForAll } from "$lib/utils/helper";
-  import { leagueID } from "$lib/utils/leagueInfo";
   import {
     allPlayRecords,
     lineupEfficiency,
@@ -16,6 +14,7 @@
     tankathonOrder,
   } from "../../utils/leagueInsights.js";
   import { loadLeagueContext } from "../../utils/leagueContext.js";
+  import { getWeeklyMatchupEntries } from "../../utils/weeklyMatchups.js";
   import Loading from "../Shared/Loading.svelte";
   import InsightsView from "./InsightsView.svelte";
   import "./insights.css";
@@ -28,18 +27,12 @@
   let view = $state.raw(null);
   let onTeamClick = $state.raw(null);
 
-  // remaining schedule: Sleeper returns matchup pairings for future weeks too
-  const loadSchedule = async (weeks) => {
-    const responses = await waitForAll(
-      ...weeks.map((w) =>
-        fetch(`https://api.sleeper.app/v1/league/${leagueID}/matchups/${w}`, { compress: true })
-          .then((res) => (res.ok ? res.json() : []))
-          .catch(() => [])
-      )
-    );
-    return weeks.map((week, i) => ({
+  // remaining schedule: Sleeper has pairings for future weeks too; read from the shared matchups download
+  const loadSchedule = async (weeksLeft) => {
+    const { weeks } = await getWeeklyMatchupEntries().catch(() => ({ weeks: {} }));
+    return weeksLeft.map((week) => ({
       week,
-      pairs: pairMatchups(responses[i] || []).map(([a, b]) => [String(a.roster_id), String(b.roster_id)]),
+      pairs: pairMatchups(weeks[week] ?? []).map(([a, b]) => [String(a.roster_id), String(b.roster_id)]),
     }));
   };
 

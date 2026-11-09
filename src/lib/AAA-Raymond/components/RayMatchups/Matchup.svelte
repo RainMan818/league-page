@@ -5,7 +5,7 @@
 -->
 <script>
   import { getTeamFromTeamManagers } from "$lib/utils/helperFunctions/universalFunctions";
-  import { posColor, playerPhoto } from "./positions.js";
+  import { posColor, playerPhoto } from "../../utils/positions.js";
 
   let { matchup, players, week, year, leagueTeamManagers, median = null, open = false, onToggle } = $props();
 

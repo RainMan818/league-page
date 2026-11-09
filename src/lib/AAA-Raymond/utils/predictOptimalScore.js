@@ -1,3 +1,5 @@
+import { idpGroup } from './positions.js';
+
 export const predictScores = (players, week, leagueData) => {
     const starterPositions = getStarterPositions(leagueData);
 
@@ -137,22 +139,9 @@ export const predictScores = (players, week, leagueData) => {
     return powerScore;
 }
 
-const IDP_POSITION_GROUPS = {
-    DL: 'DL', DE: 'DL', DT: 'DL', NT: 'DL',
-    LB: 'LB', OLB: 'LB', ILB: 'LB', MLB: 'LB',
-    DB: 'DB', CB: 'DB', S: 'DB', SS: 'DB', FS: 'DB',
-};
-
-// Map a player to DL, LB or DB (or undefined if they aren't a defender)
-const idpGroup = (player) => {
-    if (IDP_POSITION_GROUPS[player.pos]) return IDP_POSITION_GROUPS[player.pos];
-    const fantasyPosition = player.positions?.find(pos => IDP_POSITION_GROUPS[pos]);
-    return fantasyPosition ? IDP_POSITION_GROUPS[fantasyPosition] : undefined;
-}
-
 export const getStarterPositions = (leagueData) => {
     const rosterPositions = leagueData.roster_positions;
     const firstBench = rosterPositions.indexOf('BN');
 
     return rosterPositions.slice(0, firstBench);
-}
+}

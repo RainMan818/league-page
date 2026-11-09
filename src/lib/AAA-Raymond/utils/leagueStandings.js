@@ -1,4 +1,3 @@
-import { leagueID } from '$lib/utils/leagueInfo';
 import { standingsStore } from '$lib/stores';
 import { get } from 'svelte/store';
 import ColorScale from "color-scales";
@@ -7,19 +6,14 @@ import { getLeagueData } from "../../utils/helperFunctions/leagueData"
 import { getLeagueRosters } from "../../utils/helperFunctions/leagueRosters"
 import { waitForAll } from '../../utils/helperFunctions/multiPromise';
 import { round } from '../../utils/helperFunctions/universalFunctions';
-import { loadPlayers } from '../../utils/helperFunctions/players';
+import { getWeeklyMatchupEntries } from './weeklyMatchups.js';
+import { completedWeeksNewestFirst } from './matchupEntries.js';
+import { positionAverages } from './positionAverages.js';
+import { colorsGYR } from './colorScale.js';
 
 
-function addValue(map, roster_id, position, value) {
-    if (!map[roster_id]) {
-        map[roster_id] = {};
-    }
-    if (!map[roster_id]?.[position]) {
-        map[roster_id][position] = 0;
-    }
-    map[roster_id][position] = value + map[roster_id][position]
-}
 
+// servFetch is accepted for compatibility with the route loaders (they pass SvelteKit's fetch); nothing here needs it now
 export const getLeagueStandings = async (servFetch) => {
     if (get(standingsStore).standingsInfo) {
         return get(standingsStore);
@@ -29,13 +23,12 @@ export const getLeagueStandings = async (servFetch) => {
         getNflState(),
         getLeagueData(),
         getLeagueRosters(),
-        loadPlayers(servFetch || null),
     ).catch((err) => { console.error(err); return null; });
     // if loading failed, show no standings rather than crashing the server
     if (!leagueInfo) {
         return null;
     }
-    const [nflState, leagueData, rostersData, playersInfo] = leagueInfo;
+    const [nflState, leagueData, rostersData] = leagueInfo;
 
     const yearData = leagueData.season;
     const regularSeasonLength = leagueData.settings.playoff_week_start - 1;
@@ -88,19 +81,10 @@ export const getLeagueStandings = async (servFetch) => {
     }
 
     if (week >= 2) {
-        // pull in all completed matchups for the season (index 0 = most recent week)
+        // all completed matchups for the season (index 0 = most recent week), from the shared download
         try {
-            const matchupsPromises = [];
-            for (let i = week - 1; i > 0; i--) {
-                matchupsPromises.push(fetch(`https://api.sleeper.app/v1/league/${leagueID}/matchups/${i}`, { compress: true }))
-            }
-            const matchupsRes = await waitForAll(...matchupsPromises);
-            for (const matchupRes of matchupsRes) {
-                if (!matchupRes.ok) {
-                    throw new Error(`Sleeper matchups request failed (${matchupRes.status})`);
-                }
-            }
-            matchupsData = await waitForAll(...matchupsRes.map((res) => res.json()));
+            const { weeks } = await getWeeklyMatchupEntries();
+            matchupsData = completedWeeksNewestFirst(weeks, week - 1);
         } catch (err) {
             // keep the basic standings if matchups can't be loaded
             console.error(err);
@@ -113,12 +97,11 @@ export const getLeagueStandings = async (servFetch) => {
             }
         }
 
-        rosterPositionAveragesData = updateRosterPositionAveragesData({ matchupsData, week: week - 1 })
-
-        positionalData = updatePositionalData({ matchupsData, week: week - 1, players: playersInfo.players })
+        // lineup slots come from the league settings (roster_positions), not hard-coded indexes
+        rosterPositionAveragesData = positionAverages(matchupsData, week - 1, leagueData.roster_positions, 'roster');
+        positionalData = positionAverages(matchupsData, week - 1, leagueData.roster_positions, 'player');
     }
 
-    const colorsGYR = ["#57bb8a", "#ffd666", "#e67c73"];
     const response = {
         week,
         regularSeasonLength,
@@ -173,111 +156,4 @@ const processStandings = (matchup, standingsData, rosters) => {
         }
     }
     return standingsData;
-}
-
-const updateRosterPositionAveragesData = ({ matchupsData, week }) => {
-    const rosterPositionAveragesData = {};
-    for (const matchup of matchupsData) {
-        matchup.forEach((val) => {
-            const scores = val['starters_points']
-            const userId = val['roster_id']
-            const user = userId; // keyed by roster ID; PositionAverages looks up the team name
-            addValue(rosterPositionAveragesData, user, 'QB+Flex', scores[0])
-            addValue(rosterPositionAveragesData, user, 'RB', scores[1])
-            addValue(rosterPositionAveragesData, user, 'RB', scores[2])
-            addValue(rosterPositionAveragesData, user, 'WR', scores[3])
-            addValue(rosterPositionAveragesData, user, 'WR', scores[4])
-            addValue(rosterPositionAveragesData, user, 'TE', scores[5])
-            addValue(rosterPositionAveragesData, user, 'WRT', scores[6])
-            addValue(rosterPositionAveragesData, user, 'WRT', scores[7])
-            addValue(rosterPositionAveragesData, user, 'WRT', scores[8])
-            addValue(rosterPositionAveragesData, user, 'QB+Flex', scores[9])
-            addValue(rosterPositionAveragesData, user, 'IDP', scores[10])
-            addValue(rosterPositionAveragesData, user, 'DL', scores[11])
-            addValue(rosterPositionAveragesData, user, 'DL', scores[12])
-            addValue(rosterPositionAveragesData, user, 'DL', scores[13])
-            addValue(rosterPositionAveragesData, user, 'LB', scores[14])
-            addValue(rosterPositionAveragesData, user, 'LB', scores[15])
-            addValue(rosterPositionAveragesData, user, 'LB', scores[16])
-            addValue(rosterPositionAveragesData, user, 'DB', scores[17])
-            addValue(rosterPositionAveragesData, user, 'DB', scores[18])
-            addValue(rosterPositionAveragesData, user, 'DB', scores[19])
-
-            scores.forEach((score) => {
-                addValue(rosterPositionAveragesData, user, "Team", score);
-            })
-            scores.slice(0, 10).forEach((score) => {
-                addValue(rosterPositionAveragesData, user, "Off", score);
-            })
-            scores.slice(10, 20).forEach((score) => {
-                addValue(rosterPositionAveragesData, user, "Def", score);
-            })
-        })
-    }
-    for (const team in rosterPositionAveragesData) {
-        const mapping = rosterPositionAveragesData[team];
-        for (const position in mapping) {
-            const totalPoints = mapping[position];
-            mapping[position] = totalPoints / week
-        }
-    }
-
-    return rosterPositionAveragesData
-}
-
-const updatePositionalData = ({ matchupsData, week, players }) => {
-    const positionalData = {};
-    if (!players) return positionalData;
-    // process all the matchups
-    for (const matchups of matchupsData) {
-        matchups.forEach((matchup) => {
-            const scores = matchup['starters_points']
-            const starters = matchup['starters']
-            const userId = matchup['roster_id']
-            const user = userId; // keyed by roster ID; PositionAverages looks up the team name
-            addValue(positionalData, user, 'QB', scores[0])
-            addValue(positionalData, user, 'RB', scores[1])
-            addValue(positionalData, user, 'RB', scores[2])
-            addValue(positionalData, user, 'WR', scores[3])
-            addValue(positionalData, user, 'WR', scores[4])
-            addValue(positionalData, user, 'TE', scores[5])
-
-            /** Assign multi-positional slots to actual player positions */
-            // TODO: do not use position [0]
-            // addValue(positionalData, user, players[starters[6]]?.positions[0], scores[6])
-            // addValue(positionalData, user, players[starters[7]]?.positions[0], scores[7])
-            // addValue(positionalData, user, players[starters[8]]?.positions[0], scores[8])
-            // addValue(positionalData, user, players[starters[9]]?.positions[0], scores[9])
-            // addValue(positionalData, user, players[starters[10]]?.positions[0], scores[10])
-
-            addValue(positionalData, user, 'DL', scores[11])
-            addValue(positionalData, user, 'DL', scores[12])
-            addValue(positionalData, user, 'DL', scores[13])
-            addValue(positionalData, user, 'LB', scores[14])
-            addValue(positionalData, user, 'LB', scores[15])
-            addValue(positionalData, user, 'LB', scores[16])
-            addValue(positionalData, user, 'DB', scores[17])
-            addValue(positionalData, user, 'DB', scores[18])
-            addValue(positionalData, user, 'DB', scores[19])
-
-            scores.forEach((score) => {
-                addValue(positionalData, user, "Team", score);
-            })
-            scores.slice(0, 10).forEach((score) => {
-                addValue(positionalData, user, "Off", score);
-            })
-            scores.slice(10, 20).forEach((score) => {
-                addValue(positionalData, user, "Def", score);
-            })
-        })
-    }
-    for (const team in positionalData) {
-        const mapping = positionalData[team];
-        for (const position in mapping) {
-            const totalPoints = mapping[position];
-            mapping[position] = totalPoints / week
-        }
-    }
-
-    return positionalData
 }

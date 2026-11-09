@@ -79,9 +79,12 @@ const processMatchups = (inputMatchups, week) => {
 			roster_id: match.roster_id,
 			starters: match.starters,
 			points: match.starters_points,
-			// AAA-Raymond: full roster + per-player points, for the bench in the matchup view
+			// AAA-Raymond: full roster + per-player points (bench in the matchup view), plus the raw fields
+			// standings and the playoff projection need, so they can share this download (utils/weeklyMatchups.js)
 			players: match.players,
 			playersPoints: match.players_points,
+			matchup_id: match.matchup_id,
+			total: match.points,
 		})
 	}
 	return {matchups, week};

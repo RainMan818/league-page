@@ -1,4 +1,5 @@
 import ColorScale from "color-scales";
+import { colorsGYR } from "../../utils/colorScale.js";
 
 export function getAgeData(managerData, rosters) {
   return {
@@ -87,8 +88,6 @@ export function getCountData(managerData, rosters) {
 }
 
 export function getColorScales(min, max) {
-  const colorsGYR = ["#57bb8a", "#ffd666", "#e67c73"];
-  //   const colorsGYR = ["#0b8148", "#fccf55", "#f75c4d"]; // brighter
   return {
     colorsTeam: new ColorScale(min.Team, max.Team, colorsGYR),
     colorsOff: new ColorScale(min.Off, max.Off, colorsGYR),
@@ -278,4 +277,4 @@ export function digestData(passedPlayers, rawPlayers, playerScores) {
       DB: getAverage(cvData.DB),
     }
   };
-}
+}

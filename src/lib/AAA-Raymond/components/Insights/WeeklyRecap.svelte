@@ -3,8 +3,8 @@
   and league awards. `recap` comes from weeklyRecap() in utils/leagueInsights.js.
 -->
 <script>
-  import TeamChip from "./TeamChip.svelte";
-  import { pts } from "./format.js";
+  import TeamChip from "../Shared/TeamChip.svelte";
+  import { pts } from "../Shared/format.js";
 
   let { recap, teams, onTeamClick = null } = $props();
 

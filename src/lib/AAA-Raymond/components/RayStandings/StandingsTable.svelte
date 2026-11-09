@@ -1,11 +1,12 @@
 <!--
   Standings option B: one sortable table, ordered by playoff seed by default, with a dashed playoff line
   and division leader / wildcard tags. Rows are built in RayStandings/index.svelte (seeds from seedTeams()).
-  Table look comes from Insights/insights.css (wrapped in .insights by the parent).
+  Table look comes from Shared/common.css.
 -->
 <script>
-  import TeamChip from "../Insights/TeamChip.svelte";
-  import { record, pts } from "../Insights/format.js";
+  import TeamChip from "../Shared/TeamChip.svelte";
+  import { record, pts } from "../Shared/format.js";
+  import "../Shared/common.css";
   import { streakValue } from "../../utils/leagueInsights.js";
 
   let { rows, teams, playoffTeams = 0, showDivisions = false, onTeamClick = null } = $props();
@@ -53,8 +54,8 @@
   const clickFor = (id) => (onTeamClick ? () => onTeamClick(id) : null);
 </script>
 
-<div class="tableWrap">
-  <table class="ins rr-standings">
+<div class="rr-tableWrap">
+  <table class="rr-table rr-standings">
     <thead>
       <tr>
         <th aria-sort={sortKey === "seed" ? (sortDir > 0 ? "ascending" : "descending") : "none"}>
@@ -110,11 +111,6 @@
 {/if}
 
 <style>
-  .rr-standings th,
-  .rr-standings td {
-    padding: 9px 10px;
-  }
-
   .rr-sortBtn {
     padding: 0;
     border: 0;

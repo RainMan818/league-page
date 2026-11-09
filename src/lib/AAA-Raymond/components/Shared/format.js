@@ -1,4 +1,4 @@
-// Shared number formatting for the homepage insight sections.
+// Shared number formatting (insights, standings, recap).
 
 /** Probability (0-1) as a short percent. Monte Carlo odds are never shown as a guarantee unless every run agreed. */
 export function pct(p) {

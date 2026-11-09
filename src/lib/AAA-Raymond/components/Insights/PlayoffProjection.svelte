@@ -3,8 +3,9 @@
   `projection` comes from simulateSeason() in utils/leagueInsights.js.
 -->
 <script>
-  import TeamChip from "./TeamChip.svelte";
-  import { pct } from "./format.js";
+  import TeamChip from "../Shared/TeamChip.svelte";
+  import { pct } from "../Shared/format.js";
+  import "../Shared/common.css";
   import { SHOW_PLAYOFF_ODDS } from "./config.js";
 
   let { projection, teams, playoffWeeks, fromWeek, regularSeasonLength, divisions = 0, onTeamClick = null } = $props();
@@ -68,7 +69,7 @@
 {/snippet}
 
 <section class="rr-playoffs">
-  <p class="sub">
+  <p class="rr-pageSub">
     {#if weeksLeft === 0}
       Regular season complete: seeds are final.
     {/if}

@@ -7,6 +7,7 @@
 //   matchupsData: array of weekEntries, most recent completed week first (as built in leagueStandings.js)
 
 import { predictScores } from './predictOptimalScore.js';
+import { playerGroup, groupOf } from './positions.js';
 
 // League seeding rules:
 //  1. Division winners take the top seeds (ordered by record).
@@ -124,19 +125,10 @@ export const streakValue = (streak) => {
 
 /* ---------------------------------------------------------------- weekly recap */
 
-const POSITION_GROUPS = {
-    DE: 'DL', DT: 'DL', NT: 'DL', OLB: 'LB', ILB: 'LB', MLB: 'LB', CB: 'DB', S: 'DB', SS: 'DB', FS: 'DB',
-};
 export const RECAP_POSITIONS = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF', 'DL', 'LB', 'DB'];
 
 /** A player's position group (DE -> DL, CB -> DB, ...). */
-export const positionGroup = (player) => {
-    if (!player) return null;
-    const pos = POSITION_GROUPS[player.pos] ?? player.pos;
-    if (RECAP_POSITIONS.includes(pos)) return pos;
-    const alt = (player.positions || []).map((p) => POSITION_GROUPS[p] ?? p).find((p) => RECAP_POSITIONS.includes(p));
-    return alt ?? pos;
-};
+export const positionGroup = (player) => (player ? playerGroup(player, RECAP_POSITIONS) ?? groupOf(player.pos) : null);
 
 const shortName = (info, playerID) => {
     if (!info) return playerID;

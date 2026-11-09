@@ -1,0 +1,68 @@
+/*
+  Shared styles for custom tables and page subtitles (Team Breakdown, Standings, Position Averages, ...).
+  Import it from any component that uses these classes:  import "../Shared/common.css";
+
+    <p class="rr-pageSub">Muted centered line under a heading</p>
+    <div class="rr-tableWrap"><table class="rr-table"> ... <td class="left"> <td class="muted"> ... </table></div>
+
+  Selectors are two classes deep, so a component's own scoped rule needs more than that to override them
+  (e.g. ".rr-avg table.rr-avgTable td").
+*/
+
+.rr-pageSub {
+  text-align: center;
+  font-size: 0.85em;
+  color: var(--or-muted, var(--g999));
+  margin: 0 auto 1.4em;
+  max-width: 640px;
+}
+
+.rr-tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--or-table-border, var(--ccc));
+  border-radius: 10px;
+  background: var(--fff);
+  box-shadow: 0 6px 24px var(--or-table-shadow, transparent);
+}
+
+.rr-tableWrap table.rr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.rr-tableWrap table.rr-table th,
+.rr-tableWrap table.rr-table td {
+  padding: 9px 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.rr-tableWrap table.rr-table th {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--or-cyan, #0b8a9a);
+  border-bottom: 1px solid var(--or-table-border, var(--ccc));
+}
+
+/* rows are opaque so a sticky first column can cover cells scrolling under it */
+.rr-tableWrap table.rr-table tbody tr {
+  background: var(--fff);
+}
+
+.rr-tableWrap table.rr-table tbody tr:nth-child(odd) {
+  background: var(--f8f8f8);
+}
+
+.rr-tableWrap table.rr-table tbody tr:hover {
+  background: var(--or-row-hover, var(--eee));
+}
+
+.rr-tableWrap table.rr-table .left {
+  text-align: left;
+  max-width: 240px;
+}
+
+.rr-tableWrap table.rr-table .muted {
+  color: var(--or-muted, var(--g999));
+}

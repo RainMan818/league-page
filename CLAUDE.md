@@ -6,6 +6,8 @@ All data comes live from the public Sleeper API.
 
 ## Commands
 - `npm run dev` — local dev server
+- `npm test` — logic tests in `tests/` (plain `node --test`, no extra packages). Run after changing anything in
+  `src/lib/AAA-Raymond/utils/` or `RayTransactions/transactionView.js`.
 - `npm run build` / `npm run preview` — production build
 - Deploys to Vercel (default adapter). Docker build uses adapter-node (`npm run docker-run`).
 - Node is pinned to 24.x in `package.json` `engines`. Don't loosen it to `>=`: Vercel then jumps to the newest
@@ -15,40 +17,76 @@ All data comes live from the public Sleeper API.
 - Sleeper league ID `1314319869289717760`, set in `src/lib/utils/leagueInfo.js` with manager bios
 - 12 teams, dynasty, half-PPR, superflex, IDP, **3 divisions of 4** (Sleeper settings), plus a weekly
   league-median game (records are 2 games per week). The constitution text still describes 2 divisions.
-- Starting lineup order (index into Sleeper `starters` / `starters_points`):
-  0 QB, 1-2 RB, 3-4 WR, 5 TE, 6-8 FLEX, 9 SUPER_FLEX, 10 IDP_FLEX, 11-13 DL, 14-16 LB, 17-19 DB.
-  `src/lib/AAA-Raymond/utils/leagueStandings.js` hardcodes these indexes; update it if the lineup changes.
+- Starting lineup (Sleeper `roster_positions`): QB, RB×2, WR×2, TE, FLEX×3, SUPER_FLEX, IDP_FLEX, DL×3, LB×3, DB×3.
+  Code reads the lineup from `roster_positions`; nothing hard-codes slot indexes any more.
 
 ## Where custom code lives
 - **All custom work goes in `src/lib/AAA-Raymond/`.** This keeps merges from the upstream template easy.
-- Only touch upstream files to wire custom code in (imports and exports in `src/lib/components.js`,
-  `src/lib/utils/helper.js`, route pages). Keep those edits small.
+- Only touch template files to wire custom code in. Keep those edits small and mark them `AAA-Raymond`.
 - `src/lib/version.js` must stay in sync with `package.json`; don't bump it by hand.
+- Be gentle with the Sleeper API (Raymond's request): reuse data that's already loaded instead of adding requests.
 
-Custom pieces:
-- `RayHome`: all custom homepage content, the only custom line in `src/routes/+page.svelte`: weekly recap
-  (`Insights/RecapPanel`), then Power Rankings (`RayPowerRankings`), then Insights, stacked at every screen size.
-- `utils/leagueContext.js`: shared data loading. `loadLeagueBasics()` gives nflState, managers, leagueData,
-  rosters, players and `onTeamClick`; `loadLeagueContext({ standingsData, leagueTeamManagersData })` adds
-  `standings` and `teams` ({ [rosterID]: { name, avatar } }). Sections passed the same standingsData promise share
-  one result. Use these instead of calling the helpers one by one.
-- `Shared/Loading.svelte`: the "loading..." message + progress bar (`progress={false}` for errors/empty states).
-- `Insights`: playoff projection bracket and one sortable Team Breakdown table (record, division record, PF, PA,
-  streak, Tankathon pick + max PF, all-play, luck, efficiency). The weekly recap (`WeeklyRecap`, Sleeper-style
-  weekly report) renders in `RecapPanel`, which has previous/next arrows and a week picker for every completed
-  week (built from `standings.matchups`, no extra fetches; defaults to the latest week).
-- `Insights/config.js`: `SHOW_PLAYOFF_ODDS = false` hides all percentages, projected records and title odds
+### Pages
+- **Home** — `RayHome` is the only custom line in `src/routes/+page.svelte`: weekly recap (`Insights/RecapPanel`
+  + `WeeklyRecap`, previous/next and a week picker), then Power Rankings (`RayPowerRankings`, in a card), then
+  `Insights` (playoff projection bracket + sortable Team Breakdown table). The sidebar's "Recent Moves" is
+  `RayTransactions/RecentMoves` (newest 6 waivers + 6 trades, `RECENT_PER_TYPE`), swapped in via `components.js`.
+- **Matchups** — `RayMatchups/MatchupWeeks` + `Matchup` (versus strips; click for every starter with photos;
+  bench behind "Show bench"; "M" badge = beat the league median, median shown under the list when the league
+  plays median games). Swapped in by one import in `src/lib/Matchups/MatchupsAndBrackets.svelte`; the playoff
+  bracket still uses the template's `Matchup.svelte`.
+- **Standings** — `RayStandings` (`StandingsTable`: sortable, seed order, dashed playoff line, division pills,
+  Division leader / Wildcard / Points wildcard tags) and two `PositionAverages` tables (two-sided heat scale:
+  cyan = low, pink = high; by value in "Averages", evenly by rank in "Ranking").
+- **Trades & Waivers** (and manager pages) — `RayTransactions/TransactionFeed`: one card per day, one line per team
+  (waivers: + added / − dropped and FAAB bid; trades: team ← what it received, picks show "via <team>").
+  Swapped into the template's `TransactionsPage.svelte`. Date parsing/grouping in `transactionView.js`.
+- **Drafts** — `RayDrafts/DraftBoard` (dark cells, top edge in the position color, position tag, traded picks as
+  "→ owner" / "by <team>"). Swapped in by one import in `src/lib/Drafts/index.svelte`.
+- **Rosters** — `RosterAnalysis` at the top of the page (age, count and spread by position).
+
+### Shared building blocks
+- `utils/leagueContext.js` — `loadLeagueBasics()` (nflState, managers, leagueData, rosters, players, `onTeamClick`)
+  and `loadLeagueContext({ standingsData, leagueTeamManagersData })` (adds `standings` and
+  `teams` = { [rosterID]: { name, avatar } }). Sections passed the same standingsData promise share one result.
+- `utils/weeklyMatchups.js` + `utils/matchupEntries.js` — every regular-season week's matchups, downloaded once by
+  the template's `getLeagueMatchups()` (cached in `matchupsStore`) and converted back to Sleeper's raw entries.
+  Standings, the recap and the playoff projection's remaining schedule all read this; don't fetch `/matchups/{week}`
+  directly.
+- `utils/leagueStandings.js` — standings, division records, position averages (`helper.js` exports it as
+  `getLeagueStandings`). `standings.matchups` is completed weeks, newest first (index 0 = last completed week).
+- `utils/positions.js` — position grouping (DE→DL, CB→DB, …: `groupOf`, `playerGroup`, `idpGroup`), position colors
+  (`posColor` → `--or-pos-*`, Sleeper's colors) and `playerPhoto`. Use it instead of writing new position maps.
+- `utils/positionAverages.js` — per-week averages by lineup slot / player position, from `roster_positions`.
+- `utils/leagueInsights.js` — recap, seeding, bracket, simulation, all-play/luck, efficiency (plain functions).
+- `utils/predictOptimalScore.js` — best projected lineup (`predictScores`, also exported from `helper.js`).
+- `utils/colorScale.js` — the green/yellow/red palette for heat-scaled numbers.
+- `components/Shared/` — `Loading` (loading/error message), `Toggle` (segmented control; SMUI button groups are
+  restyled to match in `outrun.css`), `TeamChip` (avatar + team name, clickable), `format.js` (pct, pts, record…),
+  `common.css` (`rr-tableWrap` / `rr-table` tables and `rr-pageSub` subtitles). The table selectors are two classes
+  deep, so a component's scoped override needs more (e.g. `.rr-avg table.rr-avgTable td`).
+- `Insights/config.js` — `SHOW_PLAYOFF_ODDS = false` hides all percentages, projected records and title odds
   (bracket shows seeds only). Raymond doesn't want league mates seeing the odds yet.
-  `index.svelte` loads data in the browser and computes; `InsightsView` and the section components only render.
-  Logic lives in `utils/leagueInsights.js` (plain functions, no site imports).
-- `RosterAnalysis`: age, count and spread by position for each team (top of the /rosters page)
-- `RayStandings` + `PositionAverages`: the /standings page
-- `RayPowerRankings`: rest-of-season projections using `utils/predictOptimalScore.js`. `index.svelte` is our own
-  loader, so the upstream `src/lib/PowerRankings/` files are untouched (and unused). Uses upstream
-  `src/lib/BarChart.svelte` with `controlsOnTop` (Raymond's addition, default off) so the graph buttons sit
-  between the header and the chart.
-- `utils/leagueStandings.js`: standings, division records, position averages.
-  `helper.js` exports it as `getLeagueStandings`.
+- `RayPowerRankings` uses the template's `src/lib/BarChart.svelte` with `controlsOnTop` (Raymond's addition).
+
+### Template files we changed (check these after merging template updates)
+- Wiring: `src/routes/+page.svelte`, `src/routes/standings/+page.js` (passes `fetch`), `src/routes/rosters/+page.js`
+  and `+page.svelte`, `src/lib/components.js`, `src/lib/utils/helper.js`, `src/lib/utils/tabs.js` (nav tabs),
+  `src/lib/Matchups/MatchupsAndBrackets.svelte`, `src/lib/Drafts/index.svelte`,
+  `src/lib/Transactions/TransactionsPage.svelte`.
+- `src/lib/utils/helperFunctions/leagueMatchups.js` keeps extra fields per team (`players`, `playersPoints`,
+  `matchup_id`, `total`) for the bench and the shared matchups loader.
+- `src/lib/BarChart.svelte` (`controlsOnTop`), `src/lib/Managers/Manager.svelte` (broken-icon fallback).
+- Theme: `src/routes/+layout.svelte`, `src/app.html`, `src/lib/Nav/index.svelte`, `NavLarge.svelte`, `static/manifest.json`.
+
+### Template files no longer used (leave them unedited so template merges stay clean)
+- `src/lib/Transactions/Transactions.svelte`, `WaiverTransaction.svelte`, `TradeTransaction.svelte`, `TransactionMove.svelte`
+- `src/lib/Drafts/Draft.svelte`, `DraftRow.svelte`
+- `src/lib/Matchups/MatchupWeeks.svelte`
+- `src/lib/PowerRankings/index.svelte`, `PowerRankingsDisplay.svelte`
+- `src/lib/Standings/` (the /standings route uses `RayStandings`)
+- `src/lib/utils/helperFunctions/leagueStandings.js` and `predictOptimalScore.js` (old copies; should eventually be
+  restored to the upstream versions)
 
 ## Playoff projection
 - Monte Carlo (10,000 runs, fixed seed so numbers are stable between loads) of the remaining regular season and the playoffs.
@@ -57,7 +95,7 @@ Custom pieces:
 - Seeding (league rule, per Raymond): division winners take the top seeds, the next seeds go to the best remaining
   records, and the last seed goes to the highest points for among everyone not yet in, regardless of record.
   With 3 divisions: 1-3 division winners, 4-5 records, 6 points for. Seeds 1-2 get byes. Record ties are broken by
-  points for. Settings: `DIVISION_WINNERS_GET_TOP_SEEDS`, `POINTS_WILDCARD_SEEDS` in `leagueInsights.js`. Toggle `DIVISION_WINNERS_GET_TOP_SEEDS` in `leagueInsights.js` if the rules change.
+  points for. Settings: `DIVISION_WINNERS_GET_TOP_SEEDS`, `POINTS_WILDCARD_SEEDS` in `leagueInsights.js`.
   Playoff team count and start week come from Sleeper league settings. Median games are supported.
 - Hidden once the regular season ends (points to the Matchups bracket).
 
@@ -68,6 +106,8 @@ Custom pieces:
 - Night is the default. Sunset day mode = `<html data-theme="day">`, set by the header toggle
   (`src/lib/Nav/index.svelte`), saved in localStorage, applied before paint by the inline script in `src/app.html`.
   Day mode also loads `/smui.css` on top of `/smui-dark.css`.
+- Position colors: `--or-pos-QB` … `--or-pos-DB` (Sleeper's colors at night, darker shades in day mode).
+- Main page headings: Orbitron 34px with the pink glow (Matchups, Drafts, Standings match).
 - Header backdrop: `horizon-night.svg` / `horizon-day.svg` in the theme folder.
 - Logo: `src/lib/AAA-Raymond/components/OutrunLogo/` draws hand-built block letters (`glyphs.js`) as SVG,
   so it doesn't depend on fonts. Change the words via the `title`/`subtitle` props; letters missing from
@@ -76,20 +116,25 @@ Custom pieces:
 
 ## Gotchas
 - Sleeper roster slot names: `IDP_FLEX`, `SUPER_FLEX`, `FLEX`, `REC_FLEX`, `WRRB_FLEX`, `BN`.
-  Defender `position` can be specific (DE, DT, CB, S), so group IDPs via `idpGroup()` in predictOptimalScore.
+  Defender `position` can be specific (DE, DT, CB, S): group with `utils/positions.js`.
 - Position averages are keyed by roster ID; display names come from `getTeamFromTeamManagers`.
   Never hardcode usernames.
 - Files use Windows (CRLF) line endings; keep them.
 - Prefix class names in custom components (`rr-`): the template has global rules on generic names
   (e.g. `.slot { width: 22px !important }`) that will break your layout.
+- Svelte 5 scoped styles only add one class of specificity, so global rules like the shared table styles can win
+  over a component's own rule; check computed styles when an override "doesn't work".
 - Player projections in the players map are strings (`wi[week].p = "22.01"`); `parseFloat` before doing math.
 - Big computed objects held in Svelte state should use `$state.raw` (deep proxies break object identity).
 - Weekly recap numbers can differ slightly from Sleeper's own weekly report: Sleeper snapshots it before stat corrections.
-- Standings `matchups` is newest week first (index 0 = last completed week).
+- Transaction dates from the template look like "Nov 4 2026, 2:6AM" (minutes not padded); parse them with
+  `transactionView.js`.
 - Division records are counted once in `getLeagueStandings` (they used to be double-counted).
-- `src/lib/utils/helperFunctions/leagueStandings.js` and `predictOptimalScore.js` are old, unused copies.
-  They should eventually be restored to the upstream versions.
+- The template's stores (`standingsStore`, `matchupsStore`, ...) are module-level, so on the server they persist
+  between requests until the instance restarts. The browser re-runs the loads after hydration, so pages show fresh
+  data, but server-rendered HTML can be a little stale.
 
 ## Open TODOs
-- Finish moving custom logic out of upstream files (see `src/README.md`)
-- Build a sortable, filterable table component
+- One shared sortable-table component (TeamBreakdown and StandingsTable each have their own sorting code)
+- Split `utils/leagueInsights.js` (recap / playoffs / luck)
+- Reuse `TeamChip`, the week-arrow buttons and the "M" badge in Matchups, the transaction feed and the draft board

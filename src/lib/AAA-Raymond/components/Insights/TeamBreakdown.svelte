@@ -4,8 +4,9 @@
   Replaces the old Tankathon table. Inputs are built in index.svelte from the standings and utils/leagueInsights.js.
 -->
 <script>
-  import TeamChip from "./TeamChip.svelte";
-  import { pct, record, projRecord, signed, pts } from "./format.js";
+  import TeamChip from "../Shared/TeamChip.svelte";
+  import { pct, record, projRecord, signed, pts } from "../Shared/format.js";
+  import "../Shared/common.css";
   import { SHOW_PLAYOFF_ODDS } from "./config.js";
   import { streakValue } from "../../utils/leagueInsights.js";
 
@@ -80,8 +81,8 @@
   };
 </script>
 
-<div class="tableWrap">
-  <table class="ins rr-breakdown">
+<div class="rr-tableWrap">
+  <table class="rr-table rr-breakdown">
     <thead>
       <tr class="rr-groupRow">
         <th class="left" rowspan="2">Team</th>
@@ -151,15 +152,6 @@
 </div>
 
 <style>
-  .rr-breakdown {
-    font-size: 0.86em;
-  }
-
-  .rr-breakdown th,
-  .rr-breakdown td {
-    padding: 8px 6px;
-  }
-
   .rr-groupRow .rr-group {
     font-size: 0.72em;
     font-weight: 500;

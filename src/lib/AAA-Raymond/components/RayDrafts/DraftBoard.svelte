@@ -8,7 +8,7 @@
 <script>
   import { gotoManager } from "$lib/utils/helper";
   import { getAvatarFromTeamManagers, getTeamNameFromTeamManagers } from "$lib/utils/helperFunctions/universalFunctions";
-  import { posColor } from "../RayMatchups/positions.js";
+  import { posColor } from "../../utils/positions.js";
 
   let { draftData, leagueTeamManagers, previous = false, year, players } = $props();
 

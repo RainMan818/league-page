@@ -3,7 +3,8 @@
   Averages / ranking toggle; two-sided heat scale per column: cyan = low, neutral = middle, pink = high.
 -->
 <script>
-  import TeamChip from "../Insights/TeamChip.svelte";
+  import TeamChip from "../Shared/TeamChip.svelte";
+  import "../Shared/common.css";
   import Toggle from "../Shared/Toggle.svelte";
 
   let { averagesData, columnOrder, headerLabel, week, teams = {}, onTeamClick = null } = $props();
@@ -53,7 +54,7 @@
   <div class="rr-avgHead">
     <div>
       <h2>{headerLabel}</h2>
-      <p class="sub rr-avgSub">Points per week · through week {week - 1}</p>
+      <p class="rr-pageSub rr-avgSub">Points per week · through week {week - 1}</p>
     </div>
     <Toggle
       bind:value={mode}
@@ -65,8 +66,8 @@
     />
   </div>
 
-  <div class="tableWrap">
-    <table class="ins rr-avgTable">
+  <div class="rr-tableWrap">
+    <table class="rr-table rr-avgTable">
       <thead>
         <tr>
           <th class="left">Team</th>
@@ -114,7 +115,7 @@
     text-align: left;
   }
 
-  /* .rr-avg prefix: beat the shared .insights table.ins padding/size */
+  /* .rr-avg prefix: beat the shared .rr-tableWrap table.rr-table padding/size */
   .rr-avg table.rr-avgTable {
     font-size: 0.85em;
   }

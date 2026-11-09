@@ -1,4 +1,4 @@
-<!-- Avatar + team name; clicking goes to the manager page when onclick is given. -->
+<!-- Avatar + team name; clicking goes to the manager page when onclick is given. Used across the custom pages. -->
 <script>
   let { team, onclick = null, size = 28 } = $props();
 </script>
