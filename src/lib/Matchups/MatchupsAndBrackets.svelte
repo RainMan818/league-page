@@ -1,7 +1,8 @@
 
 <script>
 	import LinearProgress from '@smui/linear-progress';
-	import MatchupWeeks from './MatchupWeeks.svelte';
+	// AAA-Raymond: outrun "versus strip" matchups with full lineups, bench and league median
+	import MatchupWeeks from '../AAA-Raymond/components/RayMatchups/MatchupWeeks.svelte';
 	import Brackets from './Brackets.svelte';
     import Button, { Group, Label } from '@smui/button';
     import { goto } from '$app/navigation';
@@ -108,4 +109,4 @@
     {#if brackets.champs.bracket[0][0][0].points && (selection == 'champions' || selection == 'losers')}
         <Brackets {queryWeek} {leagueTeamManagers} {players} {brackets} bind:selection={selection} />
     {/if}
-{/if}
+{/if}

@@ -1,7 +1,8 @@
 <script>
 	import { waitForAll } from '$lib/utils/helper';
     import LinearProgress from '@smui/linear-progress';
-    import Draft from './Draft.svelte'; 
+    // AAA-Raymond: outrun draft board (position tags, traded-pick owners)
+    import Draft from '../AAA-Raymond/components/RayDrafts/DraftBoard.svelte';
 
     export let upcomingDraftData, previousDraftsData, leagueTeamManagersData, playersData;
 </script>

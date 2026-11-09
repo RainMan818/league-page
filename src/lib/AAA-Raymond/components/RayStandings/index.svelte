@@ -1,201 +1,139 @@
+<!--
+  The /standings page (src/routes/standings/+page.svelte): seeded standings table (option B) and the two
+  position-averages tables. Data from loadLeagueContext; seeds use the league rule in utils/leagueInsights.js.
+-->
 <script>
-  import { leagueName } from "$lib/utils/helper";
-  import { getTeamFromTeamManagers } from "$lib/utils/helperFunctions/universalFunctions";
-  import DataTable, { Head, Body, Row, Cell } from "@smui/data-table";
   import { onMount } from "svelte";
-  import Standing from "../../../Standings/Standing.svelte";
-  import PositionAverages from "../PositionAverages/index.svelte";
+  import { loadLeagueContext } from "../../utils/leagueContext.js";
+  import { seedTeams, POINTS_WILDCARD_SEEDS } from "../../utils/leagueInsights.js";
   import Loading from "../Shared/Loading.svelte";
-  import {
-    colorsGYR,
-    getColorScale,
-    getRanking,
-  } from "$lib/AAA-Raymond/utils/colorScale";
-  import ColorScale from "color-scales";
-  import {
-    standingsColumnOrder,
-    rosterPositionAveragesColumnOrder,
-    playerPositionAveragesColumnOrder,
-  } from "./constants";
+  import StandingsTable from "./StandingsTable.svelte";
+  import PositionAverages from "../PositionAverages/index.svelte";
+  import { rosterPositionAveragesColumnOrder, playerPositionAveragesColumnOrder } from "./constants";
+  import "../Insights/insights.css";
 
-  export let standingsData, leagueTeamManagersData;
+  let { standingsData, leagueTeamManagersData } = $props();
 
-  // Least important to most important (i.e. the most important [usually wins] goes last)
-  // Edit this to match your leagues settings
-  const sortOrder = [
-    "fptsAgainst",
-    "divisionTies",
-    "divisionWins",
-    "fpts",
-    "ties",
-    "wins",
-  ];
+  let status = $state("loading"); // loading | preseason | ready | error
+  let errorMessage = $state("");
+  let view = $state.raw(null);
 
-  let loading = true;
-  let preseason = false;
-  let standings, year, leagueTeamManagers;
-  let rosterPositionAveragesData, positionalData;
-  let rosterPositionAveragesColorScales, playerPositionAveragesColorScales;
-  let rosterPositionAveragesRankings = {},
-    playerPositionAveragesRankings = {};
-  let week = 0;
   onMount(async () => {
-    const asyncStandingsData = await standingsData;
-    if (!asyncStandingsData) {
-      loading = false;
-      preseason = true;
-      return;
-    }
-    const {
-      standingsInfo,
-      yearData,
-      week: asyncWeek,
-      rosterPositionAveragesData: asyncRosterPositionAveragessData,
-      positionalData: asyncPositionalData,
-    } = asyncStandingsData;
-    leagueTeamManagers = await leagueTeamManagersData;
-    year = yearData;
-
-    let finalStandings = Object.keys(standingsInfo).map(
-      (key) => standingsInfo[key]
-    );
-
-    for (const sortType of sortOrder) {
-      if (!finalStandings[0][sortType] && finalStandings[0][sortType] != 0) {
-        continue;
+    try {
+      const ctx = await loadLeagueContext({ standingsData, leagueTeamManagersData });
+      const { standings, rosters, leagueData, teams, onTeamClick } = ctx;
+      if (!standings?.standingsInfo) {
+        status = "preseason";
+        return;
       }
-      finalStandings = [...finalStandings].sort(
-        (a, b) => b[sortType] - a[sortType]
-      );
+
+      const settings = leagueData.settings;
+      const playoffTeams = settings.playoff_teams || 6;
+      const divisions = settings.divisions || 0;
+      const regularSeasonOver = standings.week > settings.playoff_week_start - 1;
+
+      const info = Object.values(standings.standingsInfo).map((s) => ({
+        ...s,
+        id: String(s.rosterID),
+        division: rosters[s.rosterID]?.settings?.division ?? null,
+      }));
+      const { order, divisionWinners } = seedTeams(info, { playoffTeams });
+
+      const recordSpots = playoffTeams - Math.min(POINTS_WILDCARD_SEEDS, playoffTeams - divisionWinners.length);
+      const rows = order.map((t, i) => {
+        const seed = i + 1;
+        let tag = "";
+        let tagKind = "";
+        if (divisionWinners.includes(t)) {
+          tag = regularSeasonOver ? "Division winner" : "Division leader";
+          tagKind = "division";
+        } else if (seed <= recordSpots) tag = "Wildcard";
+        else if (seed <= playoffTeams) tag = "Points wildcard";
+        return { ...t, seed, tag, tagKind };
+      });
+
+      view = {
+        year: standings.yearData,
+        week: standings.week,
+        rows,
+        teams,
+        onTeamClick,
+        playoffTeams,
+        showDivisions: divisions > 1,
+        playerAverages: standings.positionalData,
+        rosterAverages: standings.rosterPositionAveragesData,
+      };
+      status = "ready";
+    } catch (err) {
+      console.error(err);
+      errorMessage = err?.message ?? String(err);
+      status = "error";
     }
-
-    week = asyncWeek;
-    rosterPositionAveragesData = asyncRosterPositionAveragessData;
-    positionalData = asyncPositionalData;
-    standings = finalStandings;
-    loading = false;
-
-    rosterPositionAveragesColorScales = rosterPositionAveragesColumnOrder
-      .map(({ field }) => field)
-      .reduce(
-        (mapping, position) => {
-          mapping.averages[position] = getColorScale({
-            key: position,
-            originalMin: 100000,
-            originalMax: 0,
-            objects: Object.values(rosterPositionAveragesData),
-          });
-          rosterPositionAveragesRankings[position] = getRanking({
-            objects: Object.values(rosterPositionAveragesData),
-            key: position,
-          });
-          mapping.ranking[position] = new ColorScale(1, 12, colorsGYR);
-
-          return mapping;
-        },
-        { averages: {}, ranking: {} }
-      );
-
-    playerPositionAveragesColorScales = playerPositionAveragesColumnOrder
-      .map(({ field }) => field)
-      .reduce(
-        (mapping, position) => {
-          mapping.averages[position] = getColorScale({
-            key: position,
-            originalMin: 100000,
-            originalMax: 0,
-            objects: Object.values(positionalData),
-          });
-          playerPositionAveragesRankings[position] = getRanking({
-            objects: Object.values(positionalData),
-            key: position,
-          });
-          mapping.ranking[position] = new ColorScale(1, 12, colorsGYR);
-
-          return mapping;
-        },
-        { averages: {}, ranking: {} }
-      );
   });
 </script>
 
-<h1>{year ?? ""} {leagueName} Standings</h1>
+<h1 class="rr-pageTitle">{view?.year ?? ""} Standings</h1>
 
-{#if loading}
+{#if status === "loading"}
   <Loading message="Loading Standings..." />
-{:else if preseason}
+{:else if status === "preseason"}
   <Loading message="Preseason, No Standings Yet" progress={false} />
+{:else if status === "error"}
+  <Loading message="Couldn't load the standings: {errorMessage}" progress={false} />
 {:else}
-  <div class="standingsTable">
-    <DataTable table$aria-label="League Standings">
-      <Head>
-        <!-- Team name  -->
-        <Row>
-          <Cell class="center">Team</Cell>
-          {#each standingsColumnOrder as column}
-            <Cell class="center wrappable">{column.name}</Cell>
-          {/each}
-        </Row>
-      </Head>
-      <Body>
-        <!-- 	Standing	 -->
-        {#each standings as standing}
-          <Standing
-            columnOrder={standingsColumnOrder}
-            {standing}
-            {leagueTeamManagers}
-            team={getTeamFromTeamManagers(
-              leagueTeamManagers,
-              standing.rosterID
-            )}
-          />
-        {/each}
-      </Body>
-    </DataTable>
-  </div>
-
-  <div>
-    <PositionAverages
-      headerLabel="Per player position averages"
-      {leagueTeamManagers}
-      columnOrder={playerPositionAveragesColumnOrder}
-      averagesData={positionalData}
-      rankings={playerPositionAveragesRankings}
-      colorScale={playerPositionAveragesColorScales}
-      {week}
+  <div class="insights rr-standingsPage">
+    <p class="sub">Ordered by playoff seed · click a column to sort · records include the weekly median game</p>
+    <StandingsTable
+      rows={view.rows}
+      teams={view.teams}
+      playoffTeams={view.playoffTeams}
+      showDivisions={view.showDivisions}
+      onTeamClick={view.onTeamClick}
     />
 
     <PositionAverages
-      headerLabel="Per roster position averages"
-      {leagueTeamManagers}
+      headerLabel="Per-player position averages"
+      columnOrder={playerPositionAveragesColumnOrder}
+      averagesData={view.playerAverages}
+      week={view.week}
+      teams={view.teams}
+      onTeamClick={view.onTeamClick}
+    />
+
+    <PositionAverages
+      headerLabel="Per-roster position averages"
       columnOrder={rosterPositionAveragesColumnOrder}
-      averagesData={rosterPositionAveragesData}
-      rankings={rosterPositionAveragesRankings}
-      colorScale={rosterPositionAveragesColorScales}
-      {week}
+      averagesData={view.rosterAverages}
+      week={view.week}
+      teams={view.teams}
+      onTeamClick={view.onTeamClick}
     />
   </div>
 {/if}
 
 <style>
-  :global(.center) {
-    text-align: center;
+  /* same look as the other main pages' headings (Matchups, Drafts): Orbitron, pink glow, no gradient */
+  h1.rr-pageTitle {
+    margin: 1.33em 16px 0.5em;
+    font-size: 2.125rem;
+    font-weight: 500;
+    line-height: 1.2;
+    background: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    color: var(--or-heading, var(--g111));
+    text-shadow: var(--or-heading-glow, none);
+    filter: none;
   }
 
-  :global(.wrappable) {
-    white-space: normal;
-    line-height: 1.2em;
+  @media (max-width: 800px) {
+    h1.rr-pageTitle {
+      font-size: 1.5rem;
+    }
   }
 
-  h1 {
-    font-size: 2.2em;
-    line-height: 1.3em;
-    margin: 1.5em 0 2em;
-  }
-
-  .standingsTable {
-    max-width: 100%;
-    overflow-x: scroll;
-    margin: 0.5em 0 5em;
+  .rr-standingsPage {
+    max-width: 1140px;
+    text-align: left;
   }
 </style>

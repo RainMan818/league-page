@@ -351,3 +351,86 @@ html:root footer {
 html:root footer .navLink:hover {
   color: var(--or-cyan);
 }
+
+/* ===================== PAGE REDESIGN TOKENS ===================== */
+/* position colors (matchup chips, draft board edges) and the segmented toggle */
+html:root {
+  /* Sleeper's position colors (same as the template's --QB, --WR, ...) */
+  --or-pos-QB: #ff2a6d;
+  --or-pos-RB: #00ceb8;
+  --or-pos-WR: #58a7ff;
+  --or-pos-TE: #ffae58;
+  --or-pos-K: #bd66ff;
+  --or-pos-DEF: #fff67a;
+  --or-pos-DL: #ff795a;
+  --or-pos-LB: #6d7df5;
+  --or-pos-DB: #ff7cb6;
+  --or-toggle-bg: #0f0522;
+  --or-toggle-border: rgba(181, 55, 242, 0.5);
+  --or-toggle-text: #c3b2e6;
+  --or-pick-text: #aef8fd;
+}
+
+html:root[data-theme="day"] {
+  /* same hues as night, darkened to read on the light background */
+  --or-pos-QB: #c2185b;
+  --or-pos-RB: #00897b;
+  --or-pos-WR: #1e6fd9;
+  --or-pos-TE: #c96a00;
+  --or-pos-K: #8e3ccf;
+  --or-pos-DEF: #8a7d00;
+  --or-pos-DL: #d9480f;
+  --or-pos-LB: #4453d6;
+  --or-pos-DB: #c2387a;
+  --or-toggle-bg: #fff6f0;
+  --or-toggle-border: rgba(194, 24, 91, 0.35);
+  --or-toggle-text: #6e4a6a;
+  --or-pick-text: #0b6a78;
+}
+
+/* ===================== SEGMENTED TOGGLES ===================== */
+/* SMUI button groups (Matchups, Power Rankings) and the Trades / Waivers / Both buttons:
+   one pill container, selected = solid pink, the rest muted. Matches Shared/Toggle.svelte. */
+html:root .smui-button__group,
+html:root .transactionsParent .buttons:not(.invis-buttons) {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  margin: 4px 0;
+  border: 1px solid var(--or-toggle-border);
+  border-radius: 8px;
+  background: var(--or-toggle-bg);
+}
+
+html:root .smui-button__group:not(:has(button)) {
+  display: none;
+}
+
+/* the Trades / Waivers / Both row was centered as inline text; keep it centered as a pill */
+html:root .transactionsParent .buttons:not(.invis-buttons) {
+  display: flex;
+  width: fit-content;
+  margin: 4px auto;
+}
+
+html:root :is(.smui-button__group, .transactionsParent .buttons) .mdc-button {
+  height: 34px;
+  margin: 0 !important;
+  padding: 0 16px;
+  border: 0 !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  box-shadow: none;
+  color: var(--or-toggle-text) !important;
+  letter-spacing: 0.08em;
+}
+
+html:root :is(.smui-button__group, .transactionsParent .buttons) .mdc-button--raised {
+  background: var(--or-pink) !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px var(--or-glow-pink);
+}
+
+/* Drafts: styles live in components/RayDrafts/DraftBoard.svelte */
+
+/* Trades & waivers: styles live in components/RayTransactions/TransactionFeed.svelte */

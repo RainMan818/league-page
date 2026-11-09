@@ -5,7 +5,8 @@ import Resources from './Resources.svelte';
 import Awards from './Awards/Awards.svelte';
 import Rosters from './Rosters/Rosters.svelte';
 import Rivalry from './Rivalry/index.svelte';
-import Transactions from './Transactions/Transactions.svelte';
+// AAA-Raymond: homepage "Recent Moves" (trades + waivers grouped by day) replaces the template's Transactions
+import Transactions from './AAA-Raymond/components/RayTransactions/RecentMoves.svelte';
 import TransactionsPage from './Transactions/TransactionsPage.svelte';
 import MatchupsAndBrackets from './Matchups/MatchupsAndBrackets.svelte';
 import Pagination from './Pagination.svelte';

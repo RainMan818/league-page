@@ -26,10 +26,13 @@ All data comes live from the public Sleeper API.
 - `src/lib/version.js` must stay in sync with `package.json`; don't bump it by hand.
 
 Custom pieces:
-- `RayHome/RecapAndRankings`: homepage block with the weekly recap (`Insights/RecapPanel`) and Power Rankings
-  below it, at every screen size. Replaces `<PowerRankings />` in `src/routes/+page.svelte`.
-- `RayHome`: homepage block below that: Insights. (Tankathon was merged into Team Breakdown; the old
-  `components/Tankathon/` files are unused but still exported from `src/lib/components.js`.)
+- `RayHome`: all custom homepage content, the only custom line in `src/routes/+page.svelte`: weekly recap
+  (`Insights/RecapPanel`), then Power Rankings (`RayPowerRankings`), then Insights, stacked at every screen size.
+- `utils/leagueContext.js`: shared data loading. `loadLeagueBasics()` gives nflState, managers, leagueData,
+  rosters, players and `onTeamClick`; `loadLeagueContext({ standingsData, leagueTeamManagersData })` adds
+  `standings` and `teams` ({ [rosterID]: { name, avatar } }). Sections passed the same standingsData promise share
+  one result. Use these instead of calling the helpers one by one.
+- `Shared/Loading.svelte`: the "loading..." message + progress bar (`progress={false}` for errors/empty states).
 - `Insights`: playoff projection bracket and one sortable Team Breakdown table (record, division record, PF, PA,
   streak, Tankathon pick + max PF, all-play, luck, efficiency). The weekly recap (`WeeklyRecap`, Sleeper-style
   weekly report) renders in `RecapPanel`, which has previous/next arrows and a week picker for every completed
@@ -38,10 +41,10 @@ Custom pieces:
   (bracket shows seeds only). Raymond doesn't want league mates seeing the odds yet.
   `index.svelte` loads data in the browser and computes; `InsightsView` and the section components only render.
   Logic lives in `utils/leagueInsights.js` (plain functions, no site imports).
-- `Tankathon`: draft order by potential points, worst first
 - `RosterAnalysis`: age, count and spread by position for each team (top of the /rosters page)
 - `RayStandings` + `PositionAverages`: the /standings page
-- `RayPowerRankings`: rest-of-season projections using `utils/predictOptimalScore.js`. Uses upstream
+- `RayPowerRankings`: rest-of-season projections using `utils/predictOptimalScore.js`. `index.svelte` is our own
+  loader, so the upstream `src/lib/PowerRankings/` files are untouched (and unused). Uses upstream
   `src/lib/BarChart.svelte` with `controlsOnTop` (Raymond's addition, default off) so the graph buttons sit
   between the header and the chart.
 - `utils/leagueStandings.js`: standings, division records, position averages.

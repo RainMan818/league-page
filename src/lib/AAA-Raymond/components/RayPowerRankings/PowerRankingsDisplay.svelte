@@ -99,10 +99,23 @@
 </script>
 
 <style>
+    /* framed like the other homepage cards (header + toggle + chart inside one card) */
     .enclosure {
         display: block;
         position: relative;
         width: 100%;
+        box-sizing: border-box;
+        padding: 22px 12px 8px;
+        border: 1px solid var(--or-table-border, var(--ccc));
+        border-radius: 14px;
+        background: var(--fff);
+        box-shadow: 0 6px 24px var(--or-table-shadow, transparent);
+    }
+
+    .enclosure :global(.chartWrapper) {
+        background: transparent;
+        box-shadow: none;
+        padding-top: 0;
     }
 </style>
 
@@ -110,4 +123,4 @@
     <div class="enclosure">
         <BarChart {graphs} bind:curGraph={curGraph} {leagueTeamManagers} controlsOnTop />
     </div>
-{/if}
+{/if}

@@ -1,14 +1,14 @@
 <script>
 	import Textfield from '@smui/textfield';
   	import Icon from '@smui/textfield/icon';
-	import TradeTransaction from './TradeTransaction.svelte';
 	import Button, { Label } from '@smui/button';
 	import IconButton from '@smui/icon-button';
 	import Pagination from '../Pagination.svelte';
 	import { match } from 'fuzzyjs';
 	import { goto } from '$app/navigation';
 	import { getLeagueTransactions, loadPlayers } from '$lib/utils/helper';
-	import WaiverTransaction from './WaiverTransaction.svelte';
+	// AAA-Raymond: trades & waivers grouped by day
+	import TransactionFeed from '../AAA-Raymond/components/RayTransactions/TransactionFeed.svelte';
 
 	export let show, playersInfo, query, queryPage, transactions, stale, perPage, postUpdate=false, leagueTeamManagers;
 	const oldQuery = query;
@@ -267,13 +267,7 @@
 
 		<Pagination {perPage} total={totalTransactions} bind:page={page} target={top} scroll={false} />
 		<div class="transactions-child">
-			{#each displayTransactions as transaction (transaction.id)}
-                {#if transaction.type == "waiver"}
-				    <WaiverTransaction {players} {transaction} {leagueTeamManagers} />
-                {:else}
-				    <TradeTransaction {players} {transaction} {leagueTeamManagers} />
-                {/if}
-			{/each}
+			<TransactionFeed transactions={displayTransactions} {players} {leagueTeamManagers} />
 		</div>
 		<Pagination {perPage} total={totalTransactions} bind:page={page} target={top} scroll={true} />
 
