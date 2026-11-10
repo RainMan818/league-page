@@ -33,3 +33,31 @@ export function completedWeeksNewestFirst(weeks, lastWeek) {
     for (let w = lastWeek; w >= 1; w--) out.push(weeks[w] ?? []);
     return out;
 }
+
+/**
+ * Raw Sleeper entries for one week -> the template's matchups shape ({ [matchupID]: [entry, entry] }),
+ * so a refreshed week can replace the cached one (Matchups page "Refresh scores").
+ */
+export function toTemplateMatchups(rawEntries = []) {
+    const matchups = {};
+    for (const e of rawEntries) {
+        (matchups[e.matchup_id] ??= []).push({
+            roster_id: e.roster_id,
+            starters: e.starters,
+            points: e.starters_points,
+            players: e.players,
+            playersPoints: e.players_points,
+            matchup_id: e.matchup_id,
+            total: e.points,
+        });
+    }
+    return matchups;
+}
+
+/** 'live' for the current NFL week, 'final' before it, 'upcoming' after it (regular season only). */
+export function weekStatus(displayWeek, currentWeek) {
+    if (!currentWeek) return 'final';
+    if (displayWeek < currentWeek) return 'final';
+    if (displayWeek === currentWeek) return 'live';
+    return 'upcoming';
+}

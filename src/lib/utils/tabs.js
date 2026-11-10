@@ -20,6 +20,13 @@ export const tabs = [
         key: 'standings',
     },
     {
+        // AAA-Raymond: week-by-week trend charts
+        icon: 'show_chart',
+        label: 'Trends',
+        dest: '/trends',
+        key: 'trends',
+    },
+    {
         icon: 'swap_horiz',
         label: 'Trades & Waivers',
         dest: '/transactions',
@@ -85,4 +92,4 @@ export const tabs = [
             },
         ]
     },
-];
+];

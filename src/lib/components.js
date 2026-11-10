@@ -23,6 +23,7 @@ import RosterAnalysis from "./AAA-Raymond/components/RosterAnalysis/index.svelte
 
 import RayHome from "./AAA-Raymond/components/RayHome/index.svelte";
 import RayStandings from "./AAA-Raymond/components/RayStandings/index.svelte";
+import RayTrends from "./AAA-Raymond/components/RayTrends/index.svelte";
 
 export {
     Nav,
@@ -47,5 +48,6 @@ export {
     Standings,
     RosterAnalysis,
     RayHome,
-    RayStandings
+    RayStandings,
+    RayTrends
 };

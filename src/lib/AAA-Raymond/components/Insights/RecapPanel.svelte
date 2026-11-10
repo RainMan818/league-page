@@ -1,11 +1,13 @@
 <!--
   Weekly recap panel at the top of the homepage (see RayHome/index.svelte), with week navigation.
-  Data comes from loadLeagueContext, shared with the other homepage sections.
+  Data comes from loadLeagueContext, shared with the other homepage sections. Once the playoffs start, the
+  scored playoff weeks are added (winners-bracket games only, from loadPlayoffRecapWeeks in utils/seasonData.js).
 -->
 <script>
   import { onMount } from "svelte";
   import { weeklyRecap } from "../../utils/leagueInsights.js";
   import { loadLeagueContext } from "../../utils/leagueContext.js";
+  import { loadPlayoffRecapWeeks } from "../../utils/seasonData.js";
   import Loading from "../Shared/Loading.svelte";
   import WeeklyRecap from "./WeeklyRecap.svelte";
 
@@ -16,17 +18,25 @@
   let teams = $state.raw({});
   let onTeamClick = $state.raw(null);
 
-  // every completed week is already in standings.matchups (index 0 = latest), so switching weeks needs no fetch
-  let source = $state.raw(null); // { matchups, players, leagueData, latestWeek }
+  // every completed regular-season week is already in standings.matchups (index 0 = latest), so switching weeks
+  // needs no fetch; playoff weeks are fetched once (shared with the season awards)
+  let source = $state.raw(null); // { byWeek: { [week]: { entries, roundName } }, players, leagueData }
   let selectedWeek = $state(null);
-  const weeks = $derived(source ? Array.from({ length: source.matchups.length }, (_, i) => source.latestWeek - i) : []);
+  const weeks = $derived(source ? Object.keys(source.byWeek).map(Number).sort((a, b) => b - a) : []);
+  const roundName = $derived(source?.byWeek[selectedWeek]?.roundName ?? null);
   const recap = $derived.by(() => {
     if (!source || selectedWeek == null) return null;
-    const entries = source.matchups[source.latestWeek - selectedWeek];
+    const entries = source.byWeek[selectedWeek]?.entries;
     return entries ? weeklyRecap(entries, source.players, { week: selectedWeek, leagueData: source.leagueData }) : null;
   });
   const canPrev = $derived(weeks.length > 0 && selectedWeek > weeks[weeks.length - 1]);
   const canNext = $derived(weeks.length > 0 && selectedWeek < weeks[0]);
+  // weeks can have gaps (none today, but a week with no bracket game is skipped), so step through the list
+  const step = (dir) => {
+    const i = weeks.indexOf(selectedWeek);
+    const next = weeks[i - dir];
+    if (next != null) selectedWeek = next;
+  };
 
   onMount(async () => {
     try {
@@ -40,8 +50,16 @@
       teams = ctx.teams;
       onTeamClick = ctx.onTeamClick;
       // matchups[0] is the most recent completed week
-      source = { matchups, players: ctx.players, leagueData: ctx.leagueData, latestWeek: standings.week - 1 };
-      selectedWeek = source.latestWeek;
+      const latestWeek = standings.week - 1;
+      const byWeek = {};
+      matchups.forEach((entries, i) => (byWeek[latestWeek - i] = { entries, roundName: null }));
+      const playoffWeeks = await loadPlayoffRecapWeeks().catch((err) => {
+        console.error(err);
+        return {};
+      });
+      Object.assign(byWeek, playoffWeeks);
+      source = { byWeek, players: ctx.players, leagueData: ctx.leagueData };
+      selectedWeek = weeks[0];
       status = recap ? "ready" : "none";
     } catch (err) {
       console.error(err);
@@ -58,11 +76,11 @@
 {:else if status === "ready"}
   <section class="rr-recapPanel">
     <div class="rr-weekNav">
-      <button type="button" class="rr-navBtn" aria-label="Previous week" disabled={!canPrev} onclick={() => selectedWeek--}>
+      <button type="button" class="rr-navBtn" aria-label="Previous week" disabled={!canPrev} onclick={() => step(-1)}>
         <span class="material-icons">chevron_left</span>
       </button>
-      <h6>Week {selectedWeek} Recap</h6>
-      <button type="button" class="rr-navBtn" aria-label="Next week" disabled={!canNext} onclick={() => selectedWeek++}>
+      <h6>Week {selectedWeek} Recap{roundName ? ` · ${roundName}` : ""}</h6>
+      <button type="button" class="rr-navBtn" aria-label="Next week" disabled={!canNext} onclick={() => step(1)}>
         <span class="material-icons">chevron_right</span>
       </button>
     </div>
@@ -71,7 +89,7 @@
         <label class="rr-weekPick">
           <span>Jump to</span>
           <select bind:value={selectedWeek} aria-label="Choose a week">
-            {#each weeks as w}<option value={w}>Week {w}{w === weeks[0] ? " (latest)" : ""}</option>{/each}
+            {#each weeks as w}<option value={w}>Week {w}{source.byWeek[w]?.roundName ? ` · ${source.byWeek[w].roundName}` : ""}{w === weeks[0] ? " (latest)" : ""}</option>{/each}
           </select>
         </label>
       {/if}

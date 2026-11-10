@@ -1,7 +1,7 @@
 // Run with: npm test
 import assert from 'assert/strict';
 import { test } from 'node:test';
-import { toEntry, entriesByWeek, completedWeeksNewestFirst } from '../src/lib/AAA-Raymond/utils/matchupEntries.js';
+import { toEntry, entriesByWeek, completedWeeksNewestFirst, toTemplateMatchups, weekStatus } from '../src/lib/AAA-Raymond/utils/matchupEntries.js';
 import { pairMatchups } from '../src/lib/AAA-Raymond/utils/leagueInsights.js';
 
 // shape of the template's processed matchups (getLeagueMatchups -> matchupWeeks)
@@ -34,4 +34,23 @@ test('completed weeks come newest first, missing weeks as empty', () => {
     assert.deepEqual(out[0], []); // week 3 not downloaded
     assert.equal(out[1][0].roster_id, 1); // week 2
     assert.equal(out[2].length, 4); // week 1
+});
+
+test('a refreshed week converts to the template shape and back', () => {
+    const raw = [
+        { roster_id: 1, matchup_id: 1, points: 15, starters: ['a'], starters_points: [15], players: ['a', 'b'], players_points: { a: 15, b: 2 } },
+        { roster_id: 2, matchup_id: 1, points: 12, starters: ['c'], starters_points: [12], players: ['c'], players_points: { c: 12 } },
+    ];
+    const tpl = toTemplateMatchups(raw);
+    assert.deepEqual(Object.keys(tpl), ['1']);
+    assert.equal(tpl[1].length, 2);
+    // round trip: template shape -> raw entries gives the original back
+    assert.deepEqual(entriesByWeek([{ week: 9, matchups: tpl }])[9], raw);
+});
+
+test('week status: final before the current week, live on it, upcoming after', () => {
+    assert.equal(weekStatus(8, 9), 'final');
+    assert.equal(weekStatus(9, 9), 'live');
+    assert.equal(weekStatus(10, 9), 'upcoming');
+    assert.equal(weekStatus(3, null), 'final');
 });

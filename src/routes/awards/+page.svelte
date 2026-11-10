@@ -1,10 +1,9 @@
 <script>
-	import { Awards } from '$lib/components'
-	import { waitForAll } from '$lib/utils/helper';
-	import LinearProgress from '@smui/linear-progress';
+	// AAA-Raymond: the Trophy Room is the season awards (season picker); the template's podium list was removed
+	import TrophyRoomAwards from '$lib/AAA-Raymond/components/SeasonAwards/TrophyRoomAwards.svelte';
 
     export let data;
-    const {awardsData, teamManagersData} = data;
+    const {teamManagersData} = data;
 </script>
 
 <style>
@@ -17,37 +16,8 @@
 		z-index: 1;
 		overflow-y: hidden;
     }
-
-	.loading {
-		display: block;
-		width: 85%;
-		max-width: 500px;
-		margin: 80px auto;
-	}
-
-	.nothingYet {
-		display: block;
-		width: 85%;
-		max-width: 500px;
-		margin: 80px auto;
-		text-align: center;
-	}
 </style>
 
 <div class="awards">
-	{#await waitForAll(awardsData, teamManagersData) }
-		<div class="loading">
-			<p>Retrieving awards data...</p>
-			<LinearProgress indeterminate />
-		</div>
-	{:then [podiums, leagueTeamManagers] }
-		{#each podiums as podium}
-			<Awards {podium} {leagueTeamManagers} />
-		{:else}
-			<p class="nothingYet">No seasons have been completed yet, so no awards have been earned...</p>
-		{/each}
-	{:catch error}
-		<!-- promise was rejected -->
-		<p>Something went wrong: {error.message}</p>
-	{/await}
+	<TrophyRoomAwards {teamManagersData} />
 </div>

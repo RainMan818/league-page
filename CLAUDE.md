@@ -31,6 +31,15 @@ All data comes live from the public Sleeper API.
   + `WeeklyRecap`, previous/next and a week picker), then Power Rankings (`RayPowerRankings`, in a card), then
   `Insights` (playoff projection bracket + sortable Team Breakdown table). The sidebar's "Recent Moves" is
   `RayTransactions/RecentMoves` (newest 6 waivers + 6 trades, `RECENT_PER_TYPE`), swapped in via `components.js`.
+  End of season (`seasonPhase` in `utils/seasonData.js`, from Sleeper's `last_scored_leg` and the NFL state):
+  once every regular-season week is scored, the recap gains the playoff weeks (winners-bracket games only) and
+  `SeasonAwards/HomeAwards` shows the regular-season awards below it. Once the championship is decided the awards
+  move to the top (post-season + regular season, with a toggle) and the recap stays below them through NFL week 18
+  (about a week after the week-17 final, Raymond's call), then disappears.
+- **Trophy Room** (`/awards`) — just `SeasonAwards/TrophyRoomAwards`: a season picker for every season whose regular
+  season is over (2022 onward). The template's podium list (`src/lib/Awards/Awards.svelte`, `getAwards()`) is no
+  longer shown; `src/routes/awards/+page.js` only loads team managers. The homepage sidebar's "Fantasy Champ" still
+  uses `getAwards()`.
 - **Matchups** — `RayMatchups/MatchupWeeks` + `Matchup` (versus strips; click for every starter with photos;
   bench behind "Show bench"; "M" badge = beat the league median, median shown under the list when the league
   plays median games). Swapped in by one import in `src/lib/Matchups/MatchupsAndBrackets.svelte`; the playoff
@@ -38,6 +47,13 @@ All data comes live from the public Sleeper API.
 - **Standings** — `RayStandings` (`StandingsTable`: sortable, seed order, dashed playoff line, division pills,
   Division leader / Wildcard / Points wildcard tags) and two `PositionAverages` tables (two-sided heat scale:
   cyan = low, pink = high; by value in "Averages", evenly by rank in "Ranking").
+- **Trends** (`/trends`, nav tab after Standings) — `RayTrends` (option A "dashboard grid"): standings place,
+  points for, max PF, lineup efficiency, all-play %, total offense / defense and each position, week by week.
+  Every team starts shown in a fixed color (`--rr-team-0..11`, darker set in day mode); the team buttons show/hide
+  teams on every chart (no limit; remembered in localStorage) and hovering one picks out its lines. `TrendChart`
+  draws at its real width with a week crosshair + tooltip. End labels lead with the team's latest rank ("3rd Globo_Gym");
+  on phones the big charts show just the rank number; the position charts have no end labels (hover for values).
+  Data from `utils/leagueTrends.js`.
 - **Trades & Waivers** (and manager pages) — `RayTransactions/TransactionFeed`: one card per day, one line per team
   (waivers: + added / − dropped and FAAB bid; trades: team ← what it received, picks show "via <team>").
   Swapped into the template's `TransactionsPage.svelte`. Date parsing/grouping in `transactionView.js`.
@@ -58,7 +74,27 @@ All data comes live from the public Sleeper API.
 - `utils/positions.js` — position grouping (DE→DL, CB→DB, …: `groupOf`, `playerGroup`, `idpGroup`), position colors
   (`posColor` → `--or-pos-*`, Sleeper's colors) and `playerPhoto`. Use it instead of writing new position maps.
 - `utils/positionAverages.js` — per-week averages by lineup slot / player position, from `roster_positions`.
+- `utils/leagueTrends.js` — week-by-week series for the Trends page (place via `seedTeams`, record incl. median game,
+  PF, max PF via `predictScores`, efficiency, all-play, position / OFF / DEF averages) from `standings.matchups`.
 - `utils/leagueInsights.js` — recap, seeding, bracket, simulation, all-play/luck, efficiency (plain functions).
+- `utils/seasonAwards.js` — end-of-season award math (plain functions, `tests/seasonAwards.test.js`). Player awards
+  count points scored in a starting lineup. Waiver Wizard and the Pickups credit each start to how the
+  team got that player (latest waiver, free-agent, trade or commissioner add in a leg <= that week; otherwise
+  drafted/kept). Pickup of the Year is split into offense and defense. Trade of the Year = everything the players a
+  team received scored from the trade's week on (any team, starting or bench, Raymond's call; later flips don't
+  matter), minus the same for the players it sent; traded draft picks count as a rough season
+  of points for their round (`utils/pickValues.js`, measured from this league's 2023–2026 rookie drafts). Rookies: `experience` (Sleeper years_exp, as of the current season) minus seasons since.
+  Playoff seeds use `seedTeams` (the league rule) numbered among the teams Sleeper put in the winners bracket;
+  this matched Sleeper's brackets for 2023–2025. Cinderella = the non-bye team that went furthest (ties: lower seed).
+  Championship Hero = the champion's top scorer in the final. Most Efficient Manager = playoff points ÷ max points
+  over the winners-bracket games played. Toilet Bowl = the `w` of the losers-bracket final: Sleeper's losers bracket
+  here records the LOWER score as the winner (losers advance), so that's the team that lost all the way down.
+- `utils/seasonData.js` — loads one season for the awards: the shared regular-season matchups for the current
+  league, plus the winners and losers brackets, scored playoff weeks and transaction legs 1..regular-season length
+  (one request per URL per page load, shared with the recap). Results are saved in localStorage: past seasons for
+  good, the current season for 3 hours. **Bump `CACHE_VERSION` whenever the award math changes**, or browsers keep
+  showing the old results. A season's older-version result is kept until its new one is saved, and is shown if Sleeper
+  fails (on Nov 9 Sleeper answered 404 for the 2025 league's rosters and winners bracket for a while).
 - `utils/predictOptimalScore.js` — best projected lineup (`predictScores`, also exported from `helper.js`).
 - `utils/colorScale.js` — the green/yellow/red palette for heat-scaled numbers.
 - `components/Shared/` — `Loading` (loading/error message), `Toggle` (segmented control; SMUI button groups are
@@ -70,7 +106,7 @@ All data comes live from the public Sleeper API.
 - `RayPowerRankings` uses the template's `src/lib/BarChart.svelte` with `controlsOnTop` (Raymond's addition).
 
 ### Template files we changed (check these after merging template updates)
-- Wiring: `src/routes/+page.svelte`, `src/routes/standings/+page.js` (passes `fetch`), `src/routes/rosters/+page.js`
+- Wiring: `src/routes/+page.svelte`, `src/routes/awards/` (season awards only), `src/routes/standings/+page.js` (passes `fetch`), `src/routes/trends/` (new), `src/routes/rosters/+page.js`
   and `+page.svelte`, `src/lib/components.js`, `src/lib/utils/helper.js`, `src/lib/utils/tabs.js` (nav tabs),
   `src/lib/Matchups/MatchupsAndBrackets.svelte`, `src/lib/Drafts/index.svelte`,
   `src/lib/Transactions/TransactionsPage.svelte`.
@@ -82,6 +118,7 @@ All data comes live from the public Sleeper API.
 ### Template files no longer used (leave them unedited so template merges stay clean)
 - `src/lib/Transactions/Transactions.svelte`, `WaiverTransaction.svelte`, `TradeTransaction.svelte`, `TransactionMove.svelte`
 - `src/lib/Drafts/Draft.svelte`, `DraftRow.svelte`
+- `src/lib/Awards/Awards.svelte` (Trophy Room podiums; replaced by the season awards)
 - `src/lib/Matchups/MatchupWeeks.svelte`
 - `src/lib/PowerRankings/index.svelte`, `PowerRankingsDisplay.svelte`
 - `src/lib/Standings/` (the /standings route uses `RayStandings`)
@@ -98,6 +135,8 @@ All data comes live from the public Sleeper API.
   points for. Settings: `DIVISION_WINNERS_GET_TOP_SEEDS`, `POINTS_WILDCARD_SEEDS` in `leagueInsights.js`.
   Playoff team count and start week come from Sleeper league settings. Median games are supported.
 - Hidden once the regular season ends (points to the Matchups bracket).
+- Sleeper fills in the winners bracket before the season ends (it can even look like last year's); the awards only
+  read it once the regular season is fully scored.
 
 ## Look and feel (outrun theme)
 - Theme lives in `src/lib/AAA-Raymond/theme/outrun.css`, imported in `src/routes/+layout.svelte`.
