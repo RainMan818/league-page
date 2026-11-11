@@ -54,10 +54,28 @@ export function toTemplateMatchups(rawEntries = []) {
     return matchups;
 }
 
-/** 'live' for the current NFL week, 'final' before it, 'upcoming' after it (regular season only). */
-export function weekStatus(displayWeek, currentWeek) {
+/**
+ * 'live' for the current NFL week, 'final' before it, 'upcoming' after it (regular season only).
+ * lastScored (Sleeper league settings.last_scored_leg) wins: a week Sleeper has finished scoring is final even while
+ * nflState.display_week still points at it (Sleeper keeps display_week on the old week until about Wednesday).
+ */
+export function weekStatus(displayWeek, currentWeek, lastScored = 0) {
+    if (displayWeek <= (Number(lastScored) || 0)) return 'final';
     if (!currentWeek) return 'final';
     if (displayWeek < currentWeek) return 'final';
     if (displayWeek === currentWeek) return 'live';
     return 'upcoming';
+}
+
+/**
+ * The first week that isn't finished yet (weeks 1 .. this - 1 are complete), capped at regularSeasonLength + 1.
+ * Sleeper's nflState.display_week stays on the last week until about Wednesday, but the league's
+ * settings.last_scored_leg moves as soon as Monday night's games are scored, so the later of the two wins.
+ */
+export function firstUnfinishedWeek(nflState, leagueData, regularSeasonLength) {
+    if (nflState?.season_type === 'post') return regularSeasonLength + 1;
+    if (nflState?.season_type !== 'regular') return 0;
+    const scored = Number(leagueData?.settings?.last_scored_leg) || 0;
+    const week = Math.max(Number(nflState.display_week) || 0, scored + 1);
+    return Math.min(week, regularSeasonLength + 1);
 }

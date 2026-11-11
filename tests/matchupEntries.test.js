@@ -1,7 +1,7 @@
 // Run with: npm test
 import assert from 'assert/strict';
 import { test } from 'node:test';
-import { toEntry, entriesByWeek, completedWeeksNewestFirst, toTemplateMatchups, weekStatus } from '../src/lib/AAA-Raymond/utils/matchupEntries.js';
+import { toEntry, entriesByWeek, completedWeeksNewestFirst, toTemplateMatchups, weekStatus, firstUnfinishedWeek } from '../src/lib/AAA-Raymond/utils/matchupEntries.js';
 import { pairMatchups } from '../src/lib/AAA-Raymond/utils/leagueInsights.js';
 
 // shape of the template's processed matchups (getLeagueMatchups -> matchupWeeks)
@@ -53,4 +53,22 @@ test('week status: final before the current week, live on it, upcoming after', (
     assert.equal(weekStatus(9, 9), 'live');
     assert.equal(weekStatus(10, 9), 'upcoming');
     assert.equal(weekStatus(3, null), 'final');
+});
+
+test('a week Sleeper has scored is final even while it is still the display week', () => {
+    assert.equal(weekStatus(9, 9, 9), 'final');
+    assert.equal(weekStatus(10, 9, 9), 'upcoming');
+    assert.equal(weekStatus(9, 9, 8), 'live');
+});
+
+test('first unfinished week uses the later of display_week and last scored week + 1', () => {
+    const reg = (display_week) => ({ season_type: 'regular', display_week });
+    const league = (last_scored_leg) => ({ settings: { last_scored_leg } });
+    assert.equal(firstUnfinishedWeek(reg(9), league(9), 14), 10); // Tuesday: week 9 scored, display_week not flipped yet
+    assert.equal(firstUnfinishedWeek(reg(10), league(9), 14), 10); // Wednesday on
+    assert.equal(firstUnfinishedWeek(reg(9), league(8), 14), 9); // week 9 still being played
+    assert.equal(firstUnfinishedWeek(reg(16), league(15), 14), 15); // capped after the regular season
+    assert.equal(firstUnfinishedWeek({ season_type: 'post' }, league(16), 14), 15);
+    assert.equal(firstUnfinishedWeek({ season_type: 'pre' }, league(0), 14), 0);
+    assert.equal(firstUnfinishedWeek(reg(3), {}, 14), 3); // no league settings
 });

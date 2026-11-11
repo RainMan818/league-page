@@ -44,7 +44,9 @@
 
   // the template passes the current NFL week (display week) during the regular season
   const currentWeek = $derived(Number(week) > 0 && Number(week) <= regularSeasonLength ? Number(week) : null);
-  const status = $derived(weekStatus(displayWeek, currentWeek));
+  // Sleeper's last fully scored week: that week shows FINAL even while it's still the "current" display week
+  let lastScored = $state(0);
+  const status = $derived(weekStatus(displayWeek, currentWeek, lastScored));
   const updatedAt = $derived(
     refreshed?.week === displayWeek ? refreshed.at.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : ""
   );
@@ -87,7 +89,10 @@
   onMount(() => {
     // the median badge only means something in leagues that play the median each week
     getLeagueData()
-      .then((d) => (medianGames = d?.settings?.league_average_match == 1))
+      .then((d) => {
+        medianGames = d?.settings?.league_average_match == 1;
+        lastScored = Number(d?.settings?.last_scored_leg) || 0;
+      })
       .catch(() => {});
 
     if (!queryWeek || queryWeek < 1) {

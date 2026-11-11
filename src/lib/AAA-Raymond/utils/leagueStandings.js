@@ -7,7 +7,7 @@ import { getLeagueRosters } from "../../utils/helperFunctions/leagueRosters"
 import { waitForAll } from '../../utils/helperFunctions/multiPromise';
 import { round } from '../../utils/helperFunctions/universalFunctions';
 import { getWeeklyMatchupEntries } from './weeklyMatchups.js';
-import { completedWeeksNewestFirst } from './matchupEntries.js';
+import { completedWeeksNewestFirst, firstUnfinishedWeek } from './matchupEntries.js';
 import { positionAverages } from './positionAverages.js';
 import { colorsGYR } from './colorScale.js';
 
@@ -66,14 +66,9 @@ export const getLeagueStandings = async (servFetch) => {
     let rosterPositionAveragesData = {};
     let positionalData = {};
     let matchupsData = [];
-    // week = the current (not yet completed) week; weeks 1 to week - 1 are complete
-    let week = 0;
-    if (nflState.season_type == 'regular') {
-        // max the week out at end of regular season
-        week = nflState.display_week > regularSeasonLength ? regularSeasonLength + 1 : nflState.display_week;
-    } else if (nflState.season_type == 'post') {
-        week = regularSeasonLength + 1;
-    }
+    // week = the current (not yet completed) week; weeks 1 to week - 1 are complete.
+    // Uses the league's last scored week too, so a finished week counts on Tuesday (display_week flips ~Wednesday).
+    let week = firstUnfinishedWeek(nflState, leagueData, regularSeasonLength);
 
     // division records need at least one completed week
     if (divisions && week < 2) {
