@@ -6,7 +6,7 @@
 -->
 <script>
   import { onMount } from "svelte";
-  import { weeklyRecap } from "../../utils/leagueInsights.js";
+  import { weeklyRecap } from "../../utils/weeklyRecap.js";
   import { loadLeagueContext } from "../../utils/leagueContext.js";
   import { loadPlayoffRecapWeeks } from "../../utils/seasonData.js";
   import Loading from "../Shared/Loading.svelte";

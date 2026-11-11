@@ -1,6 +1,6 @@
 <!--
   Weekly report for the last completed week: best/worst team, players and benchwarmers of the week by position,
-  and league awards. `recap` comes from weeklyRecap() in utils/leagueInsights.js.
+  and league awards. `recap` comes from weeklyRecap() in utils/weeklyRecap.js.
 -->
 <script>
   import TeamChip from "../Shared/TeamChip.svelte";

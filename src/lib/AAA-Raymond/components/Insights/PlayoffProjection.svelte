@@ -1,6 +1,6 @@
 <!--
   Projected playoff bracket + playoff odds table.
-  `projection` comes from simulateSeason() in utils/leagueInsights.js.
+  `projection` comes from simulateSeason() in utils/playoffs.js.
 -->
 <script>
   import TeamChip from "../Shared/TeamChip.svelte";
@@ -13,9 +13,6 @@
   const oddsById = $derived(Object.fromEntries(projection.odds.map((o) => [o.rosterID, o])));
   const seeds = $derived(projection.projectedSeeds);
   const rounds = $derived(projection.rounds);
-  const bubble = $derived(
-    projection.odds.filter((o) => !seeds.includes(o.rosterID) && o.playoffs > 0).slice(0, 2)
-  );
   const titleFavorites = $derived([...projection.odds].sort((a, b) => b.title - a.title).slice(0, 3));
   const weeksLeft = $derived(Math.max(0, regularSeasonLength - fromWeek + 1));
 
@@ -206,18 +203,6 @@
     font-weight: 700;
     color: var(--or-pink, var(--blueOne));
   }
-
-  .rr-bubble {
-    text-align: center;
-    font-size: 0.85em;
-    color: var(--or-muted, var(--g999));
-    margin: 0;
-  }
-
-  .rr-bubbleTeam {
-    color: var(--g333);
-  }
-
 
   @media (max-width: 760px) {
     .rr-bracket {

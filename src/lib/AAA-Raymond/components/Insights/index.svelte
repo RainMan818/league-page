@@ -5,14 +5,9 @@
 -->
 <script>
   import { onMount } from "svelte";
-  import {
-    allPlayRecords,
-    lineupEfficiency,
-    expectedScores,
-    simulateSeason,
-    pairMatchups,
-    tankathonOrder,
-  } from "../../utils/leagueInsights.js";
+  import { allPlayRecords, lineupEfficiency, tankathonOrder } from "../../utils/teamStats.js";
+  import { expectedScores, simulateSeason } from "../../utils/playoffs.js";
+  import { pairMatchups } from "../../utils/matchupEntries.js";
   import { loadLeagueContext } from "../../utils/leagueContext.js";
   import { getWeeklyMatchupEntries } from "../../utils/weeklyMatchups.js";
   import Loading from "../Shared/Loading.svelte";

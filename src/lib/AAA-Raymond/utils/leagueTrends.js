@@ -3,7 +3,7 @@
 // Built only from data the site already has (completed weeks' matchups, league settings, players), so the page
 // makes no extra Sleeper requests. Plain functions, no site imports (tested in tests/leagueTrends.test.js).
 import { predictScores } from './predictOptimalScore.js';
-import { seedTeams } from './leagueInsights.js';
+import { seedTeams } from './playoffs.js';
 import { positionAverages, slotBuckets } from './positionAverages.js';
 
 const sum = (xs) => xs.reduce((a, b) => a + (b || 0), 0);

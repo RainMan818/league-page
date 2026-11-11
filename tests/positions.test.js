@@ -2,7 +2,7 @@
 import assert from 'assert/strict';
 import { test } from 'node:test';
 import { groupOf, playerGroup, idpGroup, posColor, playerPhoto, IDP_GROUPS } from '../src/lib/AAA-Raymond/utils/positions.js';
-import { positionGroup, RECAP_POSITIONS } from '../src/lib/AAA-Raymond/utils/leagueInsights.js';
+import { positionGroup, RECAP_POSITIONS } from '../src/lib/AAA-Raymond/utils/weeklyRecap.js';
 
 test('specific defender positions fold into DL / LB / DB', () => {
     assert.equal(groupOf('DE'), 'DL');

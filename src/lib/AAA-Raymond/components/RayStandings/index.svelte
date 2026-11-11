@@ -1,11 +1,11 @@
 <!--
   The /standings page (src/routes/standings/+page.svelte): seeded standings table (option B) and the two
-  position-averages tables. Data from loadLeagueContext; seeds use the league rule in utils/leagueInsights.js.
+  position-averages tables. Data from loadLeagueContext; seeds use the league rule in utils/playoffs.js.
 -->
 <script>
   import { onMount } from "svelte";
   import { loadLeagueContext } from "../../utils/leagueContext.js";
-  import { seedTeams, POINTS_WILDCARD_SEEDS } from "../../utils/leagueInsights.js";
+  import { seedTeams, POINTS_WILDCARD_SEEDS } from "../../utils/playoffs.js";
   import Loading from "../Shared/Loading.svelte";
   import StandingsTable from "./StandingsTable.svelte";
   import PositionAverages from "../PositionAverages/index.svelte";

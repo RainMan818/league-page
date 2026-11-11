@@ -1,8 +1,7 @@
 // Run with: npm test
 import assert from 'assert/strict';
 import { test } from 'node:test';
-import { toEntry, entriesByWeek, completedWeeksNewestFirst, toTemplateMatchups, weekStatus, firstUnfinishedWeek } from '../src/lib/AAA-Raymond/utils/matchupEntries.js';
-import { pairMatchups } from '../src/lib/AAA-Raymond/utils/leagueInsights.js';
+import { toEntry, entriesByWeek, completedWeeksNewestFirst, toTemplateMatchups, weekStatus, firstUnfinishedWeek, pairMatchups } from '../src/lib/AAA-Raymond/utils/matchupEntries.js';
 
 // shape of the template's processed matchups (getLeagueMatchups -> matchupWeeks)
 const tpl = (roster_id, matchup_id, starterPoints, total) => ({

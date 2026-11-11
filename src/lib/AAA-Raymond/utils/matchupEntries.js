@@ -1,5 +1,6 @@
 // Converts the template's processed matchups (getLeagueMatchups -> matchupWeeks) back into Sleeper's raw
 // per-team entries, so standings, the weekly recap and the playoff projection can share that one download.
+// Also small helpers for one week of raw entries (pairMatchups, playedEntries) and the current week (weekStatus).
 // Plain functions, no site imports (tested in tests/matchupEntries.test.js).
 //
 // template entry (src/lib/utils/helperFunctions/leagueMatchups.js, processMatchups):
@@ -79,3 +80,20 @@ export function firstUnfinishedWeek(nflState, leagueData, regularSeasonLength) {
     const week = Math.max(Number(nflState.display_week) || 0, scored + 1);
     return Math.min(week, regularSeasonLength + 1);
 }
+
+/** Group one week's entries into head-to-head pairs. */
+export function pairMatchups(weekEntries) {
+    const byId = {};
+    for (const entry of weekEntries) {
+        if (entry.matchup_id == null) continue;
+        (byId[entry.matchup_id] ||= []).push(entry);
+    }
+    return Object.values(byId).filter((pair) => pair.length === 2);
+}
+
+/** The entries of a week that has been played (a week where nobody has scored yet returns []). */
+export const playedEntries = (weekEntries) => {
+    const entries = (weekEntries || []).filter((e) => typeof e.points === 'number');
+    // a week where nobody has scored hasn't been played
+    return entries.some((e) => e.points > 0) ? entries : [];
+};

@@ -1,13 +1,14 @@
 <!--
   Standings option B: one sortable table, ordered by playoff seed by default, with a dashed playoff line
   and division leader / wildcard tags. Rows are built in RayStandings/index.svelte (seeds from seedTeams()).
-  Table look comes from Shared/common.css.
+  Sorting and the header come from Shared/SortableTable; table look from Shared/common.css.
 -->
 <script>
   import TeamChip from "../Shared/TeamChip.svelte";
+  import SortableTable from "../Shared/SortableTable.svelte";
   import { record, pts } from "../Shared/format.js";
   import "../Shared/common.css";
-  import { streakValue } from "../../utils/leagueInsights.js";
+  import { streakValue, streakLabel } from "../../utils/teamStats.js";
 
   let { rows, teams, playoffTeams = 0, showDivisions = false, onTeamClick = null } = $props();
 
@@ -16,7 +17,8 @@
 
   const columns = $derived(
     [
-      { key: "seed", label: "Seed", get: (r) => r.seed, firstDir: 1, cls: "rr-seedCol" },
+      { key: "seed", label: "Seed", get: (r) => r.seed, firstDir: 1 },
+      { key: "team", label: "Team", thClass: "left", sticky: true },
       { key: "div", label: "Div", get: (r) => (r.division ?? 99) * 100 + r.seed, firstDir: 1, show: showDivisions },
       { key: "record", label: "Record", get: winPct },
       { key: "divRec", label: "Div Rec", title: "Division record", get: divPct, show: showDivisions },
@@ -29,109 +31,57 @@
 
   let sortKey = $state("seed");
   let sortDir = $state(1);
-
-  const sorted = $derived.by(() => {
-    const col = columns.find((c) => c.key === sortKey) ?? columns[0];
-    return [...rows].sort((a, b) => sortDir * (col.get(a) - col.get(b)) || a.seed - b.seed);
-  });
-
   // the playoff line only makes sense in seed order
   const showLine = $derived(sortKey === "seed" && sortDir === 1 && playoffTeams > 0);
 
-  const sortBy = (key) => {
-    if (key === sortKey) sortDir = -sortDir;
-    else {
-      sortKey = key;
-      sortDir = columns.find((c) => c.key === key)?.firstDir ?? -1;
-    }
-  };
-
-  const streakText = (s) => {
-    const v = streakValue(s);
-    return v > 0 ? `W${v}` : v < 0 ? `L${-v}` : "–";
-  };
   const divColor = (d) => ["var(--or-cyan)", "var(--or-orange)", "var(--or-purple)", "var(--or-pink)"][((d ?? 1) - 1) % 4];
   const clickFor = (id) => (onTeamClick ? () => onTeamClick(id) : null);
 </script>
 
-<div class="rr-tableWrap">
-  <table class="rr-table rr-standings">
-    <thead>
-      <tr>
-        <th aria-sort={sortKey === "seed" ? (sortDir > 0 ? "ascending" : "descending") : "none"}>
-          <button type="button" class="rr-sortBtn" class:rr-active={sortKey === "seed"} onclick={() => sortBy("seed")}>
-            Seed{#if sortKey === "seed"}<span class="rr-arrow">{sortDir > 0 ? "▲" : "▼"}</span>{/if}
-          </button>
-        </th>
-        <th class="left">Team</th>
-        {#each columns.slice(1) as c (c.key)}
-          <th aria-sort={c.key === sortKey ? (sortDir > 0 ? "ascending" : "descending") : "none"}>
-            <button type="button" class="rr-sortBtn" class:rr-active={c.key === sortKey} title={c.title ?? `Sort by ${c.label}`} onclick={() => sortBy(c.key)}>
-              {c.label}{#if c.key === sortKey}<span class="rr-arrow">{sortDir > 0 ? "▲" : "▼"}</span>{/if}
-            </button>
-          </th>
-        {/each}
-      </tr>
-    </thead>
-    <tbody>
-      {#each sorted as r (r.id)}
-        <tr class:rr-lineAfter={showLine && r.seed === playoffTeams}>
-          <td><span class="rr-seed" class:rr-in={r.seed <= playoffTeams}>{r.seed}</span></td>
-          <td class="left">
-            <span class="rr-teamCell">
-              <TeamChip team={teams[r.id]} onclick={clickFor(r.id)} size={30} />
-              {#if r.tag}<span class="rr-tag" class:rr-tagDiv={r.tagKind === "division"}>{r.tag}</span>{/if}
-            </span>
-          </td>
-          {#each columns.slice(1) as c (c.key)}
-            {#if c.key === "div"}
-              <td><span class="rr-divPill" style="--c: {divColor(r.division)}">D{r.division ?? "–"}</span></td>
-            {:else if c.key === "record"}
-              <td class="rr-strong">{record(r.wins, r.losses, r.ties)}</td>
-            {:else if c.key === "divRec"}
-              <td class="muted">{record(r.divisionWins ?? 0, r.divisionLosses ?? 0, r.divisionTies ?? 0)}</td>
-            {:else if c.key === "pf"}
-              <td>{pts(r.fpts)}</td>
-            {:else if c.key === "pa"}
-              <td class="muted">{pts(r.fptsAgainst)}</td>
-            {:else if c.key === "max"}
-              <td>{pts(r.potentialPoints)}</td>
-            {:else if c.key === "streak"}
-              {@const v = streakValue(r.streak)}
-              <td><span class="rr-streak" class:rr-good={v > 0} class:rr-bad={v < 0}>{streakText(r.streak)}</span></td>
-            {/if}
-          {/each}
-        </tr>
-      {/each}
-    </tbody>
-  </table>
-</div>
+<SortableTable
+  {columns}
+  {rows}
+  rowKey={(r) => r.id}
+  defaultKey="seed"
+  tiebreak={(a, b) => a.seed - b.seed}
+  tableClass="rr-standings"
+  rowClass={(r) => (showLine && r.seed === playoffTeams ? "rr-lineAfter" : "")}
+  bind:sortKey
+  bind:sortDir
+>
+  {#snippet cell(r, c)}
+    {#if c.key === "seed"}
+      <td><span class="rr-seed" class:rr-in={r.seed <= playoffTeams}>{r.seed}</span></td>
+    {:else if c.key === "team"}
+      <td class="left rr-sticky">
+        <span class="rr-teamCell">
+          <TeamChip team={teams[r.id]} onclick={clickFor(r.id)} size={30} />
+          {#if r.tag}<span class="rr-tag" class:rr-tagDiv={r.tagKind === "division"}>{r.tag}</span>{/if}
+        </span>
+      </td>
+    {:else if c.key === "div"}
+      <td><span class="rr-divPill" style="--c: {divColor(r.division)}">D{r.division ?? "–"}</span></td>
+    {:else if c.key === "record"}
+      <td class="rr-strong">{record(r.wins, r.losses, r.ties)}</td>
+    {:else if c.key === "divRec"}
+      <td class="muted">{record(r.divisionWins ?? 0, r.divisionLosses ?? 0, r.divisionTies ?? 0)}</td>
+    {:else if c.key === "pf"}
+      <td>{pts(r.fpts)}</td>
+    {:else if c.key === "pa"}
+      <td class="muted">{pts(r.fptsAgainst)}</td>
+    {:else if c.key === "max"}
+      <td>{pts(r.potentialPoints)}</td>
+    {:else if c.key === "streak"}
+      {@const v = streakValue(r.streak)}
+      <td><span class="rr-streak" class:rr-good={v > 0} class:rr-bad={v < 0}>{streakLabel(r.streak)}</span></td>
+    {/if}
+  {/snippet}
+</SortableTable>
 {#if showLine}
   <p class="rr-legend"><span class="rr-seed rr-in" aria-hidden="true">1</span> in the playoffs today · dashed line = playoff cut</p>
 {/if}
 
 <style>
-  .rr-sortBtn {
-    padding: 0;
-    border: 0;
-    background: none;
-    color: inherit;
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .rr-sortBtn:hover,
-  .rr-sortBtn.rr-active {
-    color: var(--or-pink, var(--blueOne));
-  }
-
-  .rr-arrow {
-    font-size: 0.75em;
-    margin-left: 3px;
-  }
-
   .rr-seed {
     display: inline-flex;
     align-items: center;
@@ -204,7 +154,8 @@
     background: color-mix(in srgb, var(--or-pink, #c2185b) 12%, transparent);
   }
 
-  tr.rr-lineAfter td {
+  /* the <tr> is rendered by SortableTable (rowClass), the <td> here */
+  :global(tr.rr-lineAfter) td {
     border-bottom: 2px dashed var(--or-pink, var(--blueOne));
   }
 
@@ -224,27 +175,9 @@
     font-size: 0.7em;
   }
 
-  /* team column stays visible while the numbers scroll sideways on phones */
-  th.left,
+  /* team column width (sticky + name wrapping come from Shared/common.css) */
   td.left {
-    position: sticky;
-    left: 0;
-    z-index: 1;
-    background: inherit;
     min-width: 170px;
     max-width: 230px;
-  }
-
-  thead th.left {
-    background: var(--fff);
-  }
-
-  td.left :global(.rr-name) {
-    white-space: normal;
-    overflow-wrap: anywhere;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    line-height: 1.2;
   }
 </style>

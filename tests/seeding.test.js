@@ -1,7 +1,7 @@
 // Ported from the scratch tests used while building the homepage insights.
 // Run with: npm test
 import assert from 'assert/strict';
-import { seedTeams, simulateSeason } from '../src/lib/AAA-Raymond/utils/leagueInsights.js';
+import { seedTeams, simulateSeason } from '../src/lib/AAA-Raymond/utils/playoffs.js';
 import { test } from 'node:test';
 
 test('league seeding rule: division winners, record wildcards, one points-for wildcard', () => {

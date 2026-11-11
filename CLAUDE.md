@@ -59,7 +59,7 @@ All data comes live from the public Sleeper API.
   draws at its real width with a week crosshair + tooltip. End labels lead with the team's latest rank ("3rd Globo_Gym");
   on phones the big charts show just the rank number; the position charts have no end labels (hover for values).
   Points for / Max PF default to the season average per week (totals bunch up as weeks add up), with a small
-  Per week / Total / vs avg switch on each ( with `small`).
+  Per week / Total / vs avg switch on each (`Shared/Toggle` with `small`).
   Data from `utils/leagueTrends.js`.
 - **Trades & Waivers** (and manager pages) — `RayTransactions/TransactionFeed`: one card per day, one line per team
   (waivers: + added / − dropped and FAAB bid; trades: team ← what it received, picks show "via <team>").
@@ -90,7 +90,11 @@ All data comes live from the public Sleeper API.
 - `utils/leagueTrends.js` — week-by-week series for the Trends page (place via `seedTeams`, record incl. median game,
   PF, max PF via `predictScores`, efficiency, all-play, position / OFF / DEF averages) from `standings.matchups`.
   `placesByWeek()` + `movesForWeek()` give the recap's Movers; both share one record/seeding loop with `leagueTrends()`.
-- `utils/leagueInsights.js` — recap, seeding, bracket, simulation, all-play/luck, efficiency (plain functions).
+- `utils/playoffs.js` — the league seeding rule (`seedTeams`, also used by Standings, Trends and the awards), bracket
+  shape and the Monte Carlo playoff projection (`expectedScores`, `simulateSeason`).
+- `utils/teamStats.js` — all-play record & luck, lineup efficiency, Tankathon order, streaks (`streakValue`, `streakLabel`).
+- `utils/weeklyRecap.js` — the weekly recap (`weeklyRecap`, `positionGroup`, `RECAP_POSITIONS`).
+- `utils/matchupEntries.js` also has the one-week helpers `pairMatchups` and `playedEntries`.
 - `utils/seasonAwards.js` — end-of-season award math (plain functions, `tests/seasonAwards.test.js`). Player awards
   count points scored in a starting lineup. Waiver Wizard and the Pickups credit each start to how the
   team got that player (latest waiver, free-agent, trade or commissioner add in a leg <= that week; otherwise
@@ -113,7 +117,8 @@ All data comes live from the public Sleeper API.
 - `utils/colorScale.js` — the green/yellow/red palette for heat-scaled numbers.
 - `components/Shared/` — `Loading` (loading/error message), `Toggle` (segmented control; SMUI button groups are
   restyled to match in `outrun.css`), `TeamChip` (avatar + team name, clickable),
-  `PosChip` (solid position tag in its position color), `format.js` (pct, pts, record, `ordinal` "3rd"…),
+  `PosChip` (solid position tag in its position color), `SortableTable` (click-to-sort table shell with an optional
+  group header row and a sticky team column; Team Breakdown and the Standings table render their own cells into it), `format.js` (pct, pts, record, `ordinal` "3rd"…),
   `common.css` (`rr-tableWrap` / `rr-table` tables and `rr-pageSub` subtitles). The table selectors are two classes
   deep, so a component's scoped override needs more (e.g. `.rr-avg table.rr-avgTable td`).
 - `Insights/config.js` — `SHOW_PLAYOFF_ODDS = false` hides all percentages, projected records and title odds
@@ -147,7 +152,7 @@ All data comes live from the public Sleeper API.
 - Seeding (league rule, per Raymond): division winners take the top seeds, the next seeds go to the best remaining
   records, and the last seed goes to the highest points for among everyone not yet in, regardless of record.
   With 3 divisions: 1-3 division winners, 4-5 records, 6 points for. Seeds 1-2 get byes. Record ties are broken by
-  points for. Settings: `DIVISION_WINNERS_GET_TOP_SEEDS`, `POINTS_WILDCARD_SEEDS` in `leagueInsights.js`.
+  points for. Settings: `DIVISION_WINNERS_GET_TOP_SEEDS`, `POINTS_WILDCARD_SEEDS` in `utils/playoffs.js`.
   Playoff team count and start week come from Sleeper league settings. Median games are supported.
 - Hidden once the regular season ends (points to the Matchups bracket).
 - Sleeper fills in the winners bracket before the season ends (it can even look like last year's); the awards only
@@ -189,6 +194,4 @@ All data comes live from the public Sleeper API.
   data, but server-rendered HTML can be a little stale.
 
 ## Open TODOs
-- One shared sortable-table component (TeamBreakdown and StandingsTable each have their own sorting code)
-- Split `utils/leagueInsights.js` (recap / playoffs / luck)
 - Reuse `TeamChip`, the week-arrow buttons and the "M" badge in Matchups, the transaction feed and the draft board

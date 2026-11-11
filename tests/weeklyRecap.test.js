@@ -1,7 +1,7 @@
 // Ported from the scratch tests used while building the homepage insights.
 // Run with: npm test
 import assert from 'assert/strict';
-import { weeklyRecap, positionGroup } from '../src/lib/AAA-Raymond/utils/leagueInsights.js';
+import { weeklyRecap, positionGroup } from '../src/lib/AAA-Raymond/utils/weeklyRecap.js';
 import { test } from 'node:test';
 
 test('weekly recap awards, players of the week and benchwarmers', () => {

@@ -22,7 +22,8 @@
 
 import { predictScores } from './predictOptimalScore.js';
 import { playerGroup, groupOf } from './positions.js';
-import { allPlayRecords, seedTeams } from './leagueInsights.js';
+import { allPlayRecords } from './teamStats.js';
+import { seedTeams } from './playoffs.js';
 import { pickValue, PICK_VALUES } from './pickValues.js';
 
 const GROUPS = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF', 'DL', 'LB', 'DB'];

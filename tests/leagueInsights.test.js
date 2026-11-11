@@ -1,7 +1,9 @@
-// Ported from the scratch tests used while building the homepage insights.
+// Seeding, bracket, all-play, efficiency and the season simulation (utils/playoffs.js + utils/teamStats.js).
 // Run with: npm test
 import assert from 'assert/strict';
-import * as I from '../src/lib/AAA-Raymond/utils/leagueInsights.js';
+import * as playoffs from '../src/lib/AAA-Raymond/utils/playoffs.js';
+import * as teamStats from '../src/lib/AAA-Raymond/utils/teamStats.js';
+const I = { ...playoffs, ...teamStats };
 import { test } from 'node:test';
 
 test('bracket, seeding, all-play, efficiency and the season simulation', () => {
