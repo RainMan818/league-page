@@ -102,3 +102,24 @@ test('nice axis ticks', () => {
     const { X } = scales({ w: 100, h: 50, pad: { l: 0, r: 0, t: 0, b: 0 }, n: 5, min: 0, max: 1 });
     assert.equal(nearestIndex(60, X, 5), 2);
 });
+
+import { placesByWeek, movesForWeek } from '../src/lib/AAA-Raymond/utils/leagueTrends.js';
+
+test('placesByWeek matches the full trend series', () => {
+    const t = leagueTrends({ matchupsData, rosterIDs: [1, 2, 3, 4], divisions, leagueData, players });
+    const p = placesByWeek({ matchupsData, rosterIDs: [1, 2, 3, 4], divisions, leagueData });
+    for (const id of ['1', '2', '3', '4']) assert.deepEqual(p[id], t.series[id].place);
+});
+
+test('standings moves for a week', () => {
+    const places = placesByWeek({ matchupsData, rosterIDs: [1, 2, 3, 4], divisions, leagueData });
+    // week 1 places 1,3,2,4 -> week 2 places 3,1,4,2 (see the seeding test above)
+    const m = movesForWeek(places, 2);
+    assert.equal(m.week, 2);
+    assert.deepEqual(m.risers.map((x) => [x.rosterID, x.change]), [['2', 2], ['4', 2]]);
+    assert.deepEqual(m.fallers.map((x) => [x.rosterID, x.from, x.to]), [['1', 1, 3], ['3', 2, 4]]);
+    assert.deepEqual(m.held, []);
+    assert.equal(movesForWeek(places, 1), null); // nothing to compare week 1 with
+    assert.equal(movesForWeek(places, 3), null); // not played
+    assert.equal(movesForWeek({}, 2), null);
+});

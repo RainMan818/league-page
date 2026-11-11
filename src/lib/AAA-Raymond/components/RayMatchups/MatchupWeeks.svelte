@@ -241,10 +241,6 @@
     border: 1px solid var(--or-cyan, #0b8a9a);
   }
 
-  .rr-statusText {
-    color: var(--or-muted, var(--g999));
-  }
-
   .rr-refresh {
     display: inline-flex;
     align-items: center;

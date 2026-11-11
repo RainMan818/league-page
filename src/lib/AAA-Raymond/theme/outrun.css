@@ -358,13 +358,19 @@ html:root {
   /* Sleeper's position colors (same as the template's --QB, --WR, ...) */
   --or-pos-QB: #ff2a6d;
   --or-pos-RB: #00ceb8;
-  --or-pos-WR: #58a7ff;
+  /* WR a lighter blue and LB a deeper purple than Sleeper's, so the two are easier to tell apart.
+     --WR / --LB are the template's variables (used by the weekly recap cards), kept in step. */
+  --or-pos-WR: #7cc3ff;
+  --WR: #7cc3ff;
   --or-pos-TE: #ffae58;
   --or-pos-K: #bd66ff;
   --or-pos-DEF: #fff67a;
   --or-pos-DL: #ff795a;
-  --or-pos-LB: #6d7df5;
+  --or-pos-LB: #7a5cf0;
+  --LB: #7a5cf0;
   --or-pos-DB: #ff7cb6;
+  /* text on a solid position-color chip: dark reads best on the bright night colors */
+  --or-pos-chip-text: #120726;
   --or-toggle-bg: #0f0522;
   --or-toggle-border: rgba(181, 55, 242, 0.5);
   --or-toggle-text: #c3b2e6;
@@ -376,12 +382,15 @@ html:root[data-theme="day"] {
   --or-pos-QB: #c2185b;
   --or-pos-RB: #00897b;
   --or-pos-WR: #1e6fd9;
+  --WR: #1e6fd9;
   --or-pos-TE: #c96a00;
   --or-pos-K: #8e3ccf;
   --or-pos-DEF: #8a7d00;
   --or-pos-DL: #d9480f;
-  --or-pos-LB: #4453d6;
+  --or-pos-LB: #5b21b6;
+  --LB: #5b21b6;
   --or-pos-DB: #c2387a;
+  --or-pos-chip-text: #ffffff;
   --or-toggle-bg: #fff6f0;
   --or-toggle-border: rgba(194, 24, 91, 0.35);
   --or-toggle-text: #6e4a6a;

@@ -17,3 +17,6 @@ export const record = (w, l, t = 0) => (t ? `${w}-${l}-${t}` : `${w}-${l}`);
 
 /** Projected (fractional) record, e.g. 9.4-4.6 */
 export const projRecord = (w, l) => `${w.toFixed(1)}-${l.toFixed(1)}`;
+
+/** 1 -> "1st", 2 -> "2nd", 11 -> "11th", 22 -> "22nd" */
+export const ordinal = (k) => k + (k % 100 >= 11 && k % 100 <= 13 ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[k % 10] ?? 'th'));

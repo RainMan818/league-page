@@ -27,9 +27,14 @@ All data comes live from the public Sleeper API.
 - Be gentle with the Sleeper API (Raymond's request): reuse data that's already loaded instead of adding requests.
 
 ### Pages
-- **Home** — `RayHome` is the only custom line in `src/routes/+page.svelte`: weekly recap (`Insights/RecapPanel`
-  + `WeeklyRecap`, previous/next and a week picker), then Power Rankings (`RayPowerRankings`, in a card), then
-  `Insights` (playoff projection bracket + sortable Team Breakdown table). The sidebar's "Recent Moves" is
+- **Home** — `RayHome` is the only custom line in `src/routes/+page.svelte`. One section at a time, picked with
+  Recap / Power Rankings / Standings tabs under the league title (a fixed bottom bar under 760px wide):
+  Recap = weekly recap (`Insights/RecapPanel` + `WeeklyRecap`, previous/next and a week picker) ending with
+  "Movers" (`RayStandings/StandingsMovers`: risers / fallers that week, from `placesByWeek()` + `movesForWeek()` in
+  `utils/leagueTrends.js`; hidden for week 1 and playoff weeks) and season awards;
+  Power Rankings = `RayPowerRankings` (in a card); Standings = `Insights` (playoff projection bracket
+  + sortable Team Breakdown table). The last pick is remembered (localStorage `rr-home-view`); `/?view=recap|rankings|standings`
+  opens one directly. A section is built the first time it's opened, then kept. The sidebar's "Recent Moves" is
   `RayTransactions/RecentMoves` (newest 6 waivers + 6 trades, `RECENT_PER_TYPE`), swapped in via `components.js`.
   End of season (`seasonPhase` in `utils/seasonData.js`, from Sleeper's `last_scored_leg` and the NFL state):
   once every regular-season week is scored, the recap gains the playoff weeks (winners-bracket games only) and
@@ -59,12 +64,18 @@ All data comes live from the public Sleeper API.
 - **Trades & Waivers** (and manager pages) — `RayTransactions/TransactionFeed`: one card per day, one line per team
   (waivers: + added / − dropped and FAAB bid; trades: team ← what it received, picks show "via <team>").
   Swapped into the template's `TransactionsPage.svelte`. Date parsing/grouping in `transactionView.js`.
-- **Drafts** — `RayDrafts/DraftBoard` (dark cells, top edge in the position color, position tag, traded picks as
-  "→ owner" / "by <team>"). Swapped in by one import in `src/lib/Drafts/index.svelte`.
+- **Drafts** — `RayDrafts/DraftBoard` (dark cells, top edge in the position color, position tag (solid chip; text
+  color `--or-pos-chip-text` per theme), traded picks as "→ owner" / "by <team>"). Swapped in by one import in
+  `src/lib/Drafts/index.svelte`, which is also wrapped in `RayDrafts/DraftsLayout`. Clicking a team's name (or a
+  "by <team>" tag) spotlights that franchise's picks on every board (others dim) and opens `DraftPicksPanel`
+  (sticky right column ≥1100px, bottom sheet below; rows jump to the pick; Escape or ✕ clears). The small ↗ on
+  each team header opens the manager page. Shared state in `RayDrafts/draftHighlight.svelte.js`; teams match by
+  roster ID, compared as numbers (the boards mix string and number roster IDs).
 - **Rosters** — `RosterAnalysis` at the top of the page (age, count and spread by position).
 
 ### Shared building blocks
-- `utils/leagueContext.js` — `loadLeagueBasics()` (nflState, managers, leagueData, rosters, players, `onTeamClick`)
+- `utils/leagueContext.js` — `loadLeagueBasics()` (nflState, managers, leagueData, rosters, `divisions`
+  = { [rosterID]: division }, players, `onTeamClick`)
   and `loadLeagueContext({ standingsData, leagueTeamManagersData })` (adds `standings` and
   `teams` = { [rosterID]: { name, avatar } }). Sections passed the same standingsData promise share one result.
 - `utils/weeklyMatchups.js` + `utils/matchupEntries.js` — every regular-season week's matchups, downloaded once by
@@ -78,6 +89,7 @@ All data comes live from the public Sleeper API.
 - `utils/positionAverages.js` — per-week averages by lineup slot / player position, from `roster_positions`.
 - `utils/leagueTrends.js` — week-by-week series for the Trends page (place via `seedTeams`, record incl. median game,
   PF, max PF via `predictScores`, efficiency, all-play, position / OFF / DEF averages) from `standings.matchups`.
+  `placesByWeek()` + `movesForWeek()` give the recap's Movers; both share one record/seeding loop with `leagueTrends()`.
 - `utils/leagueInsights.js` — recap, seeding, bracket, simulation, all-play/luck, efficiency (plain functions).
 - `utils/seasonAwards.js` — end-of-season award math (plain functions, `tests/seasonAwards.test.js`). Player awards
   count points scored in a starting lineup. Waiver Wizard and the Pickups credit each start to how the
@@ -100,7 +112,8 @@ All data comes live from the public Sleeper API.
 - `utils/predictOptimalScore.js` — best projected lineup (`predictScores`, also exported from `helper.js`).
 - `utils/colorScale.js` — the green/yellow/red palette for heat-scaled numbers.
 - `components/Shared/` — `Loading` (loading/error message), `Toggle` (segmented control; SMUI button groups are
-  restyled to match in `outrun.css`), `TeamChip` (avatar + team name, clickable), `format.js` (pct, pts, record…),
+  restyled to match in `outrun.css`), `TeamChip` (avatar + team name, clickable),
+  `PosChip` (solid position tag in its position color), `format.js` (pct, pts, record, `ordinal` "3rd"…),
   `common.css` (`rr-tableWrap` / `rr-table` tables and `rr-pageSub` subtitles). The table selectors are two classes
   deep, so a component's scoped override needs more (e.g. `.rr-avg table.rr-avgTable td`).
 - `Insights/config.js` — `SHOW_PLAYOFF_ODDS = false` hides all percentages, projected records and title odds

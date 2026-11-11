@@ -13,7 +13,7 @@ import {
 import { getTeamFromTeamManagers } from '$lib/utils/helperFunctions/universalFunctions';
 
 /**
- * League data that doesn't need standings: NFL state, team managers, league settings, rosters, players.
+ * League data that doesn't need standings: NFL state, team managers, league settings, rosters (+ divisions), players.
  * Pass the page's leagueTeamManagersData promise if you have it.
  */
 export async function loadLeagueBasics({ leagueTeamManagersData } = {}) {
@@ -30,10 +30,16 @@ export async function loadLeagueBasics({ leagueTeamManagersData } = {}) {
         leagueData,
         rostersData,
         rosters: rostersData?.rosters ?? {},
+        divisions: rosterDivisions(rostersData?.rosters),
         playersInfo,
         players: playersInfo?.players ?? {},
         onTeamClick: teamClickHandler(managers),
     };
+}
+
+/** { [rosterID]: division number (null if the league has no divisions) }, from Sleeper roster settings. */
+export function rosterDivisions(rosters = {}) {
+    return Object.fromEntries(Object.entries(rosters ?? {}).map(([id, r]) => [id, r?.settings?.division ?? null]));
 }
 
 /** { [rosterID]: { name, avatar } } for the current season. */

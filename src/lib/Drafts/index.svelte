@@ -3,6 +3,8 @@
     import LinearProgress from '@smui/linear-progress';
     // AAA-Raymond: outrun draft board (position tags, traded-pick owners)
     import Draft from '../AAA-Raymond/components/RayDrafts/DraftBoard.svelte';
+    // AAA-Raymond: click a team to highlight its picks on every board + picks panel
+    import DraftsLayout from '../AAA-Raymond/components/RayDrafts/DraftsLayout.svelte';
 
     export let upcomingDraftData, previousDraftsData, leagueTeamManagersData, playersData;
 </script>
@@ -25,6 +27,7 @@
 </style>
 
 
+<DraftsLayout>
 {#await waitForAll(upcomingDraftData, leagueTeamManagersData, playersData) }
 	<div class="loading">
 		<p>Retrieving upcoming draft...</p>
@@ -62,3 +65,4 @@
 	<!-- promise was rejected -->
 	<p>Something went wrong: {error.message}</p>
 {/await}
+</DraftsLayout>

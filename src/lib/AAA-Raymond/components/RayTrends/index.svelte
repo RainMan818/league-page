@@ -11,13 +11,13 @@
   import { leagueTrends, leagueAverage } from "../../utils/leagueTrends.js";
   import { niceTicks } from "./chartGeometry.js";
   import Loading from "../Shared/Loading.svelte";
+  import { ordinal } from "../Shared/format.js";
   import Toggle from "../Shared/Toggle.svelte";
   import TrendChart from "./TrendChart.svelte";
 
   let { standingsData, leagueTeamManagersData } = $props();
 
   const STORAGE_KEY = "rr-trends-hidden";
-  const ord = (k) => k + (k % 100 >= 11 && k % 100 <= 13 ? "th" : ({ 1: "st", 2: "nd", 3: "rd" }[k % 10] ?? "th"));
   const short = (s, k) => (s.length > k ? s.slice(0, k - 1) + "…" : s);
   const POS_LABEL = { OFF: "Total offense", DEF: "Total defense" };
 
@@ -42,10 +42,9 @@
       hidden = [];
     }
     try {
-      const { standings, rosters, leagueData, players, teams } = await loadLeagueContext({ standingsData, leagueTeamManagersData });
+      const { standings, divisions, leagueData, players, teams } = await loadLeagueContext({ standingsData, leagueTeamManagersData });
       const matchupsData = standings?.matchups ?? [];
       const rosterIDs = Object.keys(teams);
-      const divisions = Object.fromEntries(rosterIDs.map((id) => [id, rosters[id]?.settings?.division ?? null]));
       const trends = leagueTrends({ matchupsData, rosterIDs, divisions, leagueData, players });
       if (trends.weeks.length < 2) {
         status = "early";
@@ -106,7 +105,7 @@
   /** Series whose end labels start with the team's rank ("3rd Globo_Gym"; just "3" when the chart is phone-width). */
   const rankedSeries = (pick, nameLen = 13) => {
     const rank = ranksFor(pick);
-    return seriesFor(pick, nameLen).map((s) => ({ ...s, rank: rank[s.id], label: `${ord(rank[s.id])} ${s.label}` }));
+    return seriesFor(pick, nameLen).map((s) => ({ ...s, rank: rank[s.id], label: `${ordinal(rank[s.id])} ${s.label}` }));
   };
 
   /** Axis range over every team (not just visible ones), so hiding teams doesn't rescale the chart. */
@@ -155,7 +154,7 @@
     });
     return {
       place: {
-        series: seriesFor((s) => s.place, 22).map((s) => ({ ...s, rank: s.vals[s.vals.length - 1], label: `${ord(s.vals[s.vals.length - 1])} ${s.label}` })),
+        series: seriesFor((s) => s.place, 22).map((s) => ({ ...s, rank: s.vals[s.vals.length - 1], label: `${ordinal(s.vals[s.vals.length - 1])} ${s.label}` })),
         ticks: [1, 3, 6, 9, nTeams].filter((v, i, a) => v <= nTeams && a.indexOf(v) === i),
         max: nTeams,
       },
@@ -221,7 +220,7 @@
         max={charts.place.max}
         ticks={charts.place.ticks}
         invert
-        fmt={(v) => ord(v)}
+        fmt={(v) => ordinal(v)}
         mark={{ value: data.playoffTeams + 0.5, label: "PLAYOFF LINE" }}
         w={1088}
         h={340}

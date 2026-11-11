@@ -2,6 +2,7 @@
   Weekly recap panel at the top of the homepage (see RayHome/index.svelte), with week navigation.
   Data comes from loadLeagueContext, shared with the other homepage sections. Once the playoffs start, the
   scored playoff weeks are added (winners-bracket games only, from loadPlayoffRecapWeeks in utils/seasonData.js).
+  Regular-season weeks end with "Movers" (RayStandings/StandingsMovers) for the week shown.
 -->
 <script>
   import { onMount } from "svelte";
@@ -10,6 +11,8 @@
   import { loadPlayoffRecapWeeks } from "../../utils/seasonData.js";
   import Loading from "../Shared/Loading.svelte";
   import WeeklyRecap from "./WeeklyRecap.svelte";
+  import StandingsMovers from "../RayStandings/StandingsMovers.svelte";
+  import { placesByWeek, movesForWeek } from "../../utils/leagueTrends.js";
 
   let { standingsData, leagueTeamManagersData } = $props();
 
@@ -29,6 +32,9 @@
     const entries = source.byWeek[selectedWeek]?.entries;
     return entries ? weeklyRecap(entries, source.players, { week: selectedWeek, leagueData: source.leagueData }) : null;
   });
+  // standings place after every regular-season week, so each recap week can show who moved (null for playoff weeks)
+  let places = $state.raw(null);
+  const moves = $derived(places && selectedWeek != null ? movesForWeek(places, selectedWeek) : null);
   const canPrev = $derived(weeks.length > 0 && selectedWeek > weeks[weeks.length - 1]);
   const canNext = $derived(weeks.length > 0 && selectedWeek < weeks[0]);
   // weeks can have gaps (none today, but a week with no bracket game is skipped), so step through the list
@@ -59,6 +65,11 @@
       });
       Object.assign(byWeek, playoffWeeks);
       source = { byWeek, players: ctx.players, leagueData: ctx.leagueData };
+      try {
+        places = placesByWeek({ matchupsData: matchups, rosterIDs: Object.keys(ctx.teams), divisions: ctx.divisions, leagueData: ctx.leagueData });
+      } catch (err) {
+        console.error(err); // the movers section just doesn't show
+      }
       selectedWeek = weeks[0];
       status = recap ? "ready" : "none";
     } catch (err) {
@@ -96,6 +107,7 @@
     </p>
     {#if recap}
       <WeeklyRecap {recap} {teams} {onTeamClick} />
+      <StandingsMovers {moves} {teams} {onTeamClick} />
     {:else}
       <p class="rr-sub">No results for week {selectedWeek}.</p>
     {/if}
