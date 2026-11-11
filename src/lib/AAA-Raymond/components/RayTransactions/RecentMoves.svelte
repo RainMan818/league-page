@@ -18,7 +18,7 @@
   let leagueTeamManagers = $state.raw(null);
 
   // how many of each kind to show
-  const RECENT_PER_TYPE = 6;
+  const RECENT_PER_TYPE = 4;
 
   // all transactions arrive newest first; keep the first N of each kind
   const pickRecent = (all = []) => {
