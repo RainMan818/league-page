@@ -68,12 +68,16 @@
 	}
 	$: displayTransactions = setQuery(query, filteredTransactions);
 
+	// AAA-Raymond fix: compare with the page currently shown, not the page the URL had on first load
+	// (queryPage never changes, so going back to that page used to be ignored and the list didn't update)
+	let shownPage = page;
 	const changePage = (dest, pageChange = false) => {
-		if(queryPage == dest && pageChange) return;
+		if(shownPage == dest && pageChange) return;
 		page = dest;
 		if(dest > (filteredTransactions.length / perPage) || dest < 0) {
 			page = 0;
 		}
+		shownPage = page;
 		displayTransactions = setQuery(query, filteredTransactions);
 		if(postUpdate) {
             goto(`/transactions?show=${show}&query=${query}&page=${page+1}`, {noscroll: true,  keepfocus: true});
@@ -282,4 +286,4 @@
 			<p class="empty">{query.trim() != "" ? "No transactions match your search" : "Nobody has made any moves yet... that's just sad" }</p>
 		{/if}
 	{/if}
-</div>
+</div>
