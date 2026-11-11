@@ -11,6 +11,7 @@
   import { leagueTrends, leagueAverage } from "../../utils/leagueTrends.js";
   import { niceTicks } from "./chartGeometry.js";
   import Loading from "../Shared/Loading.svelte";
+  import Toggle from "../Shared/Toggle.svelte";
   import TrendChart from "./TrendChart.svelte";
 
   let { standingsData, leagueTeamManagersData } = $props();
@@ -25,6 +26,14 @@
   let data = $state.raw(null);
   let hidden = $state([]);
   let hoverID = $state(null);
+  // Points for / Max PF: per-week average by default; season totals bunch up as the weeks add up
+  const SCORE_MODES = [
+    { value: "week", label: "Per week" },
+    { value: "total", label: "Total" },
+    { value: "avg", label: "vs avg" },
+  ];
+  let pfMode = $state("week");
+  let maxMode = $state("week");
 
   onMount(async () => {
     try {
@@ -106,13 +115,35 @@
     return niceTicks(Math.min(...all), Math.max(...all), count);
   };
 
+  const signed = (v, d) => `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(d)}`;
+  /** Points for / Max PF in one of three views: season average per week, season total, or total minus the league average. */
+  const scoreChart = (key, mode) => {
+    const t = data.trends;
+    const avg = leagueAverage(t, (s) => s[key]);
+    const pick =
+      mode === "total" ? (s) => s[key] : mode === "avg" ? (s) => s[key].map((v, w) => v - avg[w]) : (s) => s[key].map((v, w) => v / (w + 1));
+    const what = key === "maxCum" ? "Best possible lineup, " : "";
+    return {
+      range: rangeFor(pick),
+      series: rankedSeries(pick),
+      fmt: mode === "avg" ? (v) => signed(v, 1) : (v) => v.toFixed(1),
+      tickFmt: mode === "avg" ? (v) => (v === 0 ? "0" : signed(v, 0)) : (v) => v.toLocaleString("en-US"),
+      mark: mode === "avg" ? { value: 0, label: "LEAGUE AVERAGE" } : null,
+      refs: mode === "avg" ? [] : [{ label: "League avg", vals: mode === "total" ? avg : avg.map((v, w) => v / (w + 1)) }],
+      note:
+        mode === "total"
+          ? `${what}season total after each week · dashed = league average`
+          : mode === "avg"
+            ? `${what}season total above or below the league average`
+            : `${what}season average per week · dashed = league average`,
+    };
+  };
+
   const charts = $derived.by(() => {
     if (!data) return null;
     const t = data.trends;
     const nTeams = t.teamIDs.length;
     const pct = (v) => `${v.toFixed(0)}%`;
-    const pfR = rangeFor((s) => s.pfCum);
-    const maxR = rangeFor((s) => s.maxCum);
     const effR = rangeFor((s) => s.effWeek);
     const sides = ["OFF", "DEF"].map((p) => {
       const pick = (s) => s.pos[p];
@@ -128,8 +159,8 @@
         ticks: [1, 3, 6, 9, nTeams].filter((v, i, a) => v <= nTeams && a.indexOf(v) === i),
         max: nTeams,
       },
-      pf: { range: pfR, series: rankedSeries((s) => s.pfCum) },
-      max: { range: maxR, series: rankedSeries((s) => s.maxCum) },
+      pf: scoreChart("pfCum", pfMode),
+      max: scoreChart("maxCum", maxMode),
       eff: { range: { ...effR, max: Math.min(100, effR.max) }, series: rankedSeries((s) => s.effWeek), fmt: pct },
       ap: { series: rankedSeries((s) => s.allPlay), fmt: pct },
       sides,
@@ -200,14 +231,20 @@
 
     <div class="rr-grid2">
       <section class="rr-card">
-        <h3>Points for</h3>
-        <p class="rr-note">Season total after each week</p>
-        <TrendChart title="Points for, season total, by week" weeks={data.trends.weeks} series={charts.pf.series} min={charts.pf.range.min} max={charts.pf.range.max} ticks={charts.pf.range.ticks} {hoverID} />
+        <div class="rr-cardHead">
+          <h3>Points for</h3>
+          <Toggle small label="Points for view" options={SCORE_MODES} bind:value={pfMode} />
+        </div>
+        <p class="rr-note rr-capFirst">{charts.pf.note}</p>
+        <TrendChart title="Points for by week" weeks={data.trends.weeks} series={charts.pf.series} refs={charts.pf.refs} min={charts.pf.range.min} max={charts.pf.range.max} ticks={charts.pf.range.ticks} fmt={charts.pf.fmt} tickFmt={charts.pf.tickFmt} mark={charts.pf.mark} {hoverID} />
       </section>
       <section class="rr-card">
-        <h3>Max PF</h3>
-        <p class="rr-note">Best possible lineup, season total after each week</p>
-        <TrendChart title="Max PF, season total, by week" weeks={data.trends.weeks} series={charts.max.series} min={charts.max.range.min} max={charts.max.range.max} ticks={charts.max.range.ticks} {hoverID} />
+        <div class="rr-cardHead">
+          <h3>Max PF</h3>
+          <Toggle small label="Max PF view" options={SCORE_MODES} bind:value={maxMode} />
+        </div>
+        <p class="rr-note rr-capFirst">{charts.max.note}</p>
+        <TrendChart title="Max PF by week" weeks={data.trends.weeks} series={charts.max.series} refs={charts.max.refs} min={charts.max.range.min} max={charts.max.range.max} ticks={charts.max.range.ticks} fmt={charts.max.fmt} tickFmt={charts.max.tickFmt} mark={charts.max.mark} {hoverID} />
       </section>
       <section class="rr-card">
         <h3>Lineup efficiency</h3>
@@ -390,6 +427,18 @@
     margin: 0;
     font: 700 0.95rem "Orbitron", sans-serif;
     color: var(--or-heading);
+  }
+
+  .rr-cardHead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 10px;
+  }
+
+  .rr-capFirst::first-letter {
+    text-transform: uppercase;
   }
 
   .rr-note {

@@ -53,6 +53,8 @@ All data comes live from the public Sleeper API.
   teams on every chart (no limit; remembered in localStorage) and hovering one picks out its lines. `TrendChart`
   draws at its real width with a week crosshair + tooltip. End labels lead with the team's latest rank ("3rd Globo_Gym");
   on phones the big charts show just the rank number; the position charts have no end labels (hover for values).
+  Points for / Max PF default to the season average per week (totals bunch up as weeks add up), with a small
+  Per week / Total / vs avg switch on each ( with `small`).
   Data from `utils/leagueTrends.js`.
 - **Trades & Waivers** (and manager pages) — `RayTransactions/TransactionFeed`: one card per day, one line per team
   (waivers: + added / − dropped and FAAB bid; trades: team ← what it received, picks show "via <team>").
