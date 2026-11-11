@@ -14,10 +14,10 @@
   const awards = $derived.by(() => {
     const a = recap.awards;
     return [
-      { label: "Best manager", icon: "emoji_events", tone: "good", team: a.bestManager?.rosterID, value: a.bestManager?.points, subLabel: "max points", sub: a.bestManager?.max },
-      { label: "Worst manager", icon: "thumb_down", tone: "bad", team: a.worstManager?.rosterID, value: a.worstManager?.points, subLabel: "max points", sub: a.worstManager?.max },
-      { label: "Highest score in a loss", icon: "sentiment_dissatisfied", tone: "bad", team: a.highestInLoss?.rosterID, value: a.highestInLoss?.points, subLabel: a.highestInLoss ? `vs ${name(a.highestInLoss.oppRosterID)}` : "", sub: a.highestInLoss?.oppPoints },
-      { label: "Lowest score in a win", icon: "workspace_premium", tone: "good", team: a.lowestInWin?.rosterID, value: a.lowestInWin?.points, subLabel: a.lowestInWin ? `vs ${name(a.lowestInWin.oppRosterID)}` : "", sub: a.lowestInWin?.oppPoints },
+      { label: "Most efficient", icon: "emoji_events", tone: "good", team: a.bestManager?.rosterID, value: a.bestManager?.points, subLabel: "max points", sub: a.bestManager?.max },
+      { label: "Least efficient", icon: "thumb_down", tone: "bad", team: a.worstManager?.rosterID, value: a.worstManager?.points, subLabel: "max points", sub: a.worstManager?.max },
+      { label: "Most points in a loss", icon: "sentiment_dissatisfied", tone: "bad", team: a.highestInLoss?.rosterID, value: a.highestInLoss?.points, subLabel: a.highestInLoss ? `vs ${name(a.highestInLoss.oppRosterID)}` : "", sub: a.highestInLoss?.oppPoints },
+      { label: "Fewest points in a win", icon: "workspace_premium", tone: "good", team: a.lowestInWin?.rosterID, value: a.lowestInWin?.points, subLabel: a.lowestInWin ? `vs ${name(a.lowestInWin.oppRosterID)}` : "", sub: a.lowestInWin?.oppPoints },
       { label: "Biggest blowout", icon: "local_fire_department", tone: "hot", team: a.blowout?.winner, value: a.blowout?.winnerPts, subLabel: a.blowout ? `vs ${name(a.blowout.loser)}` : "", sub: a.blowout?.loserPts },
       { label: "Narrowest win", icon: "compress", tone: "hot", team: a.narrowWin?.winner, value: a.narrowWin?.winnerPts, subLabel: a.narrowWin ? `vs ${name(a.narrowWin.loser)}` : "", sub: a.narrowWin?.loserPts },
       { label: "Overachiever", icon: "trending_up", tone: "good", team: a.overachiever?.rosterID, value: a.overachiever?.points, subLabel: "starter projection", sub: a.overachiever?.projected },
@@ -51,8 +51,8 @@
 
 <div class="rr-recap">
   <div class="rr-duo">
-    {#if recap.bestTeam}{@render teamCard("Best team", "emoji_events", "good", recap.bestTeam)}{/if}
-    {#if recap.worstTeam}{@render teamCard("Worst team", "sentiment_very_dissatisfied", "bad", recap.worstTeam)}{/if}
+    {#if recap.bestTeam}{@render teamCard("Most points", "emoji_events", "good", recap.bestTeam)}{/if}
+    {#if recap.worstTeam}{@render teamCard("Fewest points", "sentiment_very_dissatisfied", "bad", recap.worstTeam)}{/if}
   </div>
 
   {#if recap.playersOfWeek.length}

@@ -1,4 +1,4 @@
-import {leagueID} from '$lib/utils/leagueInfo';
+import { leagueID } from '$lib/utils/leagueInfo';
 
 export const tabs = [
     {
@@ -33,12 +33,6 @@ export const tabs = [
         key: 'transactions',
     },
     {
-        icon: 'format_list_numbered',
-        label: 'Drafts',
-        dest: '/drafts',
-        key: 'drafts',
-    },
-    {
         icon: 'article',
         label: 'Blog',
         dest: '/blog',
@@ -54,6 +48,12 @@ export const tabs = [
                 icon: 'storage',
                 label: 'Rosters',
                 dest: '/rosters',
+            },
+            {
+                icon: 'format_list_numbered',
+                label: 'Drafts',
+                dest: '/drafts',
+                key: 'drafts',
             },
             {
                 icon: 'groups',
@@ -92,4 +92,4 @@ export const tabs = [
             },
         ]
     },
-];
+];
