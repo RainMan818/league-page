@@ -11,6 +11,7 @@
     getColorScales,
     digestData,
   } from "./utils";
+  import { getTeamNameFromTeamManagers } from "$lib/utils/helperFunctions/universalFunctions";
 
   export let rostersData,
     leagueData,
@@ -115,9 +116,8 @@
 
     for (const roster of rosters) {
       const user = leagueTeamManagers.users[roster.owner_id];
-      const name = user.metadata.team_name
-        ? user.metadata.team_name
-        : user.display_name;
+      // same team name everywhere: Sleeper team name, else "Team <Sleeper username>" (universalFunctions getTeamData)
+      const name = getTeamNameFromTeamManagers(leagueTeamManagers, roster.roster_id) ?? user.display_name;
       const avatar = `https://sleepercdn.com/avatars/thumbs/${user.avatar}`;
 
       roster.ownerName = name;

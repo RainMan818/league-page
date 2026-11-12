@@ -72,6 +72,15 @@ All data comes live from the public Sleeper API.
   each team header opens the manager page. Shared state in `RayDrafts/draftHighlight.svelte.js`; teams match by
   roster ID, compared as numbers (the boards mix string and number roster IDs).
 - **Rosters** — `RosterAnalysis` at the top of the page (age, count and spread by position).
+- **Managers** (`/managers`) and **manager pages** (`/manager?manager=N`, N = index in leagueInfo.js `managers`) —
+  `RayManagers/ManagersList` (option A "trading cards": team, years in the league, favorite NFL team, all-time
+  record, titles, this season's record; sort by league order / titles / all-time win % / this season) and
+  `RayManagers/ManagerPage` (banner with facts, bio and previous/next; tiles for all-time, playoffs, titles, points
+  for and this season; trophy case + league records; profile; starting lineup with bench / IR & taxi; recent moves,
+  expandable to all of them). Swapped in for the template's `AllManagers` / `Manager` in `components.js`.
+  Placeholder bios ("Lorem ipsum...", "TODO") are hidden. Numbers in `utils/managerProfile.js`
+  (`tests/managerProfile.test.js`); site glue (team managers, standings places, NFL team names) in
+  `RayManagers/managerInfo.js`.
 
 ### Shared building blocks
 - `utils/leagueContext.js` — `loadLeagueBasics()` (nflState, managers, leagueData, rosters, `divisions`
@@ -95,6 +104,8 @@ All data comes live from the public Sleeper API.
 - `utils/teamStats.js` — all-play record & luck, lineup efficiency, Tankathon order, streaks (`streakValue`, `streakLabel`).
 - `utils/weeklyRecap.js` — the weekly recap (`weeklyRecap`, `positionGroup`, `RECAP_POSITIONS`).
 - `utils/matchupEntries.js` also has the one-week helpers `pairMatchups` and `playedEntries`.
+- `utils/managerProfile.js` — Managers pages: career stats with ranks (records), trophies (award podiums), league
+  record-book places, lineup slots / bench, placeholder-bio check.
 - `utils/seasonAwards.js` — end-of-season award math (plain functions, `tests/seasonAwards.test.js`). Player awards
   count points scored in a starting lineup. Waiver Wizard and the Pickups credit each start to how the
   team got that player (latest waiver, free-agent, trade or commissioner add in a leg <= that week; otherwise
@@ -132,7 +143,10 @@ All data comes live from the public Sleeper API.
   `src/lib/Transactions/TransactionsPage.svelte`.
 - `src/lib/utils/helperFunctions/leagueMatchups.js` keeps extra fields per team (`players`, `playersPoints`,
   `matchup_id`, `total`) for the bench and the shared matchups loader.
-- `src/lib/BarChart.svelte` (`controlsOnTop`), `src/lib/Managers/Manager.svelte` (broken-icon fallback).
+- `src/lib/BarChart.svelte` (`controlsOnTop`), `src/lib/Managers/Manager.svelte` (broken-icon fallback; no longer shown).
+- `src/lib/utils/helperFunctions/universalFunctions.js` `getTeamData`: a team without a Sleeper team name is called
+  "Team <Sleeper username>" (the template used the user's display name, which leagueInfo.js replaces with the
+  manager's real name).
 - Theme: `src/routes/+layout.svelte`, `src/app.html`, `src/lib/Nav/index.svelte`, `NavLarge.svelte`, `static/manifest.json`.
 
 ### Template files no longer used (leave them unedited so template merges stay clean)
@@ -140,6 +154,7 @@ All data comes live from the public Sleeper API.
 - `src/lib/Drafts/Draft.svelte`, `DraftRow.svelte`
 - `src/lib/Awards/Awards.svelte` (Trophy Room podiums; replaced by the season awards)
 - `src/lib/Matchups/MatchupWeeks.svelte`
+- `src/lib/Managers/` (`AllManagers`, `Manager`, `ManagerRow`, `ManagerAwards`, `ManagerFantasyInfo`)
 - `src/lib/PowerRankings/index.svelte`, `PowerRankingsDisplay.svelte`
 - `src/lib/Standings/` (the /standings route uses `RayStandings`)
 - `src/lib/utils/helperFunctions/leagueStandings.js` and `predictOptimalScore.js` (old copies; should eventually be
@@ -178,6 +193,9 @@ All data comes live from the public Sleeper API.
   Defender `position` can be specific (DE, DT, CB, S): group with `utils/positions.js`.
 - Position averages are keyed by roster ID; display names come from `getTeamFromTeamManagers`.
   Never hardcode usernames.
+- Team names: always take them from the team managers data (`getTeamFromTeamManagers` / `getTeamNameFromTeamManagers`
+  or `teams` from `loadLeagueContext`), never from `users[...].display_name`: that's the manager's real name
+  (leagueInfo.js), and teams without a Sleeper team name default to "Team <username>" (`user_name`).
 - Files use Windows (CRLF) line endings; keep them.
 - Prefix class names in custom components (`rr-`): the template has global rules on generic names
   (e.g. `.slot { width: 22px !important }`) that will break your layout.

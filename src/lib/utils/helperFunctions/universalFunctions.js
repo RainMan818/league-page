@@ -195,7 +195,9 @@ export const getTeamData = (users, ownerID) => {
 	if(user) {
 		return {
 			avatar: user.metadata?.avatar ? user.metadata.avatar : `https://sleepercdn.com/avatars/thumbs/${user.avatar}`,
-			name: user.metadata.team_name ? user.metadata.team_name : user.display_name,
+			// AAA-Raymond: no Sleeper team name -> "Team <Sleeper username>" (display_name is replaced with the
+			// manager's real name from leagueInfo.js; user_name keeps the original Sleeper name)
+			name: user.metadata?.team_name ? user.metadata.team_name : `Team ${user.user_name ?? user.display_name}`,
 		}
 	}
     return {
@@ -306,4 +308,4 @@ export const getRosterIDFromManagerIDAndYear = (teamManagers, managerID, year) =
 export const checkIfManagerReceivedAward = (teamManagers, awardRosterID, year, managerID) => {
     if(!managerID) return false;
     return teamManagers.teamManagersMap[year][awardRosterID].managers.indexOf(managerID) > -1;
-}
+}
