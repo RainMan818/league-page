@@ -71,6 +71,15 @@ All data comes live from the public Sleeper API.
   (sticky right column ≥1100px, bottom sheet below; rows jump to the pick; Escape or ✕ clears). The small ↗ on
   each team header opens the manager page. Shared state in `RayDrafts/draftHighlight.svelte.js`; teams match by
   roster ID, compared as numbers (the boards mix string and number roster IDs).
+- **Records** (`/records`) — `RayRecords` (option A "record book"): Regular season / Playoffs switch, All-time or one
+  season, four headline records, record lists (top 5, "Top 10" expands; ties are left out of Closest wins; the season
+  still being played is "(so far)" in Best seasons and skipped in Worst seasons) and one sortable Team rankings table
+  (`Shared/SortableTable`; pink = league best). **Records are per team (Sleeper roster), not per manager**: all-time
+  rows add up every season of a roster whoever ran it (Team Fergilatr = calarseneau 2022–23 + Zack Miller since 2024,
+  noted as "also calarseneau '22–'23"); a single season shows that season's team and manager. Numbers in
+  `utils/recordBook.js` (`tests/recordBook.test.js`) from the template's `getLeagueRecords()` (`leagueRosterRecords`
+  per team-season) and transaction totals (`totals.seasons`, per roster). Swapped in for the template's `Records` in
+  `components.js`. Opening the page still refreshes the cached records once per visit (template behavior, many requests).
 - **Rosters** — `RosterAnalysis` at the top of the page (age, count and spread by position).
 - **Managers** (`/managers`) and **manager pages** (`/manager?manager=N`, N = index in leagueInfo.js `managers`) —
   `RayManagers/ManagersList` (option A "trading cards": team, years in the league, favorite NFL team, all-time
@@ -78,7 +87,9 @@ All data comes live from the public Sleeper API.
   `RayManagers/ManagerPage` (banner with facts, bio and previous/next; tiles for all-time, playoffs, titles, points
   for and this season; trophy case + league records; profile; starting lineup with bench / IR & taxi; recent moves,
   expandable to all of them). Swapped in for the template's `AllManagers` / `Manager` in `components.js`.
-  Placeholder bios ("Lorem ipsum...", "TODO") are hidden. Numbers in `utils/managerProfile.js`
+  Placeholder bios ("Lorem ipsum...", "TODO") are hidden. **Manager pages count per manager** (Raymond's call):
+  career numbers come from `leagueManagerRecords`, so a manager's page shows only the seasons they ran the team
+  (unlike Records, which counts per team). Numbers in `utils/managerProfile.js`
   (`tests/managerProfile.test.js`); site glue (team managers, standings places, NFL team names) in
   `RayManagers/managerInfo.js`.
 
@@ -144,6 +155,8 @@ All data comes live from the public Sleeper API.
 - `src/lib/utils/helperFunctions/leagueMatchups.js` keeps extra fields per team (`players`, `playersPoints`,
   `matchup_id`, `total`) for the bench and the shared matchups loader.
 - `src/lib/BarChart.svelte` (`controlsOnTop`), `src/lib/Managers/Manager.svelte` (broken-icon fallback; no longer shown).
+- `src/lib/utils/helperFunctions/leagueRecords.js` `analyzeRosters`: points per game is points per WEEK (games ÷ 2 when
+  the league plays the median game; 2026 seasons were halved before).
 - `src/lib/utils/helperFunctions/universalFunctions.js` `getTeamData`: a team without a Sleeper team name is called
   "Team <Sleeper username>" (the template used the user's display name, which leagueInfo.js replaces with the
   manager's real name).
@@ -155,6 +168,7 @@ All data comes live from the public Sleeper API.
 - `src/lib/Awards/Awards.svelte` (Trophy Room podiums; replaced by the season awards)
 - `src/lib/Matchups/MatchupWeeks.svelte`
 - `src/lib/Managers/` (`AllManagers`, `Manager`, `ManagerRow`, `ManagerAwards`, `ManagerFantasyInfo`)
+- `src/lib/Records/` (`index`, `AllTimeRecords`, `PerSeasonRecords`, `RecordsAndRankings`, `RecordTeam`)
 - `src/lib/PowerRankings/index.svelte`, `PowerRankingsDisplay.svelte`
 - `src/lib/Standings/` (the /standings route uses `RayStandings`)
 - `src/lib/utils/helperFunctions/leagueStandings.js` and `predictOptimalScore.js` (old copies; should eventually be

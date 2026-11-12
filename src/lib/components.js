@@ -11,7 +11,8 @@ import TransactionsPage from './Transactions/TransactionsPage.svelte';
 import MatchupsAndBrackets from './Matchups/MatchupsAndBrackets.svelte';
 import Pagination from './Pagination.svelte';
 import Drafts from './Drafts/index.svelte';
-import Records from './Records/index.svelte';
+// AAA-Raymond: redesigned Records page (option A)
+import Records from './AAA-Raymond/components/RayRecords/index.svelte';
 // AAA-Raymond: redesigned Managers list and manager pages (option A)
 import Manager from './AAA-Raymond/components/RayManagers/ManagerPage.svelte';
 import AllManagers from './AAA-Raymond/components/RayManagers/ManagersList.svelte';

@@ -141,7 +141,7 @@ const processRegularSeason = async ({rosters, leagueData, curSeason, week, regul
 	}
 
 	for(const rosterID in rosters) {
-		analyzeRosters({year, roster: rosters[rosterID], regularSeason});
+		analyzeRosters({year, roster: rosters[rosterID], regularSeason, leagueData});
 	}
 
 	// loop through each week of the season
@@ -216,7 +216,7 @@ const processRegularSeason = async ({rosters, leagueData, curSeason, week, regul
  * @param {Object} rosterData.roster the roster being analyzed
  * @param {Records} rosterData.regularSeason the global regularSeason object that will be updated and returned
  */
-const analyzeRosters = ({year, roster, regularSeason}) => {
+const analyzeRosters = ({year, roster, regularSeason, leagueData}) => {
     // team name and logo are tied to the ownerID
     const rosterID = roster.roster_id;
 
@@ -227,7 +227,11 @@ const analyzeRosters = ({year, roster, regularSeason}) => {
 
 	// fptsFor and fptsPerGame are used for both rosterRecords and seasonLongPoints
 	const fptsFor = roster.settings.fpts + (roster.settings.fpts_decimal / 100);
-	const fptsPerGame = round(fptsFor / (roster.settings.wins + roster.settings.losses + roster.settings.ties));
+	// AAA-Raymond: points per WEEK. With the league-median game every week counts as two games in the record,
+	// so dividing by games halved the number (2026 seasons looked like the worst ever).
+	const games = roster.settings.wins + roster.settings.losses + roster.settings.ties;
+	const weeks = leagueData?.settings?.league_average_match == 1 ? games / 2 : games;
+	const fptsPerGame = round(fptsFor / weeks);
 
 	const rosterRecords = {
 		wins:  roster.settings.wins,
@@ -504,4 +508,4 @@ const getStartWeek = (i, playoffRounds, consolation, playoffsStart) => {
 		default:
 			return "Qualifiers";
 	}
-}
+}
