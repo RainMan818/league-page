@@ -66,8 +66,8 @@ export function logoSvg({ title = 'DYNASTY', subtitle = 'LEAGUE · IDP SF' } = {
     </filter>
   </defs>
   <g transform="translate(${titleLeft} ${titleTop}) skewX(-10)">
-    <g filter="url(#orl-glow)"><path d="${titleD}" fill="#000"/></g>
-    <path d="${titleD}" transform="translate(${depth.x} ${depth.y})" fill="#12002b" stroke="#12002b" stroke-width="6" stroke-linejoin="miter"/>
+    <g filter="url(#orl-glow)"><path d="${titleD}" fill="#000" fill-rule="evenodd"/></g>
+    <path d="${titleD}" transform="translate(${depth.x} ${depth.y})" fill="#12002b" fill-rule="evenodd" stroke="#12002b" stroke-width="6" stroke-linejoin="miter"/>
     <path d="${titleD}" fill="none" stroke="#1b0636" stroke-width="6" stroke-linejoin="miter"/>
   </g>
   <g mask="url(#orl-slits)">
@@ -79,7 +79,7 @@ export function logoSvg({ title = 'DYNASTY', subtitle = 'LEAGUE · IDP SF' } = {
   <rect x="${subLeft + subWidth + 14}" y="${ruleY - 1}" width="${subLeft - 14 - pad}" height="2" fill="url(#orl-rule-r)"/>
   <g transform="translate(${subLeft} ${subTop}) scale(${subScale})">
     <path d="${subD}" fill="none" stroke="#1b0636" stroke-width="16" stroke-linejoin="miter"/>
-    <path d="${subD}" filter="url(#orl-subglow)" fill="#05d9e8"/>
+    <path d="${subD}" filter="url(#orl-subglow)" fill="#05d9e8" fill-rule="evenodd"/>
     <path d="${subD}" fill="#c9fdff" fill-rule="evenodd"/>
   </g>
 </svg>`;
