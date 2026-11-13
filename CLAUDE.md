@@ -33,7 +33,8 @@ All data comes live from the public Sleeper API.
   about 250K characters, refreshed weekly; `tests/savedSeasons.test.js`). The template loaders that read past seasons
   (`getLeagueData`, `getLeagueTeamManagers`, `getLeagueRosters`, `getAwards`, `getPreviousDrafts`) use it; the
   current league is never saved. Use `seasonJson(path, finished)` for any new past-season download.
-  Measured Nov 12 2026 (fresh page load after the first visit, browser): Home 20, Matchups 24, Standings / Trends /
+  Measured Nov 12 2026 (fresh page load after the first visit, browser): Home 20, Matchups 18 (+2 for the playoff
+  bracket, +3 for a past season's), Standings / Trends /
   Rosters / Managers 18, Drafts 8, a manager page 20, Trades & Waivers / Records / Rivalry 6 (72 with two managers
   picked), Trophy Room 4; 238 for one load of every page (1,318 before the request work started).
 
@@ -60,8 +61,17 @@ All data comes live from the public Sleeper API.
   uses `getAwards()`.
 - **Matchups** — `RayMatchups/MatchupWeeks` + `Matchup` (versus strips; click for every starter with photos;
   bench behind "Show bench"; "M" badge = beat the league median, median shown under the list when the league
-  plays median games). Swapped in by one import in `src/lib/Matchups/MatchupsAndBrackets.svelte`; the playoff
-  bracket still uses the template's `Matchup.svelte`.
+  plays median games). Swapped in by one import in `src/lib/Matchups/MatchupsAndBrackets.svelte`.
+  Playoffs = `RayMatchups/PlayoffBracket` (option A "neon bracket tree"; the page's Championship / Toilet Bowl buttons
+  pick the bracket): season picker (every season), round columns with connector lines (the champion's path in pink,
+  orange in the Toilet Bowl), a champion card (last place in the Toilet Bowl), placement games, and the selected
+  game's lineups (`RayMatchups/Matchup` with `current={false}` for past seasons: no projections, opponents or NFL
+  teams). Phones get one list per round. Before the regular season is fully scored the teams come from today's seeds
+  (league rule, `reseed` in `utils/playoffBracket.js`) with later games as "Winner of #4 / #5", not Sleeper's
+  placeholder bracket. A playoff week in progress shows LIVE + "Refresh scores" (one request, 30-second cooldown).
+  The Toilet Bowl here is lose-to-move-on (Sleeper records the lower score as `w`); `buildBracket` reads that from the
+  results. Card in `RayMatchups/BracketCard`. Requests: the two brackets (saved for finished seasons) and the playoff
+  weeks that have started; the template's `getBrackets()` is no longer loaded on the Matchups page.
 - **Standings** — `RayStandings` (`StandingsTable`: sortable, seed order, dashed playoff line, division pills,
   Division leader / Wildcard / Points wildcard tags, plus Tankathon pick, all-play and lineup efficiency) and two `PositionAverages` tables (two-sided heat scale:
   cyan = low, pink = high; by value in "Averages", evenly by rank in "Ranking").
@@ -131,6 +141,9 @@ All data comes live from the public Sleeper API.
 - `utils/leagueTrends.js` — week-by-week series for the Trends page (place via `seedTeams`, record incl. median game,
   PF, max PF via `predictScores`, efficiency, all-play, position / OFF / DEF averages) from `standings.matchups`.
   `placesByWeek()` + `movesForWeek()` give the recap's Movers; both share one record/seeding loop with `leagueTrends()`.
+- `utils/playoffBracket.js` — the Matchups playoff bracket: `buildBracket` (games, scores, status, placement games,
+  tree layout, champion), `reseed` (teams by seed before the playoffs), `sourceLabel`, `defaultGame`
+  (`tests/playoffBracket.test.js`, built on the real 2025 brackets).
 - `utils/playoffs.js` — the league seeding rule (`seedTeams`, also used by Standings, Trends and the awards), bracket
   shape and the Monte Carlo playoff projection (`expectedScores`, `simulateSeason`).
 - `utils/teamStats.js` — all-play record & luck, lineup efficiency, Tankathon order, streaks (`streakValue`, `streakLabel`).
@@ -170,6 +183,10 @@ All data comes live from the public Sleeper API.
 - `RayPowerRankings` uses the template's `src/lib/BarChart.svelte` with `controlsOnTop` (Raymond's addition).
 
 ### Template files we changed (check these after merging template updates)
+- `src/lib/Matchups/MatchupsAndBrackets.svelte`: `PlayoffBracket` instead of the template's `Brackets` (shown before
+  the playoffs too), buttons renamed Championship / Toilet Bowl, no `bracketsData`, and Regular Season goes back to
+  the week you were on (else the current week) instead of week 1; `src/routes/matchups/+page.js`
+  no longer loads `getBrackets()`.
 - Wiring: `src/routes/+page.svelte`, `src/routes/awards/` (season awards only), `src/routes/standings/+page.js` (passes `fetch`), `src/routes/trends/` (new), `src/routes/rosters/+page.js`
   and `+page.svelte`, `src/lib/components.js`, `src/lib/utils/helper.js`, `src/lib/utils/tabs.js` (nav tabs),
   `src/lib/Matchups/MatchupsAndBrackets.svelte`, `src/lib/Drafts/index.svelte`,
@@ -198,7 +215,7 @@ All data comes live from the public Sleeper API.
 - `src/lib/Transactions/Transactions.svelte`, `WaiverTransaction.svelte`, `TradeTransaction.svelte`, `TransactionMove.svelte`
 - `src/lib/Drafts/Draft.svelte`, `DraftRow.svelte`
 - `src/lib/Awards/Awards.svelte` (Trophy Room podiums; replaced by the season awards)
-- `src/lib/Matchups/MatchupWeeks.svelte`
+- `src/lib/Matchups/MatchupWeeks.svelte`, `Brackets.svelte`, `BracketsColumn.svelte`, `Matchup.svelte`
 - `src/lib/Managers/` (`AllManagers`, `Manager`, `ManagerRow`, `ManagerAwards`, `ManagerFantasyInfo`)
 - `src/lib/Records/` (`index`, `AllTimeRecords`, `PerSeasonRecords`, `RecordsAndRankings`, `RecordTeam`)
 - `src/lib/PowerRankings/index.svelte`, `PowerRankingsDisplay.svelte`

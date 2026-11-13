@@ -3,7 +3,8 @@
 	import LinearProgress from '@smui/linear-progress';
 	// AAA-Raymond: outrun "versus strip" matchups with full lineups, bench and league median
 	import MatchupWeeks from '../AAA-Raymond/components/RayMatchups/MatchupWeeks.svelte';
-	import Brackets from './Brackets.svelte';
+	// AAA-Raymond: outrun playoff bracket (tree, season picker, projected seeds before the playoffs, lineups)
+	import PlayoffBracket from '../AAA-Raymond/components/RayMatchups/PlayoffBracket.svelte';
     import Button, { Group, Label } from '@smui/button';
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
@@ -11,12 +12,12 @@
 
 	export let queryWeek, leagueTeamManagersData, matchupsData, bracketsData, playersData;
 
-    let players, matchupWeeks, year, week, regularSeasonLength, brackets, leagueTeamManagers;
+    let players, matchupWeeks, year, week, regularSeasonLength, leagueTeamManagers;
 
     let loading = true;
 
     onMount(async () => {
-        brackets = await bracketsData;
+        // AAA-Raymond: the bracket loads its own data (PlayoffBracket), only when Playoffs is picked
         const matchupsInfo = await matchupsData;
         leagueTeamManagers = await leagueTeamManagersData;
         matchupWeeks = matchupsInfo.matchupWeeks;
@@ -33,11 +34,16 @@
         }
     });
 
+    // AAA-Raymond: back from the playoffs to the regular-season week you were on (else the current week), not week 1
+    let lastRegularWeek = null;
     const changeSelection = (s) => {
         if(s == 'regular') {
-            queryWeek = 1;
-            goto(`/matchups?week=1`, {noscroll: true});
+            const back = lastRegularWeek || Math.min(Math.max(Number(week) || 1, 1), regularSeasonLength || 1);
+            queryWeek = back;
+            goto(`/matchups?week=${back}`, {noscroll: true});
         } else if(selection == 'regular') {
+            const shown = Number(new URL(window.location.href).searchParams.get('week'));
+            if(shown > 0 && shown <= regularSeasonLength) lastRegularWeek = shown;
             queryWeek = 99;
             goto(`/matchups?week=99`, {noscroll: true});
         }
@@ -88,11 +94,11 @@
                 <Group variant="outlined">
                     <!-- Championship Bracket -->
                     <Button class="selectionButtons" onclick={() => changeSelection('champions')} variant="{selection == 'champions' ? "raised" : "outlined"}">
-                        <Label>Champions' Bracket</Label>
+                        <Label>Championship</Label>
                     </Button>
                     <!-- Losers Bracket -->
                     <Button class="selectionButtons" onclick={() => changeSelection('losers')} variant="{selection == 'losers' ? "raised" : "outlined"}">
-                        <Label>Losers' Bracket</Label>
+                        <Label>Toilet Bowl</Label>
                     </Button>
                 </Group>
             {/if}
@@ -106,7 +112,8 @@
         </div>
     {/if}
     <!-- {promise has processed -->
-    {#if brackets.champs.bracket[0][0][0].points && (selection == 'champions' || selection == 'losers')}
-        <Brackets {queryWeek} {leagueTeamManagers} {players} {brackets} bind:selection={selection} />
+    <!-- AAA-Raymond: shown before the playoffs too (today's seeds), not only once Sleeper has scores -->
+    {#if selection == 'champions' || selection == 'losers'}
+        <PlayoffBracket {queryWeek} {leagueTeamManagers} {players} bind:selection={selection} />
     {/if}
 {/if}

@@ -2,12 +2,14 @@
   One regular-season matchup as a "versus strip" (Matchups option B). Click to open both lineups:
   every starter is listed; the bench stays collapsed until "Show bench".
   An "M" badge marks a team that beat the league median that week.
+  `current = false` (a past season, from the playoff bracket): no projections, opponents or NFL teams, since Sleeper's
+  player data only has this season's.
 -->
 <script>
   import { getTeamFromTeamManagers } from "$lib/utils/helperFunctions/universalFunctions";
   import { posColor, playerPhoto } from "../../utils/positions.js";
 
-  let { matchup, players, week, year, leagueTeamManagers, median = null, open = false, onToggle } = $props();
+  let { matchup, players, week, year, leagueTeamManagers, median = null, open = false, onToggle, current = true } = $props();
 
   let showBench = $state(false);
 
@@ -18,13 +20,13 @@
     const p = players?.[id];
     if (!p) return { id, name: String(id), points: points ?? 0, projection: 0 };
     const isDef = p.pos === "DEF";
-    const wi = p.wi?.[week];
+    const wi = current ? p.wi?.[week] : null;
     return {
       id,
       name: isDef ? `${p.fn ?? ""} ${p.ln ?? ""}`.trim() : `${p.fn?.[0] ?? ""}. ${p.ln ?? ""}`,
       pos: p.pos,
       color: posColor(p.pos),
-      meta: [isDef ? null : p.t, wi?.o ? `vs ${wi.o}` : null].filter(Boolean).join(" "),
+      meta: [isDef || !current ? null : p.t, wi?.o ? `vs ${wi.o}` : null].filter(Boolean).join(" "),
       photo: playerPhoto(id, p.pos),
       projection: wi ? parseFloat(wi.p) || 0 : 0,
       points: points ?? 0,
@@ -72,8 +74,8 @@
 {#snippet line(l, r, bench)}
   <div class="rr-line" class:rr-benchLine={bench}>
     {@render player(l, "left")}
-    <span class="rr-pts" class:rr-win={!l.blank && l.points > r.points}>{l.blank ? "" : fmt(l.points)}<small>{l.blank || l.empty ? "" : fmt(l.projection)}</small></span>
-    <span class="rr-pts" class:rr-win={!r.blank && r.points > l.points}>{r.blank ? "" : fmt(r.points)}<small>{r.blank || r.empty ? "" : fmt(r.projection)}</small></span>
+    <span class="rr-pts" class:rr-win={!l.blank && l.points > r.points}>{l.blank ? "" : fmt(l.points)}<small>{l.blank || l.empty || !current ? "" : fmt(l.projection)}</small></span>
+    <span class="rr-pts" class:rr-win={!r.blank && r.points > l.points}>{r.blank ? "" : fmt(r.points)}<small>{r.blank || r.empty || !current ? "" : fmt(r.projection)}</small></span>
     {@render player(r, "right")}
   </div>
 {/snippet}
@@ -99,12 +101,12 @@
     <span class="rr-scores">
       <span class="rr-score rr-scoreL">
         <span class="rr-total" class:rr-lead={lead === "home"}>{fmt(home.total)}</span>
-        <span class="rr-proj">proj {home.proj.toFixed(1)}</span>
+        {#if current}<span class="rr-proj">proj {home.proj.toFixed(1)}</span>{/if}
       </span>
       <span class="rr-vs">VS</span>
       <span class="rr-score rr-scoreR">
         <span class="rr-total" class:rr-lead={lead === "away"}>{fmt(away.total)}</span>
-        <span class="rr-proj">proj {away.proj.toFixed(1)}</span>
+        {#if current}<span class="rr-proj">proj {away.proj.toFixed(1)}</span>{/if}
       </span>
     </span>
     {@render teamSide(away, lead === "away", "right")}
