@@ -4,6 +4,8 @@ import { getLeagueRosters } from './leagueRosters';
 import {waitForAll} from './multiPromise';
 import { get } from 'svelte/store';
 import {brackets} from '$lib/stores';
+// AAA-Raymond: one request per Sleeper URL per page load (shared with every other loader)
+import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
 
 export const getBrackets = async (queryLeagueID = leagueID) => {
     if(get(brackets).champs && queryLeagueID == leagueID) {
@@ -21,8 +23,8 @@ export const getBrackets = async (queryLeagueID = leagueID) => {
 
     // get bracket data for winners and losers
     const bracketsAndMatchupFetches = [
-        fetch(`https://api.sleeper.app/v1/league/${queryLeagueID}/winners_bracket`, {compress: true}),
-        fetch(`https://api.sleeper.app/v1/league/${queryLeagueID}/losers_bracket`, {compress: true}),
+        sleeperFetch(`https://api.sleeper.app/v1/league/${queryLeagueID}/winners_bracket`, {compress: true}),
+        sleeperFetch(`https://api.sleeper.app/v1/league/${queryLeagueID}/losers_bracket`, {compress: true}),
     ]
 
     // variables for playoff records
@@ -49,7 +51,7 @@ export const getBrackets = async (queryLeagueID = leagueID) => {
     // add each week after the regular season to the fetch array
     for(let i = playoffsStart; i < 19; i++) {
         // Get the matchup data (starters) for the playoff weeks
-        bracketsAndMatchupFetches.push(fetch(`https://api.sleeper.app/v1/league/${queryLeagueID}/matchups/${i}`, {compress: true}));
+        bracketsAndMatchupFetches.push(sleeperFetch(`https://api.sleeper.app/v1/league/${queryLeagueID}/matchups/${i}`, {compress: true}));
     }
     
     // Simultaneously fetch the bracket and matchup data

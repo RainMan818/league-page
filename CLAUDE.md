@@ -25,6 +25,11 @@ All data comes live from the public Sleeper API.
 - Only touch template files to wire custom code in. Keep those edits small and mark them `AAA-Raymond`.
 - `src/lib/version.js` must stay in sync with `package.json`; don't bump it by hand.
 - Be gentle with the Sleeper API (Raymond's request): reuse data that's already loaded instead of adding requests.
+  Every Sleeper request goes through `utils/sleeperFetch.js` (`sleeperFetch`, or `sleeperJson(path)`): one request
+  per URL per page load, shared by every section that asks at the same time (`tests/sleeperFetch.test.js`). Use it for
+  new code too; plain `fetch` only for something that must be re-downloaded (the Matchups "Refresh scores" button).
+  Measured Nov 2026 (cold page load, browser): Home 40, Matchups 36, Standings / Trends / Rosters 30, Drafts 36,
+  Managers 38, a manager page 40, Trades & Waivers / Records / Rivalry 18 (84 with two managers picked), Trophy Room 16.
 
 ### Pages
 - **Home** — `RayHome` is the only custom line in `src/routes/+page.svelte`. One section at a time, picked with
@@ -79,7 +84,10 @@ All data comes live from the public Sleeper API.
   noted as "also calarseneau '22–'23"); a single season shows that season's team and manager. Numbers in
   `utils/recordBook.js` (`tests/recordBook.test.js`) from the template's `getLeagueRecords()` (`leagueRosterRecords`
   per team-season) and transaction totals (`totals.seasons`, per roster). Swapped in for the template's `Records` in
-  `components.js`. Opening the page still refreshes the cached records once per visit (template behavior, many requests).
+  `components.js`. Records are saved in the browser (localStorage `records`) and rebuilt only when Sleeper scores a new
+  week (`last_scored_leg`), the season changes or `RECORDS_CACHE_VERSION` in `utils/recordsCache.js` is bumped (bump it
+  whenever the records math changes). A rebuild downloads every week of every season (about 90 Sleeper requests);
+  records are never built on the server.
 - **Rosters** — `RosterAnalysis` at the top of the page (age, count and spread by position).
 - **Managers** (`/managers`) and **manager pages** (`/manager?manager=N`, N = index in leagueInfo.js `managers`) —
   `RayManagers/ManagersList` (option A "trading cards": team, years in the league, favorite NFL team, all-time
@@ -156,7 +164,9 @@ All data comes live from the public Sleeper API.
   `matchup_id`, `total`) for the bench and the shared matchups loader.
 - `src/lib/BarChart.svelte` (`controlsOnTop`), `src/lib/Managers/Manager.svelte` (broken-icon fallback; no longer shown).
 - `src/lib/utils/helperFunctions/leagueRecords.js` `analyzeRosters`: points per game is points per WEEK (games ÷ 2 when
-  the league plays the median game; 2026 seasons were halved before).
+  the league plays the median game; 2026 seasons were halved before). `getLeagueRecords`: the in-session check looks at
+  `regularSeasonData` (it checked a key one level down and never matched), saved records carry `meta` and stay fresh
+  until a new week is scored (`utils/recordsCache.js`), and nothing is built on the server.
 - `src/lib/utils/helperFunctions/universalFunctions.js` `getTeamData`: a team without a Sleeper team name is called
   "Team <Sleeper username>" (the template used the user's display name, which leagueInfo.js replaces with the
   manager's real name).
@@ -227,3 +237,16 @@ All data comes live from the public Sleeper API.
 
 ## Open TODOs
 - Reuse `TeamChip`, the week-arrow buttons and the "M" badge in Matchups, the transaction feed and the draft board
+- Bench Legend should be split into offense and defense
+- For trade of the year scoring, if a pick is traded late in the season it should not be calculated for full value (i.e. a 1st round pick with only games left should not be worth 120pts)
+- default trophy room to show regular season.  Make regular season the first option in the toggle (on the left side)
+- ordering on the Awards page "All-league team" is strange.  Move the SF spot to top of the right-hand column.  So that it pushes other rows down one. Also, put the IDP slot 
+- most of the remaining requests are the 15 season-history requests on nearly every page. Saving finished seasons would remove 12 of them.
+- Align content of Team Breakdown and Standings 
+
+## TODO (not a priority)
+- The fix: add one line, export const ssr = false, in a new src/routes/+layout. 
+  - Why? 
+    - Every time Vercel starts a fresh server, which it does often on a small site after it sits idle, the first visits make another 20–35 Sleeper requests per page type. They come from Vercel’s address and nothing uses them.
+    - What the server builds is only the header, nav and loading messages.
+

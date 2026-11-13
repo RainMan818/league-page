@@ -4,6 +4,8 @@ import { teamManagersStore } from '$lib/stores';
 import { waitForAll } from './multiPromise';
 import { getManagers, getTeamData } from './universalFunctions';
 import { getLeagueData } from './leagueData';
+// AAA-Raymond: one request per Sleeper URL per page load (shared with every other loader)
+import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
 
 export const getLeagueTeamManagers = async () => {
     if(get(teamManagersStore) && get(teamManagersStore).currentSeason) {
@@ -17,9 +19,9 @@ export const getLeagueTeamManagers = async () => {
     // loop through all seasons and create a [year][roster_id]: team, managers object
 	while(currentLeagueID && currentLeagueID != 0) {
 		const [usersRaw, leagueData, rostersRaw] = await waitForAll(
-            fetch(`https://api.sleeper.app/v1/league/${currentLeagueID}/users`, {compress: true}),
+            sleeperFetch(`https://api.sleeper.app/v1/league/${currentLeagueID}/users`, {compress: true}),
 			getLeagueData(currentLeagueID),
-            fetch(`https://api.sleeper.app/v1/league/${currentLeagueID}/rosters`, {compress: true}),
+            sleeperFetch(`https://api.sleeper.app/v1/league/${currentLeagueID}/rosters`, {compress: true}),
         ).catch((err) => { console.error(err); });
 
         const [users, rosters] = await waitForAll(

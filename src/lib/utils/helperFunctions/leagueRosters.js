@@ -1,6 +1,8 @@
 import { leagueID } from '$lib/utils/leagueInfo';
 import { get } from 'svelte/store';
 import { rostersStore } from '$lib/stores';
+// AAA-Raymond: one request per Sleeper URL per page load (shared with every other loader)
+import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
 
 export const getLeagueRosters = async (queryLeagueID = leagueID) => {
     const storedRoster = get(rostersStore)[queryLeagueID];
@@ -12,7 +14,7 @@ export const getLeagueRosters = async (queryLeagueID = leagueID) => {
     ) {
 		return storedRoster;
 	}
-    const res = await fetch(`https://api.sleeper.app/v1/league/${queryLeagueID}/rosters`, {compress: true}).catch((err) => { console.error(err); });
+    const res = await sleeperFetch(`https://api.sleeper.app/v1/league/${queryLeagueID}/rosters`, {compress: true}).catch((err) => { console.error(err); });
 	const data = await res.json().catch((err) => { console.error(err); });
 	
 	if (res.ok) {
@@ -39,4 +41,4 @@ const processRosters = (rosters) => {
         rosterMap[roster.roster_id] = roster;
 	}
 	return {rosters: rosterMap, startersAndReserve};
-}
+}

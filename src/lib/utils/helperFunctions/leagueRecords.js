@@ -9,6 +9,10 @@ import { getManagers, round, sortHighAndLow } from './universalFunctions';
 import { Records } from '$lib/utils/dataClasses';
 import { getBrackets } from './leagueBrackets';
 import { browser } from '$app/environment';
+// AAA-Raymond: keep saved records while they're still good (see recordsCache.js)
+import { isRecordsFresh, recordsMeta } from '$lib/AAA-Raymond/utils/recordsCache.js';
+// AAA-Raymond: one request per Sleeper URL per page load (shared with every other loader)
+import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
 
 /**
  * getLeagueRecords obtains all the record for a league since it was first created
@@ -17,17 +21,39 @@ import { browser } from '$app/environment';
  */
 export const getLeagueRecords = async (refresh = false) => {
 	// records temporarily cached for an individual session
-	if(get(records).leagueWeekHighs) {
+	// AAA-Raymond: the store holds { regularSeasonData, playoffData } (it checked leagueWeekHighs, which is one level
+	// down, so this never matched and every visit rebuilt everything)
+	if(get(records).regularSeasonData) {
 		return get(records);
+	}
+
+	// AAA-Raymond: only build records in the browser. The server has no localStorage, so every server render started
+	// the full download (about 90 Sleeper requests); the browser loads them right after.
+	if(!browser) {
+		return { regularSeasonData: null, playoffData: null, stale: true };
 	}
 
 	// if this isn't a refresh data call, check if there are already
 	// transactions stored in localStorage (long term)
 	if(!refresh && browser) {
-		let localRecords = await JSON.parse(localStorage.getItem("records"));
+		let localRecords = null;
+		try {
+			localRecords = JSON.parse(localStorage.getItem("records"));
+		} catch (err) {
+			localRecords = null;
+		}
 		// check if transactions have been saved to localStorage before
 		if(localRecords && localRecords.playoffData) {
-			localRecords.stale = true;
+			// AAA-Raymond: only stale (and rebuilt by the page) once Sleeper scores another week or the records math
+			// changes; fresh records are kept for the rest of this visit
+			const currentLeague = await getLeagueData().catch(() => null);
+			localRecords.stale = !isRecordsFresh(localRecords.meta, {
+				season: currentLeague?.season,
+				lastScored: currentLeague?.settings?.last_scored_leg,
+			});
+			if(!localRecords.stale) {
+				records.update(() => localRecords);
+			}
 			return localRecords;
 		}
 	}
@@ -108,7 +134,13 @@ export const getLeagueRecords = async (refresh = false) => {
 	const regularSeasonData = regularSeason.returnRecords()
 	const playoffData = playoffRecords.returnRecords()
 
-	const recordsData = {regularSeasonData, playoffData};
+	// AAA-Raymond: saved with the records so later visits know whether they're still good
+	const currentLeague = await getLeagueData().catch(() => null);
+	const recordsData = {
+		regularSeasonData,
+		playoffData,
+		meta: recordsMeta({ season: currentLeague?.season, lastScored: currentLeague?.settings?.last_scored_leg }),
+	};
 
     if(browser) {
         // update localStorage
@@ -148,7 +180,7 @@ const processRegularSeason = async ({rosters, leagueData, curSeason, week, regul
 	const matchupsPromises = [];
 	let startWeek = parseInt(week);
 	while(week > 0) {
-		matchupsPromises.push(fetch(`https://api.sleeper.app/v1/league/${curSeason}/matchups/${week}`, {compress: true}))
+		matchupsPromises.push(sleeperFetch(`https://api.sleeper.app/v1/league/${curSeason}/matchups/${week}`, {compress: true}))
 		week--;
 	}
 

@@ -4,6 +4,8 @@ import { getNflState } from "./nflState"
 import { waitForAll } from './multiPromise';
 import { get } from 'svelte/store';
 import {matchupsStore} from '$lib/stores';
+// AAA-Raymond: one request per Sleeper URL per page load (shared with every other loader)
+import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
 
 export const getLeagueMatchups = async () => {
 	if(get(matchupsStore).matchupWeeks) {
@@ -27,7 +29,7 @@ export const getLeagueMatchups = async () => {
 	// pull in all matchup data for the season
 	const matchupsPromises = [];
 	for(let i = 1; i < leagueData.settings.playoff_week_start; i++) {
-		matchupsPromises.push(fetch(`https://api.sleeper.app/v1/league/${leagueID}/matchups/${i}`, {compress: true}))
+		matchupsPromises.push(sleeperFetch(`https://api.sleeper.app/v1/league/${leagueID}/matchups/${i}`, {compress: true}))
 	}
 	const matchupsRes = await waitForAll(...matchupsPromises);
 

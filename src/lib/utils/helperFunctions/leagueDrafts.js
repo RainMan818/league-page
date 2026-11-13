@@ -4,6 +4,8 @@ import { waitForAll } from './multiPromise';
 import { get } from 'svelte/store';
 import {upcomingDraft, previousDrafts} from '$lib/stores';
 import { getLeagueRosters } from './leagueRosters';
+// AAA-Raymond: one request per Sleeper URL per page load (shared with every other loader)
+import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
 
 export const getUpcomingDraft = async () => {
 	if(get(upcomingDraft).draft) {
@@ -20,8 +22,8 @@ export const getUpcomingDraft = async () => {
 	let year = parseInt(leagueData.season);
 
 	const [officialDraftRes, picksRes] = await waitForAll(
-		fetch(`https://api.sleeper.app/v1/draft/${draftID}`, {compress: true}),
-		fetch(`https://api.sleeper.app/v1/league/${leagueID}/traded_picks`, {compress: true}),
+		sleeperFetch(`https://api.sleeper.app/v1/draft/${draftID}`, {compress: true}),
+		sleeperFetch(`https://api.sleeper.app/v1/league/${leagueID}/traded_picks`, {compress: true}),
 	).catch((err) => { console.error(err); });
 
 	const [officialDraft, picks] = await waitForAll(
@@ -194,7 +196,7 @@ export const getPreviousDrafts = async () => {
 	while(curSeason && curSeason != 0) {
 		const [leagueData, completedDraftsInfo] = await waitForAll(
             getLeagueData(curSeason).catch((err) => { console.error(err); }),
-            fetch(`https://api.sleeper.app/v1/league/${curSeason}/drafts`, {compress: true}),
+            sleeperFetch(`https://api.sleeper.app/v1/league/${curSeason}/drafts`, {compress: true}),
         ).catch((err) => { console.error(err); });
 
         const completedDrafts = await completedDraftsInfo.json();
@@ -205,9 +207,9 @@ export const getPreviousDrafts = async () => {
             const year = parseInt(completedDraft.season);
         
             const [officialDraftRes, picksRes, playersRes] = await waitForAll(
-                fetch(`https://api.sleeper.app/v1/draft/${draftID}`, {compress: true}),
-                fetch(`https://api.sleeper.app/v1/draft/${draftID}/traded_picks`, {compress: true}),
-                fetch(`https://api.sleeper.app/v1/draft/${draftID}/picks`, {compress: true}),
+                sleeperFetch(`https://api.sleeper.app/v1/draft/${draftID}`, {compress: true}),
+                sleeperFetch(`https://api.sleeper.app/v1/draft/${draftID}/traded_picks`, {compress: true}),
+                sleeperFetch(`https://api.sleeper.app/v1/draft/${draftID}/picks`, {compress: true}),
             ).catch((err) => { console.error(err); });
         
             const [officialDraft, picks, players] = await waitForAll(
@@ -242,4 +244,4 @@ export const getPreviousDrafts = async () => {
 	previousDrafts.update(() => drafts);
 
 	return drafts;
-}
+}

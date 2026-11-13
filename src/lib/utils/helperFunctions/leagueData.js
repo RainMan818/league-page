@@ -1,12 +1,14 @@
 import { get } from 'svelte/store';
 import {leagueData} from '$lib/stores';
 import { leagueID } from '$lib/utils/leagueInfo';
+// AAA-Raymond: one request per Sleeper URL per page load (shared with every other loader)
+import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
 
 export const getLeagueData = async (queryLeagueID = leagueID) => {
 	if(get(leagueData)[queryLeagueID]) {
 		return get(leagueData)[queryLeagueID];
 	}
-    const res = await fetch(`https://api.sleeper.app/v1/league/${queryLeagueID}`, {compress: true}).catch((err) => { console.error(err); });
+    const res = await sleeperFetch(`https://api.sleeper.app/v1/league/${queryLeagueID}`, {compress: true}).catch((err) => { console.error(err); });
 	const data = await res.json().catch((err) => { console.error(err); });
 	
 	if (res.ok) {
@@ -15,4 +17,4 @@ export const getLeagueData = async (queryLeagueID = leagueID) => {
 	} else {
 		throw new Error(data);
 	}
-}
+}

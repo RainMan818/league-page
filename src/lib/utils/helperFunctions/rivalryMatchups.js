@@ -4,6 +4,8 @@ import { getNflState } from "./nflState"
 import { waitForAll } from './multiPromise';
 import { getRosterIDFromManagerIDAndYear } from '$lib/utils/helperFunctions/universalFunctions';
 import { getLeagueTeamManagers } from "./leagueTeamManagers";
+// AAA-Raymond: one request per Sleeper URL per page load (shared with every other loader)
+import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
 
 export const getRivalryMatchups = async (userOneID, userTwoID) => {
     if(!userOneID || !userTwoID) {
@@ -49,9 +51,12 @@ export const getRivalryMatchups = async (userOneID, userTwoID) => {
         }
 
         // pull in all matchup data for the season
+        // AAA-Raymond: during the regular season, skip the current season's weeks that haven't been played yet
+        // (the template worked out `week` for this but never used it)
+        const lastWeek = nflState.season_type == 'regular' && leagueData.season == nflState.season ? week : Infinity;
         const matchupsPromises = [];
-        for(let i = 1; i < leagueData.settings.playoff_week_start; i++) {
-            matchupsPromises.push(fetch(`https://api.sleeper.app/v1/league/${curLeagueID}/matchups/${i}`, {compress: true}))
+        for(let i = 1; i < leagueData.settings.playoff_week_start && i <= lastWeek; i++) {
+            matchupsPromises.push(sleeperFetch(`https://api.sleeper.app/v1/league/${curLeagueID}/matchups/${i}`, {compress: true}))
         }
         const matchupsRes = await waitForAll(...matchupsPromises);
 

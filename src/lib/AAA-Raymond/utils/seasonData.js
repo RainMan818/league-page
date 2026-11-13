@@ -10,6 +10,7 @@
 import { leagueID as currentLeagueID } from '$lib/utils/leagueInfo';
 import { getLeagueData, getLeagueRosters, getNflState, loadPlayers, waitForAll } from '$lib/utils/helper';
 import { getWeeklyMatchupEntries } from './weeklyMatchups.js';
+import { sleeperJson } from './sleeperFetch.js';
 import { seasonAwards, roundWeeks, playoffRecapEntries, playoffRoundName } from './seasonAwards.js';
 
 // bump when the award math changes, so browsers drop results saved by the old version
@@ -17,23 +18,8 @@ const CACHE_VERSION = 7;
 // current-season results are reused for a few hours, then rebuilt (scores can get stat corrections)
 const CURRENT_SEASON_TTL_MS = 3 * 60 * 60 * 1000;
 
-// one request per URL per page load, shared by the recap, the awards and the Trophy Room
-const requests = new Map();
-function sleeper(path) {
-    if (!requests.has(path)) {
-        const p = fetch(`https://api.sleeper.app/v1/${path}`)
-            .then((res) => {
-                if (!res.ok) throw new Error(`Sleeper ${path}: ${res.status}`);
-                return res.json();
-            })
-            .catch((err) => {
-                requests.delete(path);
-                throw err;
-            });
-        requests.set(path, p);
-    }
-    return requests.get(path);
-}
+// one request per URL per page load, shared by the recap, the awards, the Trophy Room and every other loader
+const sleeper = (path) => sleeperJson(path);
 
 const regularSeasonLength = (leagueData) => (Number(leagueData.settings?.playoff_week_start) || 15) - 1;
 

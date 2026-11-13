@@ -3,6 +3,8 @@ import { getLeagueRosters } from './leagueRosters';
 import { waitForAll } from './multiPromise';
 import { get } from 'svelte/store';
 import { awards } from '$lib/stores';
+// AAA-Raymond: one request per Sleeper URL per page load (shared with every other loader)
+import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
 
 export const getAwards = async () => {
 	if(get(awards).length) {
@@ -77,10 +79,10 @@ const getPodiums = async (previousSeasonID) => {
 // fetch the previous season's data from sleeper
 const getPreviousLeagueData = async (previousSeasonID) => {
 	const resPromises = [
-		fetch(`https://api.sleeper.app/v1/league/${previousSeasonID}`, {compress: true}),
+		sleeperFetch(`https://api.sleeper.app/v1/league/${previousSeasonID}`, {compress: true}),
 		getLeagueRosters(previousSeasonID),
-		fetch(`https://api.sleeper.app/v1/league/${previousSeasonID}/losers_bracket`, {compress: true}),
-		fetch(`https://api.sleeper.app/v1/league/${previousSeasonID}/winners_bracket`, {compress: true}),
+		sleeperFetch(`https://api.sleeper.app/v1/league/${previousSeasonID}/losers_bracket`, {compress: true}),
+		sleeperFetch(`https://api.sleeper.app/v1/league/${previousSeasonID}/winners_bracket`, {compress: true}),
 	]
 
 	const [leagueRes, rostersData, losersRes, winnersRes] = await waitForAll(...resPromises).catch((err) => { console.error(err); });
@@ -144,4 +146,4 @@ const buildDivisionsAndManagers = ({previousRosters, leagueMetadata, numDivision
 	}
 
 	return divisions;
-}
+}
