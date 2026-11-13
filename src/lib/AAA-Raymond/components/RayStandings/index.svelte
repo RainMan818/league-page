@@ -6,6 +6,7 @@
   import { onMount } from "svelte";
   import { loadLeagueContext } from "../../utils/leagueContext.js";
   import { seedTeams, POINTS_WILDCARD_SEEDS } from "../../utils/playoffs.js";
+  import { allPlayRecords, lineupEfficiency, tankathonOrder } from "../../utils/teamStats.js";
   import Loading from "../Shared/Loading.svelte";
   import StandingsTable from "./StandingsTable.svelte";
   import PositionAverages from "../PositionAverages/index.svelte";
@@ -39,6 +40,12 @@
       }));
       const { order, divisionWinners } = seedTeams(info, { playoffTeams });
 
+      // same extra columns as the homepage's Team Breakdown: Tankathon pick, all-play, lineup efficiency
+      const picks = tankathonOrder(standings.standingsInfo);
+      const byId = (list) => Object.fromEntries(list.map((r) => [String(r.rosterID), r]));
+      const allPlay = byId(allPlayRecords(standings.matchups ?? []));
+      const efficiency = byId(lineupEfficiency(standings.standingsInfo));
+
       const recordSpots = playoffTeams - Math.min(POINTS_WILDCARD_SEEDS, playoffTeams - divisionWinners.length);
       const rows = order.map((t, i) => {
         const seed = i + 1;
@@ -49,7 +56,7 @@
           tagKind = "division";
         } else if (seed <= recordSpots) tag = "Wildcard";
         else if (seed <= playoffTeams) tag = "Points wildcard";
-        return { ...t, seed, tag, tagKind };
+        return { ...t, seed, tag, tagKind, pick: picks.indexOf(t.id) + 1, allPlay: allPlay[t.id] ?? null, eff: efficiency[t.id] ?? null };
       });
 
       view = {

@@ -1,6 +1,7 @@
 <!--
   Standings option B: one sortable table, ordered by playoff seed by default, with a dashed playoff line
-  and division leader / wildcard tags. Rows are built in RayStandings/index.svelte (seeds from seedTeams()).
+  and division leader / wildcard tags. Same contents as the homepage's Team Breakdown (Tankathon pick, all-play,
+  lineup efficiency) minus Luck; each table keeps its own look. Rows are built in RayStandings/index.svelte (seeds from seedTeams()).
   Sorting and the header come from Shared/SortableTable; table look from Shared/common.css.
 -->
 <script>
@@ -26,6 +27,9 @@
       { key: "pa", label: "PA", title: "Points against", get: (r) => r.fptsAgainst },
       { key: "max", label: "Max PF", title: "Points with the best possible lineup each week", get: (r) => r.potentialPoints },
       { key: "streak", label: "Strk", title: "Current streak", get: (r) => streakValue(r.streak) },
+      { key: "pick", label: "Pick", title: "Tankathon draft order: lowest max points picks first", get: (r) => r.pick || 99, firstDir: 1 },
+      { key: "allplay", label: "All-play", title: "Win % if you played every team every week", get: (r) => r.allPlay?.apPct ?? -1, show: rows.some((r) => r.allPlay) },
+      { key: "eff", label: "Efficiency", title: "Points scored ÷ best possible lineup", get: (r) => r.eff?.efficiency ?? -1, show: rows.some((r) => r.eff) },
     ].filter((c) => c.show !== false)
   );
 
@@ -74,6 +78,16 @@
     {:else if c.key === "streak"}
       {@const v = streakValue(r.streak)}
       <td><span class="rr-streak" class:rr-good={v > 0} class:rr-bad={v < 0}>{streakLabel(r.streak)}</span></td>
+    {:else if c.key === "pick"}
+      <td class="rr-strong">{r.pick || "–"}</td>
+    {:else if c.key === "allplay"}
+      <td title={r.allPlay ? `All-play record ${record(r.allPlay.apWins, r.allPlay.apLosses, r.allPlay.apTies)}` : ""}>
+        {r.allPlay ? `${(r.allPlay.apPct * 100).toFixed(0)}%` : "–"}
+      </td>
+    {:else if c.key === "eff"}
+      <td title={r.eff ? `${pts(r.eff.fpts)} of ${pts(r.eff.maxPts)} possible · ${pts(r.eff.benchPts)} left on the bench` : ""}>
+        {r.eff ? `${(r.eff.efficiency * 100).toFixed(1)}%` : "–"}
+      </td>
     {/if}
   {/snippet}
 </SortableTable>

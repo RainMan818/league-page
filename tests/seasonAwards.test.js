@@ -5,7 +5,7 @@ import {
   regularSeasonAwards, postseasonAwards, acquisitionIndex, allLeagueTeam, roundWeeks, bracketGames,
   playoffRecapEntries, playoffRoundName, isRookie,
 } from '../src/lib/AAA-Raymond/utils/seasonAwards.js';
-import { pickValue } from '../src/lib/AAA-Raymond/utils/pickValues.js';
+import { pickValue, pickShare } from '../src/lib/AAA-Raymond/utils/pickValues.js';
 
 // tiny league: 4 teams, lineup QB, RB, FLEX, DL, IDP_FLEX + bench
 const rosterPositions = ['QB', 'RB', 'FLEX', 'DL', 'IDP_FLEX', 'BN', 'BN'];
@@ -66,20 +66,21 @@ test('waivers, trades and pickups use how the player was acquired', () => {
   assert.equal(a.waiverWizard.rosterID, '2'); assert.equal(a.waiverWizard.points, 35); assert.equal(a.waiverWizard.top.playerID, 'fa');
   assert.equal(a.offPickup.playerID, 'fa'); assert.equal(a.offPickup.rosterID, '2');
   assert.equal(a.defPickup, null); // no defender was picked up
-  // trade: team 3 got w4 (30) and sent w3 (5 for team 4) plus a 2027 1st (worth 120 by default):
-  // team 3 = 30 - 5 - 120 = -95, team 4 = 5 + 120 - 30 = +95
-  assert.equal(a.tradeOfYear.rosterID, '4'); assert.equal(a.tradeOfYear.net, 95);
+  // trade: team 3 got w4 (30) and sent w3 (5 for team 4) plus a 2027 1st (120 by default, but traded in week 2 of a
+  // 2-week season, so half of it counts: 60): team 3 = 30 - 5 - 60 = -35, team 4 = 5 + 60 - 30 = +35
+  assert.equal(a.tradeOfYear.rosterID, '4'); assert.equal(a.tradeOfYear.net, 35);
   assert.deepEqual(a.tradeOfYear.received.map((p) => p.playerID), ['w3']);
   assert.deepEqual(a.tradeOfYear.sent.map((p) => p.playerID), ['w4']);
-  assert.equal(a.tradeOfYear.picksReceived.length, 1); assert.equal(a.tradeOfYear.picksReceived[0].value, 120);
+  assert.equal(a.tradeOfYear.picksReceived.length, 1);
+  assert.equal(a.tradeOfYear.picksReceived[0].value, 60); assert.equal(a.tradeOfYear.picksReceived[0].fullValue, 120);
   // both sides of the deal, winner first
-  assert.deepEqual(a.tradeOfYear.sides.map((sd) => [sd.rosterID, sd.net]), [['4', 95], ['3', -95]]);
+  assert.deepEqual(a.tradeOfYear.sides.map((sd) => [sd.rosterID, sd.net]), [['4', 35], ['3', -35]]);
   assert.deepEqual(a.tradeOfYear.sides[1].received.map((p) => [p.playerID, p.points]), [['w4', 30]]);
   assert.equal(a.tradeOfYear.sides[0].picks[0].round, 1);
-  // with a cheap 1st (10 pts) the player side wins instead: team 3 = 30 - 5 - 10 = +15
+  // with a cheap 1st (10 pts, half counts: 5) the player side wins instead: team 3 = 30 - 5 - 5 = +20
   const cheap = regularSeasonAwards({ ...base, pickValues: { 1: 10 } });
-  assert.equal(cheap.tradeOfYear.rosterID, '3'); assert.equal(cheap.tradeOfYear.net, 15);
-  assert.equal(cheap.tradeOfYear.picksSent[0].value, 10);
+  assert.equal(cheap.tradeOfYear.rosterID, '3'); assert.equal(cheap.tradeOfYear.net, 20);
+  assert.equal(cheap.tradeOfYear.picksSent[0].value, 5);
   // trades count bench points too: team 1 gets bx (40 on the bench in week 1) for l2 (9 + 6 as a starter) -> +25
   const benchTrade = { transaction_id: 't4', type: 'trade', status: 'complete', leg: 1, status_updated: 5, roster_ids: [1, 2],
     adds: { bx: 1, l2: 2 }, drops: { bx: 2, l2: 1 }, draft_picks: [], waiver_budget: [] };
@@ -107,7 +108,9 @@ test('rookie awards, DPOY, best game, bench legend', () => {
   assert.equal(a.droy.playerID, 'd2'); assert.equal(a.droy.pos, 'DL'); assert.equal(a.droy.points, 26); // d2 26 > l3 23
   assert.equal(a.dpoy.playerID, 'd2');
   assert.equal(a.bestGame.playerID, 'fa'); assert.equal(a.bestGame.points, 35);
-  assert.equal(a.benchLegend.playerID, 'bx'); assert.equal(a.benchLegend.points, 40);
+  // bench legend is split: bx (RB, 40 on the bench) is the offensive one; no defender sat on a bench
+  assert.equal(a.offBenchLegend.playerID, 'bx'); assert.equal(a.offBenchLegend.points, 40);
+  assert.equal(a.defBenchLegend, null);
   // a 2025 rookie has years_exp 1 in 2026
   assert.ok(isRookie({ experience: 1 }, 2025, 2026));
   assert.ok(!isRookie({ experience: 1 }, 2026, 2026));
@@ -192,6 +195,15 @@ test('post-season awards', () => {
   assert.notEqual(a.mostEfficient.rosterID, '1'); assert.equal(a.mostEfficient.efficiency, 1);
   assert.equal(a.benchBlunder.rosterID, '1'); assert.equal(a.benchBlunder.bench.playerID, 'bx');
   assert.equal(a.benchBlunder.starter.playerID, 'w4'); assert.equal(a.benchBlunder.game, 'the semifinals'); assert.equal(a.benchBlunder.margin, 25); assert.equal(a.benchBlunder.swing, 40);
+});
+
+test('a traded pick counts for the part of the regular season left after the trade', () => {
+  assert.equal(pickShare(1, 14), 1); // offseason / week 1: all of it
+  assert.equal(pickShare(12, 14), 3 / 14); // weeks 12, 13, 14 left
+  assert.equal(pickShare(14, 14), 1 / 14);
+  assert.equal(pickShare(16, 14), 0); // after the regular season
+  assert.equal(pickShare(0, 14), 1);
+  assert.equal(Math.round(120 * pickShare(12, 14)), 26);
 });
 
 test('pick values by round', () => {

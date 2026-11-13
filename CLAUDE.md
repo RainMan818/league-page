@@ -28,8 +28,14 @@ All data comes live from the public Sleeper API.
   Every Sleeper request goes through `utils/sleeperFetch.js` (`sleeperFetch`, or `sleeperJson(path)`): one request
   per URL per page load, shared by every section that asks at the same time (`tests/sleeperFetch.test.js`). Use it for
   new code too; plain `fetch` only for something that must be re-downloaded (the Matchups "Refresh scores" button).
-  Measured Nov 2026 (cold page load, browser): Home 40, Matchups 36, Standings / Trends / Rosters 30, Drafts 36,
-  Managers 38, a manager page 40, Trades & Waivers / Records / Rivalry 18 (84 with two managers picked), Trophy Room 16.
+  Finished seasons (previous leagues with status "complete") never change, so their league info, users, rosters,
+  playoff brackets and drafts are saved in the browser (`utils/savedSeasons.js`, localStorage `rr-pastSeasons`,
+  about 250K characters, refreshed weekly; `tests/savedSeasons.test.js`). The template loaders that read past seasons
+  (`getLeagueData`, `getLeagueTeamManagers`, `getLeagueRosters`, `getAwards`, `getPreviousDrafts`) use it; the
+  current league is never saved. Use `seasonJson(path, finished)` for any new past-season download.
+  Measured Nov 12 2026 (fresh page load after the first visit, browser): Home 20, Matchups 24, Standings / Trends /
+  Rosters / Managers 18, Drafts 8, a manager page 20, Trades & Waivers / Records / Rivalry 6 (72 with two managers
+  picked), Trophy Room 4; 238 for one load of every page (1,318 before the request work started).
 
 ### Pages
 - **Home** — `RayHome` is the only custom line in `src/routes/+page.svelte`. One section at a time, picked with
@@ -47,7 +53,9 @@ All data comes live from the public Sleeper API.
   move to the top (post-season + regular season, with a toggle) and the recap stays below them through NFL week 18
   (about a week after the week-17 final, Raymond's call), then disappears.
 - **Trophy Room** (`/awards`) — just `SeasonAwards/TrophyRoomAwards`: a season picker for every season whose regular
-  season is over (2022 onward). The template's podium list (`src/lib/Awards/Awards.svelte`, `getAwards()`) is no
+  season is over (2022 onward). Opens on the regular-season awards (`prefer="regular"`); the toggle has Regular season
+  on the left everywhere (the homepage still opens on the post-season once the championship is decided).
+  All-League Team: offense in the left column (QB … SF), defense in the right (IDP, DL, LB, DB), stacked on phones. The template's podium list (`src/lib/Awards/Awards.svelte`, `getAwards()`) is no
   longer shown; `src/routes/awards/+page.js` only loads team managers. The homepage sidebar's "Fantasy Champ" still
   uses `getAwards()`.
 - **Matchups** — `RayMatchups/MatchupWeeks` + `Matchup` (versus strips; click for every starter with photos;
@@ -55,7 +63,7 @@ All data comes live from the public Sleeper API.
   plays median games). Swapped in by one import in `src/lib/Matchups/MatchupsAndBrackets.svelte`; the playoff
   bracket still uses the template's `Matchup.svelte`.
 - **Standings** — `RayStandings` (`StandingsTable`: sortable, seed order, dashed playoff line, division pills,
-  Division leader / Wildcard / Points wildcard tags) and two `PositionAverages` tables (two-sided heat scale:
+  Division leader / Wildcard / Points wildcard tags, plus Tankathon pick, all-play and lineup efficiency) and two `PositionAverages` tables (two-sided heat scale:
   cyan = low, pink = high; by value in "Averages", evenly by rank in "Ranking").
 - **Trends** (`/trends`, nav tab after Standings) — `RayTrends` (option A "dashboard grid"): standings place,
   points for, max PF, lineup efficiency, all-play %, total offense / defense and each position, week by week.
@@ -69,6 +77,11 @@ All data comes live from the public Sleeper API.
 - **Trades & Waivers** (and manager pages) — `RayTransactions/TransactionFeed`: one card per day, one line per team
   (waivers: + added / − dropped and FAAB bid; trades: team ← what it received, picks show "via <team>").
   Swapped into the template's `TransactionsPage.svelte`. Date parsing/grouping in `transactionView.js`.
+  Transactions are saved in the browser (localStorage `transactions`, with `meta`). A page load downloads only the
+  current and previous week of the current league and merges them in (2 requests; `utils/transactionsCache.js`,
+  `tests/transactionsCache.test.js`); the full download (every week of every season) happens only the first time,
+  after a new season starts or when `TRANSACTIONS_CACHE_VERSION` is bumped (bump it if the saved entry shape changes).
+  Sections that ask at the same time share one refresh. Nothing is downloaded on the server.
 - **Drafts** — `RayDrafts/DraftBoard` (dark cells, top edge in the position color, position tag (solid chip; text
   color `--or-pos-chip-text` per theme), traded picks as "→ owner" / "by <team>"). Swapped in by one import in
   `src/lib/Drafts/index.svelte`, which is also wrapped in `RayDrafts/DraftsLayout`. Clicking a team's name (or a
@@ -128,10 +141,11 @@ All data comes live from the public Sleeper API.
 - `utils/seasonAwards.js` — end-of-season award math (plain functions, `tests/seasonAwards.test.js`). Player awards
   count points scored in a starting lineup. Waiver Wizard and the Pickups credit each start to how the
   team got that player (latest waiver, free-agent, trade or commissioner add in a leg <= that week; otherwise
-  drafted/kept). Pickup of the Year is split into offense and defense. Trade of the Year = everything the players a
+  drafted/kept). Pickup of the Year and Bench Legend are split into offense and defense. Trade of the Year = everything the players a
   team received scored from the trade's week on (any team, starting or bench, Raymond's call; later flips don't
   matter), minus the same for the players it sent; traded draft picks count as a rough season
-  of points for their round (`utils/pickValues.js`, measured from this league's 2023–2026 rookie drafts). Rookies: `experience` (Sleeper years_exp, as of the current season) minus seasons since.
+  of points for their round (`utils/pickValues.js`, measured from this league's 2023–2026 rookie drafts), scaled to the
+  part of the regular season left after the trade (`pickShare`: a 1st traded in week 12 of 14 counts 3/14 of 120). Rookies: `experience` (Sleeper years_exp, as of the current season) minus seasons since.
   Playoff seeds use `seedTeams` (the league rule) numbered among the teams Sleeper put in the winners bracket;
   this matched Sleeper's brackets for 2023–2025. Cinderella = the non-bye team that went furthest (ties: lower seed).
   Championship Hero = the champion's top scorer in the final. Most Efficient Manager = playoff points ÷ max points
@@ -167,6 +181,14 @@ All data comes live from the public Sleeper API.
   the league plays the median game; 2026 seasons were halved before). `getLeagueRecords`: the in-session check looks at
   `regularSeasonData` (it checked a key one level down and never matched), saved records carry `meta` and stay fresh
   until a new week is scored (`utils/recordsCache.js`), and nothing is built on the server.
+- Every file in `src/lib/utils/helperFunctions/` that calls Sleeper imports `sleeperFetch` instead of `fetch` (marked).
+- `src/lib/utils/helperFunctions/leagueTransactions.js`: the saved-copy top-up (entries carry `league`, `leg`, `ts`;
+  `computeTotals` split out; newest-first order with a transaction-ID tie-break).
+- `src/lib/utils/helperFunctions/rivalryMatchups.js`: skips the current season's unplayed weeks.
+- `leagueData.js`, `leagueTeamManagers.js`, `leagueRosters.js`, `leagueAwards.js`, `leagueDrafts.js` (helperFunctions):
+  finished seasons come from `utils/savedSeasons.js`. `getLeagueTeamManagers` now loads each season's league info
+  before its users and rosters; `getAwards` gets past league info through `getLeagueData`; saved draft picks keep
+  only the fields the boards use.
 - `src/lib/utils/helperFunctions/universalFunctions.js` `getTeamData`: a team without a Sleeper team name is called
   "Team <Sleeper username>" (the template used the user's display name, which leagueInfo.js replaces with the
   manager's real name).
@@ -236,16 +258,11 @@ All data comes live from the public Sleeper API.
   data, but server-rendered HTML can be a little stale.
 
 ## Open TODOs
-- Reuse `TeamChip`, the week-arrow buttons and the "M" badge in Matchups, the transaction feed and the draft board
-- Bench Legend should be split into offense and defense
-- For trade of the year scoring, if a pick is traded late in the season it should not be calculated for full value (i.e. a 1st round pick with only games left should not be worth 120pts)
-- default trophy room to show regular season.  Make regular season the first option in the toggle (on the left side)
-- ordering on the Awards page "All-league team" is strange.  Move the SF spot to top of the right-hand column.  So that it pushes other rows down one. Also, put the IDP slot 
-- most of the remaining requests are the 15 season-history requests on nearly every page. Saving finished seasons would remove 12 of them.
-- Align content of Team Breakdown and Standings 
+- (none)
 
 ## TODO (not a priority)
-- The fix: add one line, export const ssr = false, in a new src/routes/+layout. 
+- Reuse `TeamChip`, the week-arrow buttons and the "M" badge in Matchups, the transaction feed and the draft board
+- Add one line, export const ssr = false, in a new src/routes/+layout. 
   - Why? 
     - Every time Vercel starts a fresh server, which it does often on a small site after it sits idle, the first visits make another 20–35 Sleeper requests per page type. They come from Vercel’s address and nothing uses them.
     - What the server builds is only the header, nav and loading messages.

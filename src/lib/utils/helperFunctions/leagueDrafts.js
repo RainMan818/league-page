@@ -6,6 +6,8 @@ import {upcomingDraft, previousDrafts} from '$lib/stores';
 import { getLeagueRosters } from './leagueRosters';
 // AAA-Raymond: one request per Sleeper URL per page load (shared with every other loader)
 import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
+// AAA-Raymond: past (finished) seasons' drafts are saved in the browser (savedSeasons.js)
+import { seasonJson, isFinishedLeague } from '$lib/AAA-Raymond/utils/savedSeasons.js';
 
 export const getUpcomingDraft = async () => {
 	if(get(upcomingDraft).draft) {
@@ -194,28 +196,24 @@ export const getPreviousDrafts = async () => {
 	const drafts = [];
 	
 	while(curSeason && curSeason != 0) {
-		const [leagueData, completedDraftsInfo] = await waitForAll(
-            getLeagueData(curSeason).catch((err) => { console.error(err); }),
-            sleeperFetch(`https://api.sleeper.app/v1/league/${curSeason}/drafts`, {compress: true}),
-        ).catch((err) => { console.error(err); });
-
-        const completedDrafts = await completedDraftsInfo.json();
+		// AAA-Raymond: league info first (saved for past seasons), so a finished season's drafts can come from the saved copy
+		const leagueData = await getLeagueData(curSeason);
+		const finished = isFinishedLeague(leagueData, leagueID);
+		const completedDrafts = await seasonJson(`league/${curSeason}/drafts`, finished);
         curSeason = leagueData.previous_league_id;
 
         for(const completedDraft of completedDrafts) {
             const draftID = completedDraft.draft_id;
             const year = parseInt(completedDraft.season);
         
-            const [officialDraftRes, picksRes, playersRes] = await waitForAll(
-                sleeperFetch(`https://api.sleeper.app/v1/draft/${draftID}`, {compress: true}),
-                sleeperFetch(`https://api.sleeper.app/v1/draft/${draftID}/traded_picks`, {compress: true}),
-                sleeperFetch(`https://api.sleeper.app/v1/draft/${draftID}/picks`, {compress: true}),
-            ).catch((err) => { console.error(err); });
-        
             const [officialDraft, picks, players] = await waitForAll(
-                officialDraftRes.json(),
-                picksRes.json(),
-                playersRes.json(),
+                seasonJson(`draft/${draftID}`, finished),
+                seasonJson(`draft/${draftID}/traded_picks`, finished),
+                // AAA-Raymond: only the pick fields the boards use (the full answer is ~80KB per draft)
+                seasonJson(`draft/${draftID}/picks`, finished, (list) => list.map((p) => ({
+                    player_id: p.player_id, round: p.round, draft_slot: p.draft_slot, roster_id: p.roster_id,
+                    pick_no: p.pick_no, picked_by: p.picked_by, metadata: { amount: p.metadata?.amount },
+                }))),
             ).catch((err) => { console.error(err); });
 
             if(officialDraft.status != "complete") continue;

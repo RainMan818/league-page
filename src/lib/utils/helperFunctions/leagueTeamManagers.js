@@ -5,7 +5,8 @@ import { waitForAll } from './multiPromise';
 import { getManagers, getTeamData } from './universalFunctions';
 import { getLeagueData } from './leagueData';
 // AAA-Raymond: one request per Sleeper URL per page load (shared with every other loader)
-import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
+// AAA-Raymond: past (finished) seasons' users and rosters are saved in the browser (savedSeasons.js)
+import { seasonJson, isFinishedLeague } from '$lib/AAA-Raymond/utils/savedSeasons.js';
 
 export const getLeagueTeamManagers = async () => {
     if(get(teamManagersStore) && get(teamManagersStore).currentSeason) {
@@ -18,16 +19,14 @@ export const getLeagueTeamManagers = async () => {
 
     // loop through all seasons and create a [year][roster_id]: team, managers object
 	while(currentLeagueID && currentLeagueID != 0) {
-		const [usersRaw, leagueData, rostersRaw] = await waitForAll(
-            sleeperFetch(`https://api.sleeper.app/v1/league/${currentLeagueID}/users`, {compress: true}),
-			getLeagueData(currentLeagueID),
-            sleeperFetch(`https://api.sleeper.app/v1/league/${currentLeagueID}/rosters`, {compress: true}),
-        ).catch((err) => { console.error(err); });
-
-        const [users, rosters] = await waitForAll(
-            usersRaw.json(), 
-            rostersRaw.json(), 
-        ).catch((err) => { console.error(err); });
+		// AAA-Raymond: league info first (saved for past seasons), so a finished season's users and rosters can come
+		// from the saved copy too
+		const leagueData = await getLeagueData(currentLeagueID);
+		const finished = isFinishedLeague(leagueData, leagueID);
+		const [users, rosters] = await waitForAll(
+			seasonJson(`league/${currentLeagueID}/users`, finished),
+			seasonJson(`league/${currentLeagueID}/rosters`, finished),
+		).catch((err) => { console.error(err); });
 
         const year = parseInt(leagueData.season);
         currentLeagueID = leagueData.previous_league_id;

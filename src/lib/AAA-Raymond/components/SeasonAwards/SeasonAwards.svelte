@@ -1,7 +1,8 @@
 <!--
   One season's awards: post-season (podium, team and player awards) and regular season (team awards, player
-  awards, All-League Team), with a toggle when both are ready. Used on the homepage (HomeAwards) and in the
-  Trophy Room (TrophyRoomAwards). `awards` comes from seasonAwards() in utils/seasonAwards.js.
+  awards, All-League Team), with a toggle when both are ready (regular season on the left). Used on the homepage
+  (HomeAwards: post-season first once the championship is decided) and in the Trophy Room (TrophyRoomAwards:
+  `prefer="regular"`). `awards` comes from seasonAwards() in utils/seasonAwards.js.
 -->
 <script>
   import TeamChip from "../Shared/TeamChip.svelte";
@@ -9,13 +10,13 @@
   import { pts, signed, record } from "../Shared/format.js";
   import { posColor } from "../../utils/positions.js";
 
-  let { awards, teamFor, onTeamClick = null, title = null } = $props();
+  // prefer: the group shown first when both are ready ("post" or "regular")
+  let { awards, teamFor, onTeamClick = null, title = null, prefer = "post" } = $props();
 
   const hasPost = $derived(!!awards?.post);
   const hasRegular = $derived(!!awards?.regular);
   let group = $state(null);
-  // post-season first once the championship is decided
-  const shown = $derived(group ?? (hasPost ? "post" : "regular"));
+  const shown = $derived(group ?? (hasPost && (prefer === "post" || !hasRegular) ? "post" : "regular"));
 
   const clickFor = (id) => (onTeamClick && id ? () => onTeamClick(id) : null);
   const name = (id) => teamFor(id)?.name ?? "Unknown team";
@@ -71,9 +72,19 @@
       { title: "Best Single Game", icon: "bolt", tone: "hot", why: "Highest one-week score by a starter", player: p(r.bestGame), stat: pts(r.bestGame?.points), sub: r.bestGame && `Week ${r.bestGame.week}` },
       { title: "Offensive Pickup of the Year", icon: "person_add", tone: "good", why: "Most starter points after a waiver or free-agent add (QB, RB, WR, TE)", player: p(r.offPickup), stat: pts(r.offPickup?.points), sub: r.offPickup && "starter points after the add" },
       { title: "Defensive Pickup of the Year", icon: "group_add", tone: "good", why: "Most starter points after a waiver or free-agent add (DL, LB, DB)", player: p(r.defPickup), stat: pts(r.defPickup?.points), sub: r.defPickup && "starter points after the add" },
-      { title: "Bench Legend", icon: "event_seat", tone: "bad", why: "Most points scored while on the bench", player: p(r.benchLegend), stat: pts(r.benchLegend?.points), sub: r.benchLegend && `${r.benchLegend.games} weeks on the bench` },
+      { title: "Offensive Bench Legend", icon: "event_seat", tone: "bad", why: "Most points scored while on the bench (QB, RB, WR, TE)", player: p(r.offBenchLegend), stat: pts(r.offBenchLegend?.points), sub: r.offBenchLegend && `${r.offBenchLegend.games} weeks on the bench` },
+      { title: "Defensive Bench Legend", icon: "weekend", tone: "bad", why: "Most points scored while on the bench (DL, LB, DB)", player: p(r.defBenchLegend), stat: pts(r.defBenchLegend?.points), sub: r.defBenchLegend && `${r.defBenchLegend.games} weeks on the bench` },
     ];
   });
+
+  // All-League Team: offense in the left column (QB ... SF), defense in the right (IDP, DL, LB, DB)
+  const DEFENSE_GROUPS = ["DL", "LB", "DB"];
+  const lineupColumns = $derived.by(() => {
+    const all = awards?.regular?.allLeague ?? [];
+    return [all.filter((s) => !DEFENSE_GROUPS.includes(s.pos)), all.filter((s) => DEFENSE_GROUPS.includes(s.pos))].filter((c) => c.length);
+  });
+  const slotLabel = (slot) =>
+    slot.replace("SUPER_FLEX", "SF").replace("IDP_FLEX", "IDP").replace("REC_FLEX", "REC").replace("WRRB_FLEX", "W/R");
 
   // ---- post-season
   const postTeam = $derived.by(() => {
@@ -152,7 +163,7 @@
     <h6>{title ?? `${awards.season} Season Awards`}</h6>
     {#if hasPost && hasRegular}
       <Toggle
-        options={[{ value: "post", label: "Post-season" }, { value: "regular", label: "Regular season" }]}
+        options={[{ value: "regular", label: "Regular season" }, { value: "post", label: "Post-season" }]}
         bind:value={() => shown, (v) => (group = v)}
         label="Award group"
       />
@@ -220,8 +231,8 @@
         <div class="rr-head"><span class="material-icons rr-icon">handshake</span>Trade of the Year</div>
         <div class="rr-why">
           Points scored after the trade by the players a team got, minus points scored by the players it sent away
-          (for any team, starting or bench). Draft picks
-          count as about one season of what that round has produced in this league's rookie drafts.
+          (for any team, starting or bench). A draft pick counts as about one season of what that round has produced
+          in this league's rookie drafts, scaled to the part of the regular season left after the trade.
         </div>
         {#if t}
           <div class="rr-row">
@@ -238,7 +249,7 @@
                 </div>
                 <div class="rr-tradeLabel">Got</div>
                 {#each side.received as pl (pl.playerID)}<div>{pl.name} <span class="rr-muted">{pl.pos} · {pts(pl.points)}</span></div>{/each}
-                {#each side.picks as pk}<div>{pickText(pk)} <span class="rr-muted">pick · ~{pk.value}</span></div>{/each}
+                {#each side.picks as pk}<div>{pickText(pk)} <span class="rr-muted">pick · ~{pk.value}{pk.fullValue != null && pk.fullValue !== pk.value ? ` of ${pk.fullValue}` : ""}</span></div>{/each}
                 {#if side.faab}<div>${side.faab} <span class="rr-muted">FAAB</span></div>{/if}
                 {#if !side.received.length && !side.picks.length && !side.faab}<div class="rr-muted">Nothing</div>{/if}
               </div>
@@ -262,13 +273,17 @@
       <div class="rr-groupLabel">All-League Team</div>
       <p class="rr-note">The top scorer at every lineup spot, counting points in a starting lineup.</p>
       <div class="rr-card rr-lineup">
-        {#each r.allLeague as s, i (i)}
-          <div class="rr-slotRow">
-            <span class="rr-slot">{s.slot.replace("SUPER_FLEX", "SF").replace("IDP_FLEX", "IDP").replace("REC_FLEX", "REC").replace("WRRB_FLEX", "W/R")}</span>
-            <span class="rr-pos" style="--pos: {posColor(s.pos)}">{s.pos}</span>
-            <span class="rr-pname" title={s.name}>{s.name}</span>
-            <span class="rr-owner"><TeamChip team={teamFor(s.rosterID)} onclick={clickFor(s.rosterID)} size={20} /></span>
-            <span class="rr-slotPts">{pts(s.points)}</span>
+        {#each lineupColumns as column, c (c)}
+          <div class="rr-lineupCol">
+            {#each column as s, i (i)}
+              <div class="rr-slotRow">
+                <span class="rr-slot">{slotLabel(s.slot)}</span>
+                <span class="rr-pos" style="--pos: {posColor(s.pos)}">{s.pos}</span>
+                <span class="rr-pname" title={s.name}>{s.name}</span>
+                <span class="rr-owner"><TeamChip team={teamFor(s.rosterID)} onclick={clickFor(s.rosterID)} size={20} /></span>
+                <span class="rr-slotPts">{pts(s.points)}</span>
+              </div>
+            {/each}
           </div>
         {/each}
       </div>
@@ -549,11 +564,12 @@
     }
   }
 
-  /* All-League lineup */
+  /* All-League lineup: offense column, defense column (stacked when there's no room for both) */
   .rr-lineup {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
     column-gap: 18px;
+    align-items: start;
     padding: 6px 14px;
   }
 

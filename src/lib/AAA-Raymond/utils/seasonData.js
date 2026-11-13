@@ -14,7 +14,7 @@ import { sleeperJson } from './sleeperFetch.js';
 import { seasonAwards, roundWeeks, playoffRecapEntries, playoffRoundName } from './seasonAwards.js';
 
 // bump when the award math changes, so browsers drop results saved by the old version
-const CACHE_VERSION = 7;
+const CACHE_VERSION = 8;
 // current-season results are reused for a few hours, then rebuilt (scores can get stat corrections)
 const CURRENT_SEASON_TTL_MS = 3 * 60 * 60 * 1000;
 

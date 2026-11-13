@@ -6,7 +6,7 @@
 <script>
   import { onMount } from "svelte";
   import { allPlayRecords, lineupEfficiency, tankathonOrder } from "../../utils/teamStats.js";
-  import { expectedScores, simulateSeason } from "../../utils/playoffs.js";
+  import { expectedScores, simulateSeason, seedTeams } from "../../utils/playoffs.js";
   import { pairMatchups } from "../../utils/matchupEntries.js";
   import { loadLeagueContext } from "../../utils/leagueContext.js";
   import { getWeeklyMatchupEntries } from "../../utils/weeklyMatchups.js";
@@ -47,11 +47,18 @@
 
       const standingsRows = {};
       const picks = tankathonOrder(standings.standingsInfo);
+      // playoff seeds by the league rule (same as the Standings page)
+      const { order: seedOrder } = seedTeams(
+        Object.values(standings.standingsInfo).map((s) => ({ ...s, division: rosters[s.rosterID]?.settings?.division ?? null })),
+        { playoffTeams: settings.playoff_teams || 6 }
+      );
+      const seeds = Object.fromEntries(seedOrder.map((t, i) => [String(t.rosterID), i + 1]));
       for (const s of Object.values(standings.standingsInfo)) {
         const id = String(s.rosterID);
         standingsRows[id] = {
           ...s,
           pick: picks.indexOf(id) + 1,
+          seed: seeds[id] ?? null,
           // green-to-red scale over max points, as on the old Tankathon table
           maxColor: standings.colorsScale?.getColor(s.potentialPoints)?.toHexString?.() ?? null,
         };

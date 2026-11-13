@@ -89,7 +89,7 @@
       <Loading message="Couldn't build the {season} awards: {current.error}" progress={false} margin="40px auto" />
     {:else}
       {#key selected}
-        <SeasonAwards awards={current.awards} {teamFor} {onTeamClick} />
+        <SeasonAwards awards={current.awards} {teamFor} {onTeamClick} prefer="regular" />
       {/key}
     {/if}
   </section>

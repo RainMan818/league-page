@@ -24,7 +24,7 @@ import { predictScores } from './predictOptimalScore.js';
 import { playerGroup, groupOf } from './positions.js';
 import { allPlayRecords } from './teamStats.js';
 import { seedTeams } from './playoffs.js';
-import { pickValue, PICK_VALUES } from './pickValues.js';
+import { pickValue, pickShare, PICK_VALUES } from './pickValues.js';
 
 const GROUPS = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF', 'DL', 'LB', 'DB'];
 export const OFFENSE = ['QB', 'RB', 'WR', 'TE', 'K'];
@@ -273,9 +273,14 @@ export function regularSeasonAwards(input) {
 
     // trade of the year: everything each player in the trade scored from the trade's week on (for whichever team had
     // him, starting or bench; Raymond's call, so later flips don't matter). A team's net = what the players it got
-    // scored minus what the players it sent scored. Draft picks count as a rough season of points (pickValues.js).
+    // scored minus what the players it sent scored. Draft picks count as a rough season of points (pickValues.js),
+    // scaled to the part of the regular season left after the trade (a 1st traded in week 12 of 14 is worth 3/14 of
+    // 120), like the players, who only count from the trade's week on.
     const values = input.pickValues ?? PICK_VALUES;
-    const withValue = (pk) => ({ ...pk, value: pickValue(pk.round, values) });
+    const withValue = (pk, leg) => {
+        const full = pickValue(pk.round, values);
+        return { ...pk, fullValue: full, value: Math.round(full * pickShare(leg, regularSeasonLength)) };
+    };
     const scoredFrom = (playerID, leg) =>
         sum(Object.entries(weekPts[playerID] ?? {}).filter(([w]) => Number(w) >= leg).map(([, v]) => v));
     const playerInfo = (tr, p) => ({ playerID: p, name: playerName(players, p), pos: groupFor(players[p]), points: scoredFrom(p, tr.leg) });
@@ -285,8 +290,8 @@ export function regularSeasonAwards(input) {
         const sent = Object.keys(tr.drops)
             .filter((p) => tr.drops[p] === rosterID && tr.adds[p] && tr.adds[p] !== rosterID)
             .map((p) => playerInfo(tr, p));
-        const picks = tr.picks.filter((pk) => pk.to === rosterID).map(withValue);
-        const picksSent = tr.picks.filter((pk) => pk.from === rosterID).map(withValue);
+        const picks = tr.picks.filter((pk) => pk.to === rosterID).map((pk) => withValue(pk, tr.leg));
+        const picksSent = tr.picks.filter((pk) => pk.from === rosterID).map((pk) => withValue(pk, tr.leg));
         const gained = sum(received.map((x) => x.points)) + sum(picks.map((pk) => pk.value));
         const lost = sum(sent.map((x) => x.points)) + sum(picksSent.map((pk) => pk.value));
         return {
@@ -354,7 +359,8 @@ export function regularSeasonAwards(input) {
         bestGame: bestGame && { ...bestGame, name: playerName(players, bestGame.playerID), pos: groupFor(players[bestGame.playerID]) },
         offPickup: topPickup(OFFENSE),
         defPickup: topPickup(DEFENSE),
-        benchLegend: withInfo(best(benchTotals, (t) => t.points)),
+        offBenchLegend: topIn(benchTotals, OFFENSE),
+        defBenchLegend: topIn(benchTotals, DEFENSE),
     };
 }
 

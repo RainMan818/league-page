@@ -1,5 +1,5 @@
 <!--
-  One sortable table: season record, Tankathon draft order, all-play & luck, lineup efficiency,
+  One sortable table: playoff seed, season record, Tankathon draft order, all-play & luck, lineup efficiency,
   and (when SHOW_PLAYOFF_ODDS is on) projected record and playoff odds.
   Replaces the old Tankathon table. Inputs are built in index.svelte from the standings and utils/teamStats.js.
 -->
@@ -27,6 +27,7 @@
   // firstDir: direction of the first click (-1 = high to low). Pick sorts 1, 2, 3... first.
   const columns = $derived(
     [
+      { key: "seed", label: "Seed", title: "Playoff seed today", get: (id) => standings[id]?.seed ?? 99, show: true, firstDir: 1, thClass: "rr-seedTh" },
       { key: "team", label: "Team", thClass: "left", sticky: true, show: true },
       { key: "record", group: "Season", label: "Record", get: (id) => winPct(standings[id]), show: true },
       { key: "div", group: "Season", label: "Div", title: "Division record", get: (id) => divPct(standings[id]), show: divisions > 1 },
@@ -62,7 +63,9 @@
     {@const o = oddsById[id]}
     {@const l = luckById[id]}
     {@const e = effById[id]}
-    {#if c.key === "team"}
+    {#if c.key === "seed"}
+      <td class="rr-seedNum">{s?.seed ?? "–"}</td>
+    {:else if c.key === "team"}
       <td class="left rr-sticky"><TeamChip team={teams[id]} onclick={clickFor(id)} /></td>
     {:else if c.key === "record"}
       <td>{s ? record(s.wins, s.losses, s.ties) : "–"}</td>
@@ -106,8 +109,8 @@
   /* team column width (sticky + name wrapping come from Shared/common.css) */
   td.left {
     min-width: 140px;
-    width: 170px;
-    max-width: 180px;
+    width: 150px;
+    max-width: 170px;
   }
 
   .rr-pctCell {
@@ -116,6 +119,19 @@
     padding: 2px 4px;
     border-radius: 4px;
     background: color-mix(in srgb, var(--or-pink, #c2185b) calc(var(--p) * 55%), transparent);
+  }
+
+  /* a narrow seed column, so the table still fits beside the sidebar */
+  /* two classes deep, to beat the shared table padding in common.css */
+  :global(.rr-tableWrap table.rr-breakdown th.rr-seedTh),
+  :global(.rr-tableWrap table.rr-breakdown) td.rr-seedNum {
+    padding-left: 4px;
+    padding-right: 0;
+  }
+
+  td.rr-seedNum {
+    font-weight: 700;
+    color: var(--or-muted, var(--g999));
   }
 
   .rr-pick {

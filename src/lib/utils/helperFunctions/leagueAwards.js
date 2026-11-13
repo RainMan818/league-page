@@ -3,8 +3,9 @@ import { getLeagueRosters } from './leagueRosters';
 import { waitForAll } from './multiPromise';
 import { get } from 'svelte/store';
 import { awards } from '$lib/stores';
-// AAA-Raymond: one request per Sleeper URL per page load (shared with every other loader)
-import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
+// AAA-Raymond: past (finished) seasons' league info and brackets are saved in the browser (savedSeasons.js)
+import { leagueID } from '$lib/utils/leagueInfo';
+import { seasonJson, isFinishedLeague } from '$lib/AAA-Raymond/utils/savedSeasons.js';
 
 export const getAwards = async () => {
 	if(get(awards).length) {
@@ -78,26 +79,14 @@ const getPodiums = async (previousSeasonID) => {
 
 // fetch the previous season's data from sleeper
 const getPreviousLeagueData = async (previousSeasonID) => {
-	const resPromises = [
-		sleeperFetch(`https://api.sleeper.app/v1/league/${previousSeasonID}`, {compress: true}),
+	// AAA-Raymond: league info through getLeagueData (saved for past seasons), then the brackets, saved the same way
+	const prevLeagueData = await getLeagueData(previousSeasonID);
+	const finished = isFinishedLeague(prevLeagueData, leagueID);
+	const [rostersData, losersData, winnersData] = await waitForAll(
 		getLeagueRosters(previousSeasonID),
-		sleeperFetch(`https://api.sleeper.app/v1/league/${previousSeasonID}/losers_bracket`, {compress: true}),
-		sleeperFetch(`https://api.sleeper.app/v1/league/${previousSeasonID}/winners_bracket`, {compress: true}),
-	]
-
-	const [leagueRes, rostersData, losersRes, winnersRes] = await waitForAll(...resPromises).catch((err) => { console.error(err); });
-
-	if(!leagueRes.ok || !losersRes.ok || !winnersRes.ok) {
-		throw new Error(data);
-	}
-
-	const jsonPromises = [
-		leagueRes.json(),
-		losersRes.json(),
-		winnersRes.json(),
-	]
-
-	const [prevLeagueData, losersData, winnersData] = await waitForAll(...jsonPromises).catch((err) => { console.error(err); });
+		seasonJson(`league/${previousSeasonID}/losers_bracket`, finished),
+		seasonJson(`league/${previousSeasonID}/winners_bracket`, finished),
+	);
 
 	const year = prevLeagueData.season;
 
