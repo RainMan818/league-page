@@ -123,6 +123,13 @@ All data comes live from the public Sleeper API.
   (unlike Records, which counts per team). Numbers in `utils/managerProfile.js`
   (`tests/managerProfile.test.js`); site glue (team managers, standings places, NFL team names) in
   `RayManagers/managerInfo.js`.
+- **Error page** (404, 500, ...) — `RayError` (wired in by `src/routes/+error.svelte`): the status code in the logo's
+  chrome block letters (`RayError/codeSvg.js`, built from `OutrunLogo/glyphs.js`, which now has the digits 0–9) over a
+  neon sun and a rolling grid horizon (a dark sky in both themes, like the header; the grid stops under
+  `prefers-reduced-motion`), then a kicker ("Hut, hut, blue 404!" / "Flag on the play"), a title, the missing path,
+  and Back to Home + Go back (Try again for 5xx). SvelteKit's own "Not Found" / "Internal Error" messages are hidden;
+  any other `error.message` is shown. Don't use a `<nav>` element in page content: the theme styles every `nav` as
+  the header.
 
 ### Shared building blocks
 - `utils/leagueContext.js` — `loadLeagueBasics()` (nflState, managers, leagueData, rosters, `divisions`
@@ -187,7 +194,7 @@ All data comes live from the public Sleeper API.
   the playoffs too), buttons renamed Championship / Toilet Bowl, no `bracketsData`, and Regular Season goes back to
   the week you were on (else the current week) instead of week 1; `src/routes/matchups/+page.js`
   no longer loads `getBrackets()`.
-- Wiring: `src/routes/+page.svelte`, `src/routes/awards/` (season awards only), `src/routes/standings/+page.js` (passes `fetch`), `src/routes/trends/` (new), `src/routes/rosters/+page.js`
+- Wiring: `src/routes/+page.svelte`, `src/routes/+error.svelte`, `src/routes/awards/` (season awards only), `src/routes/standings/+page.js` (passes `fetch`), `src/routes/trends/` (new), `src/routes/rosters/+page.js`
   and `+page.svelte`, `src/lib/components.js`, `src/lib/utils/helper.js`, `src/lib/utils/tabs.js` (nav tabs),
   `src/lib/Matchups/MatchupsAndBrackets.svelte`, `src/lib/Drafts/index.svelte`,
   `src/lib/Transactions/TransactionsPage.svelte`.
