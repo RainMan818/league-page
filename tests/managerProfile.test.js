@@ -50,6 +50,20 @@ test('trophies: titles first, then newest; finishes before a takeover are marked
     assert.deepEqual(both.map((t) => [t.year, t.kind, t.former]), [[2025, 'champion', false], [2023, 'division', true], [2023, 'second', true]]);
 });
 
+test('trophies: unnamed division winners are division champions; the best record is regular season champion', () => {
+    // 2022 here: roster 4 won a division at 10-4, roster 11 had the best record (12-2)
+    const awards = [{ year: 2022, champion: 4, divisions: [
+        { wins: 10, points: 3584.28, rosterID: '4' }, { wins: 12, points: 3283.26, rosterID: '11' }, { wins: 8, points: 3242.66, rosterID: '3' },
+    ] }, { year: 2025, divisions: [
+        { wins: 9, points: 3406.12, rosterID: '1' }, { wins: 10, points: 3256.48, rosterID: '6' }, { wins: 10, points: 3540.64, rosterID: '4' },
+    ] }];
+    const t = managerTrophies(awards, (rid) => String(rid) === '4');
+    assert.deepEqual(t.map((x) => [x.year, x.title]), [
+        [2022, 'League Champion'], [2025, 'Regular Season Champion'], [2025, 'Division Champion'], [2022, 'Division Champion'],
+    ]); // 2025: tied at 10 wins, more points for
+    assert.deepEqual(managerTrophies(awards, (rid) => String(rid) === '11').map((x) => [x.year, x.kind]), [[2022, 'regular'], [2022, 'division']]);
+});
+
 test('record book places', () => {
     const a = managerRecords(records, 'a', owns('a'));
     assert.deepEqual(a.map((r) => [r.label, r.rankText, r.value]), [

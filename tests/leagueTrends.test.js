@@ -1,7 +1,7 @@
 // Run with: npm test
 import assert from 'assert/strict';
 import { test } from 'node:test';
-import { leagueTrends, weekResults, weekMedian, weeklyMax, leagueAverage } from '../src/lib/AAA-Raymond/utils/leagueTrends.js';
+import { leagueTrends, weekResults, weekMedian, weeklyMax, leagueAverage, fitToTotal } from '../src/lib/AAA-Raymond/utils/leagueTrends.js';
 
 // tiny league: 4 teams, lineup QB + RB + DL, one bench spot, median game on, 2 playoff teams, 2 divisions
 const leagueData = { roster_positions: ['QB', 'RB', 'DL', 'BN'], settings: { league_average_match: 1, playoff_teams: 2 } };
@@ -38,6 +38,16 @@ test('week results include the median game (top half wins)', () => {
 test('max PF uses the best lineup from everyone rostered, never below the actual score', () => {
     assert.equal(weeklyMax(week1[0], players, leagueData), 45); // 10 QB + 25 bench RB + 10 DL
     assert.equal(weeklyMax(week1[1], players, leagueData), 20);
+});
+
+test('weekly max PF fitted to the official season total, never below the actual score', () => {
+    assert.deepEqual(fitToTotal([100, 200], [50, 50], 330).map((v) => Math.round(v)), [110, 220]);
+    // week 2 would fall under what the team scored (190), so it stays there and week 1 takes the rest
+    assert.deepEqual(fitToTotal([100, 200], [50, 190], 270).map((v) => Math.round(v)), [80, 190]);
+    assert.deepEqual(fitToTotal([100, 200], [50, 50], null), [100, 200]);
+    const t = leagueTrends({ matchupsData, rosterIDs: [1, 2, 3, 4], divisions, leagueData, players, officialMax: { 1: 66 } });
+    assert.equal(Math.round(t.series['1'].maxCum[1]), 66);
+    assert.ok(t.series['1'].maxWeek[1] >= 15); // week 2 scored 15
 });
 
 test('season series by week', () => {

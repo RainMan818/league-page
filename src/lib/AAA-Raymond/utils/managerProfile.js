@@ -50,8 +50,11 @@ const TROPHIES = {
 
 /**
  * Season podium finishes for one manager, best first, then newest first.
- * awards: getAwards() podiums [{ year, champion, second, third, toilet, divisions: [{ name, rosterID }] }]
+ * awards: getAwards() podiums [{ year, champion, second, third, toilet, divisions: [{ name, rosterID, wins, points }] }]
  * tookOver: year the manager took over the team (leagueInfo.js), so older finishes are marked `former`.
+ * divisions holds each division's winner (Sleeper's divisions here have no names: "Division Champion"). The regular
+ * season champion is the division winner with the best record, points for breaking ties (the 1 seed). A league
+ * without divisions has a single unnamed entry, which is the regular season champion.
  */
 export function managerTrophies(awards = [], owns, tookOver = null) {
     const out = [];
@@ -61,10 +64,15 @@ export function managerTrophies(awards = [], owns, tookOver = null) {
         for (const [key, value] of Object.entries(podium)) {
             if (key === 'year' || value == null) continue;
             if (key === 'divisions') {
-                for (const d of value) {
-                    if (d?.rosterID == null || !owns(d.rosterID, year)) continue;
-                    const kind = d.name ? 'division' : 'regular';
-                    out.push({ year, kind, title: d.name ? `${d.name} Division Champion` : TROPHIES.regular.title, former });
+                const divs = value.filter((d) => d?.rosterID != null);
+                const noDivisions = divs.length === 1 && !divs[0].name;
+                const best = divs.every((d) => d.wins != null)
+                    ? [...divs].sort((x, y) => y.wins - x.wins || (y.points ?? 0) - (x.points ?? 0))[0]
+                    : null;
+                for (const d of divs) {
+                    if (!owns(d.rosterID, year)) continue;
+                    if (noDivisions || d === best) out.push({ year, kind: 'regular', title: TROPHIES.regular.title, former });
+                    if (!noDivisions) out.push({ year, kind: 'division', title: d.name ? `${d.name} Division Champion` : 'Division Champion', former });
                 }
             } else if (TROPHIES[key] && owns(value, year)) {
                 out.push({ year, kind: key, title: TROPHIES[key].title, former });

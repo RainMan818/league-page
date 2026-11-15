@@ -73,7 +73,7 @@ All data comes live from the public Sleeper API.
   results. Card in `RayMatchups/BracketCard`. Requests: the two brackets (saved for finished seasons) and the playoff
   weeks that have started; the template's `getBrackets()` is no longer loaded on the Matchups page.
 - **Standings** — `RayStandings` (`StandingsTable`: sortable, seed order, dashed playoff line, division pills,
-  Division leader / Wildcard / Points wildcard tags, plus Tankathon pick, all-play and lineup efficiency) and two `PositionAverages` tables (two-sided heat scale:
+  Division leader / Wildcard / Points wildcard tags, plus draft pick (`utils/draftOrder.js`), all-play and lineup efficiency) and two `PositionAverages` tables (two-sided heat scale:
   cyan = low, pink = high; by value in "Averages", evenly by rank in "Ranking").
 - **Trends** (`/trends`, nav tab after Standings) — `RayTrends` (option A "dashboard grid"): standings place,
   points for, max PF, lineup efficiency, all-play %, total offense / defense and each position, week by week.
@@ -170,11 +170,16 @@ All data comes live from the public Sleeper API.
 - `utils/positionAverages.js` — per-week averages by lineup slot / player position, from `roster_positions`.
 - `utils/predictOptimalScore.js` — `predictLineup(players, week, leagueData)` = best projected lineup
   (`{ score, picks: [{ slot, id, p }] }`, players need an `id`); `predictScores` is its score (max PF everywhere).
+  Optimal assignment (Nov 14): players best first, any slot their Sleeper positions allow, others moved to make room
+  (augmenting paths); free slots at the player's listed position first. Week pools include taxi/IR players, so it runs
+  ~0.1–2% above Sleeper's `ppts`; the old slot-order greedy ran up to 3% under.
 - `utils/rosterBreakdown.js` — Rosters page: `rosterAgeCounts` (players / average age per position, `rosterGroup`
   = listed position first), `leagueRanks` (average + dense rank, 1 = highest), `rankShade`, `projectionWeeks` /
   `seasonProjection`, `depthChart`, `pickSeasons` / `ownedPicks` (future picks from `traded_picks`).
 - `utils/leagueTrends.js` — week-by-week series for the Trends page (place via `seedTeams`, record incl. median game,
   PF, max PF via `predictScores`, efficiency, all-play, position / OFF / DEF averages) from `standings.matchups`.
+  Pass `officialMax` (standings `potentialPoints`): weekly max PF is fitted to Sleeper's season max PF (`fitToTotal`,
+  never below the week's actual score), so Trends totals, ranks and efficiency match Standings exactly.
   `placesByWeek()` + `movesForWeek()` give the recap's Movers; both share one record/seeding loop with `leagueTrends()`.
 - `utils/playoffBracket.js` — the Matchups playoff bracket: `buildBracket` (games, scores, status, placement games,
   tree layout, champion), `reseed` (teams by seed before the playoffs), `sourceLabel`, `defaultGame`
@@ -182,9 +187,18 @@ All data comes live from the public Sleeper API.
 - `utils/playoffs.js` — the league seeding rule (`seedTeams`, also used by Standings, Trends and the awards), bracket
   shape and the Monte Carlo playoff projection (`expectedScores`, `simulateSeason`).
 - `utils/teamStats.js` — all-play record & luck, lineup efficiency, Tankathon order, streaks (`streakValue`, `streakLabel`).
+- `utils/draftOrder.js` — rookie draft order by the league rule (`leagueDraftOrder`, `tests/draftOrder.test.js`):
+  picks 1–6 non-playoff teams by lowest max PF (`tankathonOrder` on those teams), then 5th, 6th, 3rd, 4th,
+  runner-up, champion. Playoff places come from the winners bracket (`playoffPlaces`: real winners where played, the
+  better seed otherwise) and are projected by seed until it's set (`bracketIsSet`: regular season fully scored).
+  Used by the Standings Pick column, the homepage Team Breakdown and the Drafts board's upcoming draft
+  (`leagueDrafts.js` `buildFromScratch`, marked; its accuracy bar now counts weeks scored, not games).
+  `leagueContext.js` `loadWinnersBracket()` fetches the bracket only once it's set.
 - `utils/weeklyRecap.js` — the weekly recap (`weeklyRecap`, `positionGroup`, `RECAP_POSITIONS`).
 - `utils/matchupEntries.js` also has the one-week helpers `pairMatchups` and `playedEntries`.
-- `utils/managerProfile.js` — Managers pages: career stats with ranks (records), trophies (award podiums), league
+- `utils/managerProfile.js` — Managers pages: career stats with ranks (records), trophies (award podiums; Sleeper's
+  divisions here are unnamed, so each division winner is "Division Champion" and the best record among them, points
+  for breaking ties, is "Regular Season Champion"), league
   record-book places, season-by-season history (`seasonHistory`), lineup slots / bench, placeholder-bio check.
 - `utils/seasonAwards.js` — end-of-season award math (plain functions, `tests/seasonAwards.test.js`). Player awards
   count points scored in a starting lineup. Waiver Wizard and the Pickups credit each start to how the

@@ -39,7 +39,7 @@
       { key: "bye", group: "Playoff odds", label: "Bye", get: (id) => oddsById[id]?.bye ?? -1, show: showBye, kind: "pct" },
       { key: "division", group: "Playoff odds", label: showBye ? "Div" : "Div+Bye", title: "Win the division (and a first-round bye)", get: (id) => oddsById[id]?.division ?? -1, show: showOdds, kind: "pct" },
       { key: "title", group: "Playoff odds", label: "Title", get: (id) => oddsById[id]?.title ?? -1, show: showOdds, kind: "pct" },
-      { key: "pick", group: "Tankathon", label: "Pick", title: "Draft order: lowest max points picks first", get: (id) => standings[id]?.pick ?? 99, show: true, firstDir: 1 },
+      { key: "pick", group: "Tankathon", label: "Pick", title: "Rookie draft pick: non-playoff teams by lowest max PF, then playoff finish (projected by seed until decided)", get: (id) => standings[id]?.pick ?? 99, show: true, firstDir: 1 },
       { key: "max", group: "Tankathon", label: "Max PF", title: "Points with the best possible lineup each week", get: (id) => standings[id]?.potentialPoints ?? -1, show: true, firstDir: 1 },
       { key: "allplay", group: "Luck", label: "All-play", title: "Win % if you played every team every week", get: (id) => luckById[id]?.apPct ?? -1, show: luck.length > 0 },
       { key: "luck", group: "Luck", label: "Luck", title: "Actual wins minus the wins your scores usually earn", get: (id) => luckById[id]?.luck ?? -99, show: luck.length > 0 },

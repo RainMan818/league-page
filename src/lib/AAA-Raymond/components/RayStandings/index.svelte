@@ -4,9 +4,10 @@
 -->
 <script>
   import { onMount } from "svelte";
-  import { loadLeagueContext } from "../../utils/leagueContext.js";
+  import { loadLeagueContext, loadWinnersBracket } from "../../utils/leagueContext.js";
   import { seedTeams, POINTS_WILDCARD_SEEDS } from "../../utils/playoffs.js";
-  import { allPlayRecords, lineupEfficiency, tankathonOrder } from "../../utils/teamStats.js";
+  import { allPlayRecords, lineupEfficiency } from "../../utils/teamStats.js";
+  import { leagueDraftOrder } from "../../utils/draftOrder.js";
   import Loading from "../Shared/Loading.svelte";
   import StandingsTable from "./StandingsTable.svelte";
   import PositionAverages from "../PositionAverages/index.svelte";
@@ -40,8 +41,8 @@
       }));
       const { order, divisionWinners } = seedTeams(info, { playoffTeams });
 
-      // same extra columns as the homepage's Team Breakdown: Tankathon pick, all-play, lineup efficiency
-      const picks = tankathonOrder(standings.standingsInfo);
+      // same extra columns as the homepage's Team Breakdown: draft pick (league rule), all-play, lineup efficiency
+      const { order: picks } = leagueDraftOrder(info, { playoffTeams, bracket: await loadWinnersBracket(leagueData) });
       const byId = (list) => Object.fromEntries(list.map((r) => [String(r.rosterID), r]));
       const allPlay = byId(allPlayRecords(standings.matchups ?? []));
       const efficiency = byId(lineupEfficiency(standings.standingsInfo));

@@ -8,6 +8,8 @@ import { getLeagueRosters } from './leagueRosters';
 import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
 // AAA-Raymond: past (finished) seasons' drafts are saved in the browser (savedSeasons.js)
 import { seasonJson, isFinishedLeague } from '$lib/AAA-Raymond/utils/savedSeasons.js';
+// AAA-Raymond: the upcoming draft follows the league's draft-order rule (same as the Standings page's Pick column)
+import { leagueDraftOrder, teamsFromRosters, bracketIsSet } from '$lib/AAA-Raymond/utils/draftOrder.js';
 
 export const getUpcomingDraft = async () => {
 	if(get(upcomingDraft).draft) {
@@ -41,7 +43,11 @@ export const getUpcomingDraft = async () => {
 
 	if(officialDraft.status == "complete") {
 		year = year + 1;
-		const buildRes = buildFromScratch(rosters, officialDraft.slot_to_roster_id, officialDraft.settings.rounds, picks.filter(pick => parseInt(pick.season) == year), regularSeasonLength);
+		// AAA-Raymond: pass league settings and the winners bracket for the league's draft-order rule
+		const bracket = bracketIsSet(leagueData)
+			? await sleeperFetch(`https://api.sleeper.app/v1/league/${leagueID}/winners_bracket`, {compress: true}).then((r) => r.json()).catch(() => [])
+			: [];
+		const buildRes = buildFromScratch(rosters, officialDraft.slot_to_roster_id, officialDraft.settings.rounds, picks.filter(pick => parseInt(pick.season) == year), regularSeasonLength, leagueData, bracket);
 		draft = buildRes.draft;
 		draftOrder = buildRes.draftOrder;
 		accuracy = buildRes.accuracy;
@@ -66,7 +72,7 @@ export const getUpcomingDraft = async () => {
 }
 
 // Predict draft board
-const buildFromScratch = (rosters, previousOrder, rounds, picks, regularSeasonLength) => {
+const buildFromScratch = (rosters, previousOrder, rounds, picks, regularSeasonLength, leagueData = null, bracket = []) => {
 	const draftOrder = [];
     const rosterKeys = Object.keys(rosters);
     const testRoster = rosters[rosterKeys[0]].settings;
@@ -79,20 +85,10 @@ const buildFromScratch = (rosters, previousOrder, rounds, picks, regularSeasonLe
 			draftOrder.push(previousOrder[key]);
 		}
 	} else {
-		const sortedRosterKeys = rosterKeys.sort((a, b) => {
-			const rosterA = rosters[a].settings;
-			const rosterB = rosters[b].settings;
-			if(rosterA.wins != rosterB.wins) {
-				return rosterA.wins - rosterB.wins;
-			}
-			if(rosterA.ties != rosterB.ties) {
-				return rosterA.ties - rosterB.ties;
-			}
-			return (rosterA.fpts + rosterA.fpts_decimal / 100) - (rosterB.fpts + rosterB.fpts_decimal / 100);
-		})
-		for (const key of sortedRosterKeys) {
-			draftOrder.push(key);
-		}
+		// AAA-Raymond: league rule (Constitution 8.2) instead of reverse standings: non-playoff teams by lowest max PF,
+		// then playoff finish (projected by seed until the bracket decides it)
+		const { order } = leagueDraftOrder(teamsFromRosters(rosters), { playoffTeams: leagueData?.settings?.playoff_teams || 6, bracket });
+		draftOrder.push(...order);
 	}
 
 	const row = new Array(rosterKeys.length);
@@ -107,7 +103,9 @@ const buildFromScratch = (rosters, previousOrder, rounds, picks, regularSeasonLe
 		draft[pick.round - 1][draftOrder.indexOf(pick.roster_id.toString())] = pick.owner_id;
 	}
 
-	let accuracy = (progression + 1) / (regularSeasonLength + 1);
+	// AAA-Raymond: weeks scored, not games (the league-median game makes two games a week)
+	const weeksPlayed = leagueData?.settings?.last_scored_leg ?? progression;
+	let accuracy = (Math.min(weeksPlayed, regularSeasonLength) + 1) / (regularSeasonLength + 1);
 	// make sure accuracy doesn't exceed 1
 	accuracy = accuracy > 1 ? 1 : accuracy;
 

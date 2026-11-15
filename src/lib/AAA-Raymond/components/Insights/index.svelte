@@ -5,10 +5,11 @@
 -->
 <script>
   import { onMount } from "svelte";
-  import { allPlayRecords, lineupEfficiency, tankathonOrder } from "../../utils/teamStats.js";
-  import { expectedScores, simulateSeason, seedTeams } from "../../utils/playoffs.js";
+  import { allPlayRecords, lineupEfficiency } from "../../utils/teamStats.js";
+  import { leagueDraftOrder } from "../../utils/draftOrder.js";
+  import { expectedScores, simulateSeason } from "../../utils/playoffs.js";
   import { pairMatchups } from "../../utils/matchupEntries.js";
-  import { loadLeagueContext } from "../../utils/leagueContext.js";
+  import { loadLeagueContext, loadWinnersBracket } from "../../utils/leagueContext.js";
   import { getWeeklyMatchupEntries } from "../../utils/weeklyMatchups.js";
   import Loading from "../Shared/Loading.svelte";
   import InsightsView from "./InsightsView.svelte";
@@ -46,13 +47,11 @@
       const regularSeasonLength = settings.playoff_week_start - 1;
 
       const standingsRows = {};
-      const picks = tankathonOrder(standings.standingsInfo);
-      // playoff seeds by the league rule (same as the Standings page)
-      const { order: seedOrder } = seedTeams(
+      // playoff seeds and draft order by the league rules (same as the Standings page)
+      const { order: picks, seeds } = leagueDraftOrder(
         Object.values(standings.standingsInfo).map((s) => ({ ...s, division: rosters[s.rosterID]?.settings?.division ?? null })),
-        { playoffTeams: settings.playoff_teams || 6 }
+        { playoffTeams: settings.playoff_teams || 6, bracket: await loadWinnersBracket(leagueData) }
       );
-      const seeds = Object.fromEntries(seedOrder.map((t, i) => [String(t.rosterID), i + 1]));
       for (const s of Object.values(standings.standingsInfo)) {
         const id = String(s.rosterID);
         standingsRows[id] = {

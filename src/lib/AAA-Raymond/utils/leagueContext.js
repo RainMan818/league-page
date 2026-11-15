@@ -11,6 +11,9 @@ import {
     gotoManager,
 } from '$lib/utils/helper';
 import { getTeamFromTeamManagers } from '$lib/utils/helperFunctions/universalFunctions';
+import { leagueID } from '$lib/utils/leagueInfo';
+import { sleeperFetch } from './sleeperFetch.js';
+import { bracketIsSet } from './draftOrder.js';
 
 /**
  * League data that doesn't need standings: NFL state, team managers, league settings, rosters (+ divisions), players.
@@ -51,6 +54,22 @@ export function buildTeams(managers, rosterIDs) {
         teams[id] = { name: team?.name ?? `Team ${id}`, avatar: team?.avatar };
     }
     return teams;
+}
+
+/**
+ * This season's winners bracket (for the draft order), or [] until the regular season is fully scored, so pages
+ * don't make the request during the season.
+ */
+export async function loadWinnersBracket(leagueData) {
+    if (!bracketIsSet(leagueData)) return [];
+    try {
+        const res = await sleeperFetch(`https://api.sleeper.app/v1/league/${leagueID}/winners_bracket`, { compress: true });
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+    } catch (e) {
+        console.error(e);
+        return [];
+    }
 }
 
 /** Click handler for team chips: opens that team's manager page. */

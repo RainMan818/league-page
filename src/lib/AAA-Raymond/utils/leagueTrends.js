@@ -24,6 +24,34 @@ export function weeklyMax(entry, players, leagueData) {
     return Math.max(predictScores(pool, 1, leagueData), entry.points ?? 0);
 }
 
+/**
+ * Scale one team's weekly values so they add up to `target`, never going below each week's floor (the points the
+ * team actually scored): weeks that would drop under it stay at the floor and the rest share the difference.
+ * Used to line weekly max PF up with Sleeper's official season max PF. No target: values unchanged.
+ */
+export function fitToTotal(values, floors, target) {
+    if (!(target > 0) || !values.length) return [...values];
+    const fixed = new Set();
+    let out = [...values];
+    for (let pass = 0; pass < values.length; pass++) {
+        const freeSum = sum(values.filter((_, i) => !fixed.has(i)));
+        const fixedSum = sum([...fixed].map((i) => floors[i]));
+        const k = freeSum > 0 ? (target - fixedSum) / freeSum : 1;
+        let changed = false;
+        out = values.map((v, i) => {
+            if (fixed.has(i)) return floors[i];
+            const x = v * k;
+            if (x < floors[i]) {
+                fixed.add(i);
+                changed = true;
+            }
+            return x;
+        });
+        if (!changed) break;
+    }
+    return out.map((x, i) => Math.max(x, floors[i] ?? 0));
+}
+
 /** League median score for one week. */
 export function weekMedian(weekEntries) {
     const sorted = weekEntries.map((e) => e.points).sort((x, y) => x - y);
@@ -95,6 +123,9 @@ function seedPlaces(records, ids, divisions, playoffTeams) {
  *  divisions:    { [rosterID]: division number } (for the seeding rule)
  *  leagueData:   Sleeper league (roster_positions, settings.playoff_teams, settings.league_average_match)
  *  players:      the site's player map (positions, for max PF)
+ *  officialMax:  { [rosterID]: Sleeper's max PF for these weeks } (standings potentialPoints). Each team's weekly
+ *                max PF is our best-lineup math scaled to add up to it, so totals, ranks and efficiency match the
+ *                Standings page; without it the weekly numbers are used as computed (within ~1% of Sleeper's).
  *
  * Returns {
  *   weeks: [1..n], teamIDs, positions: ['QB', ...],
@@ -103,7 +134,7 @@ function seedPlaces(records, ids, divisions, playoffTeams) {
  *   median: [league median per week],
  * }  Every array has one value per completed week (index 0 = week 1).
  */
-export function leagueTrends({ matchupsData = [], rosterIDs = [], divisions = {}, leagueData = {}, players = {} }) {
+export function leagueTrends({ matchupsData = [], rosterIDs = [], divisions = {}, leagueData = {}, players = {}, officialMax = null }) {
     const weeksData = oldestFirst(matchupsData);
     const n = weeksData.length;
     const ids = rosterIDs.map(String);
@@ -121,6 +152,21 @@ export function leagueTrends({ matchupsData = [], rosterIDs = [], divisions = {}
     const totals = Object.fromEntries(ids.map((id) => [id, { max: 0, apW: 0, apG: 0 }])); // max PF, all-play wins / games
     const median = [];
 
+    // each team-week's best lineup, then fitted to Sleeper's season max PF when we have it
+    const maxBy = Object.fromEntries(ids.map((id) => [id, {}])); // id -> { week index: max }
+    for (const id of ids) {
+        const weeksIn = [], raw = [], floors = [];
+        weeksData.forEach((weekEntries, w) => {
+            const e = weekEntriesFor(weekEntries, [id])[0];
+            if (!e) return;
+            weeksIn.push(w);
+            raw.push(weeklyMax(e, players, leagueData));
+            floors.push(entryPoints(e));
+        });
+        const fitted = fitToTotal(raw, floors, Number(officialMax?.[id] ?? officialMax?.[Number(id)]) || null);
+        weeksIn.forEach((w, i) => (maxBy[id][w] = fitted[i]));
+    }
+
     weeksData.forEach((weekEntries, w) => {
         const entries = weekEntriesFor(weekEntries, ids);
         median.push(weekMedian(entries));
@@ -129,7 +175,7 @@ export function leagueTrends({ matchupsData = [], rosterIDs = [], divisions = {}
             const id = String(e.roster_id);
             const t = totals[id], s = series[id];
             const points = entryPoints(e);
-            const max = weeklyMax(e, players, leagueData);
+            const max = maxBy[id][w] ?? 0;
             t.max += max;
             // all-play: beat everyone who scored less this week
             for (const o of entries) {

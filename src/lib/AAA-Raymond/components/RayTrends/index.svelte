@@ -45,7 +45,9 @@
       const { standings, divisions, leagueData, players, teams } = await loadLeagueContext({ standingsData, leagueTeamManagersData });
       const matchupsData = standings?.matchups ?? [];
       const rosterIDs = Object.keys(teams);
-      const trends = leagueTrends({ matchupsData, rosterIDs, divisions, leagueData, players });
+      // weekly max PF fitted to Sleeper's official season max PF (same numbers as the Standings page)
+      const officialMax = Object.fromEntries(Object.values(standings?.standingsInfo ?? {}).map((s) => [String(s.rosterID), s.potentialPoints]));
+      const trends = leagueTrends({ matchupsData, rosterIDs, divisions, leagueData, players, officialMax });
       if (trends.weeks.length < 2) {
         status = "early";
         return;
