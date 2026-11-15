@@ -56,7 +56,7 @@ All data comes live from the public Sleeper API.
 - **Trophy Room** (`/awards`) — just `SeasonAwards/TrophyRoomAwards`: a season picker for every season whose regular
   season is over (2022 onward). Opens on the regular-season awards (`prefer="regular"`); the toggle has Regular season
   on the left everywhere (the homepage still opens on the post-season once the championship is decided).
-  All-League Team: offense in the left column (QB … SF), defense in the right (IDP, DL, LB, DB), stacked on phones. The template's podium list (`src/lib/Awards/Awards.svelte`, `getAwards()`) is no
+  All-League Team: offense in the left column (QB … SF), defense in the right (IDP, DL, LB, DB), stacked on phones. The template's podium list (the deleted `src/lib/Awards/Awards.svelte`, `getAwards()`) is no
   longer shown; `src/routes/awards/+page.js` only loads team managers. The homepage sidebar's "Fantasy Champ" still
   uses `getAwards()`.
 - **Matchups** — `RayMatchups/MatchupWeeks` + `Matchup` (versus strips; click for every starter with photos;
@@ -164,7 +164,7 @@ All data comes live from the public Sleeper API.
   or chrome letters); the scene is dark in both themes and keeps a 760:360 aspect ratio; the dashes and ball stop
   under `prefers-reduced-motion`. Then a kicker ("Wide right" / "Flag on the play"), a title, the text, and Back to
   Home + Go back (Try again for 5xx). SvelteKit's own "Not Found" / "Internal Error" messages are hidden; any other
-  `error.message` is shown. `RayError/codeSvg.js` (the old chrome-letter code) is no longer used and can be deleted.
+  `error.message` is shown.
   Don't use a `<nav>` element in page content: the theme styles every `nav` as the header.
 
 ### Shared building blocks
@@ -259,7 +259,7 @@ All data comes live from the public Sleeper API.
   `src/lib/Transactions/TransactionsPage.svelte`.
 - `src/lib/utils/helperFunctions/leagueMatchups.js` keeps extra fields per team (`players`, `playersPoints`,
   `matchup_id`, `total`) for the bench and the shared matchups loader.
-- `src/lib/BarChart.svelte` (`controlsOnTop`), `src/lib/Managers/Manager.svelte` (broken-icon fallback; no longer shown).
+- `src/lib/BarChart.svelte` (`controlsOnTop`).
 - `src/lib/utils/helperFunctions/leagueRecords.js` `analyzeRosters`: points per game is points per WEEK (games ÷ 2 when
   the league plays the median game; 2026 seasons were halved before). `getLeagueRecords`: the in-session check looks at
   `regularSeasonData` (it checked a key one level down and never matched), saved records carry `meta` and stay fresh
@@ -299,19 +299,16 @@ All data comes live from the public Sleeper API.
   gets it from that week's schedule built from every other entry (team -> opponent); bye weeks stay null. Browsers
   keep player data 24 hours (`playersInfo` in localStorage), so fixes here show up after that.
 
-### Template files no longer used (leave them unedited so template merges stay clean)
-- `src/lib/Transactions/Transactions.svelte`, `WaiverTransaction.svelte`, `TradeTransaction.svelte`, `TransactionMove.svelte`
-- `src/lib/Drafts/Draft.svelte`, `DraftRow.svelte`
-- `src/lib/Awards/Awards.svelte` (Trophy Room podiums; replaced by the season awards)
-- `src/lib/Matchups/MatchupWeeks.svelte`, `Brackets.svelte`, `BracketsColumn.svelte`, `Matchup.svelte`
-- `src/lib/Managers/` (`AllManagers`, `Manager`, `ManagerRow`, `ManagerAwards`, `ManagerFantasyInfo`)
-- `src/lib/Records/` (`index`, `AllTimeRecords`, `PerSeasonRecords`, `RecordsAndRankings`, `RecordTeam`)
-- `src/lib/PowerRankings/index.svelte`, `PowerRankingsDisplay.svelte`
-- `src/lib/Standings/` (the /standings route uses `RayStandings`)
-- `src/lib/Rosters/` (`Rosters`, `RosterSorter`, `Roster`, `RosterRow`; the /rosters route uses `RayRosters`)
-- `src/lib/Resources.svelte` and `src/lib/News/` (`index`, `SingleNews`; the /resources route uses `RayResources`)
-- `src/lib/utils/helperFunctions/leagueStandings.js` and `predictOptimalScore.js` (old copies; should eventually be
-  restored to the upstream versions)
+### Template files deleted (Nov 15)
+Unused template components and old helper copies were deleted with `git rm` once every page had a Ray* replacement
+(an import graph from the routes and tests showed nothing reached them): `src/lib/Awards/`, `Managers/`, `News/`,
+`PowerRankings/`, `Records/`, `Rivalry/`, `Rosters/`, `Standings/`, `src/lib/Resources.svelte`, the unused files in
+`src/lib/Drafts/` (`Draft`, `DraftRow`), `src/lib/Matchups/` (`MatchupWeeks`, `Brackets`, `BracketsColumn`,
+`Matchup`) and `src/lib/Transactions/` (`Transactions`, `WaiverTransaction`, `TradeTransaction`, `TransactionMove`),
+`src/lib/utils/helperFunctions/leagueStandings.js` and `predictOptimalScore.js`, plus our own unused
+`PositionAverages/PositionAverages.svelte` and `RayError/codeSvg.js`. `src/lib/components.js` no longer exports
+News, Resources, Awards, Rosters, PowerRankings or Standings. If a template update changes one of these files, git
+reports a modify/delete conflict: keep the deletion (`git rm <file>`).
 
 ## Playoff projection
 - Monte Carlo (10,000 runs, fixed seed so numbers are stable between loads) of the remaining regular season and the playoffs.
