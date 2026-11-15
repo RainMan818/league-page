@@ -26,6 +26,14 @@ test('saved answers survive a page load and are refreshed after a week', () => {
     assert.equal(next.read('league/111/users'), null);
 });
 
+test('permanent answers (finished seasons\' scores) are never refreshed', () => {
+    const storage = memoryStorage();
+    let t = 1000;
+    createSavedStore(storage, { now: () => t }).save('scores/111/3', [{ roster_id: 1, points: 200 }], { permanent: true });
+    t += SAVED_SEASONS_MAX_AGE * 50;
+    assert.deepEqual(createSavedStore(storage, { now: () => t }).read('scores/111/3'), [{ roster_id: 1, points: 200 }]);
+});
+
 test('callers get copies; an older version or broken storage starts empty', () => {
     const storage = memoryStorage();
     const store = createSavedStore(storage);
