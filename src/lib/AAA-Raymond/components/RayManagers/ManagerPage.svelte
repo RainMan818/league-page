@@ -59,7 +59,8 @@
 
   const m = $derived(managers[idx]);
   const b = $derived(managerBasics(m, idx, leagueTeamManagers));
-  const career = $derived(careerStats(records, b.managerID));
+  // ranks among the league's current managers only (a former manager's record doesn't push anyone down)
+  const career = $derived(careerStats(records, b.managerID, { active: managers.map((x) => x.managerID).filter(Boolean) }));
   const trophies = $derived(managerTrophies(awards, b.owns, m.tookOver));
   const titles = $derived(titleYears(trophies));
   const bookRecords = $derived(managerRecords(records, b.managerID, b.owns, m.tookOver, { inProgressYear }));

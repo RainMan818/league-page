@@ -72,7 +72,16 @@
   const open = (rid, y = cur) => () => gotoManager({ year: y, leagueTeamManagers, rosterID: parseInt(rid) });
 
   const fmt = (v, d = 2) => Number(v ?? 0).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
-  const when = (y, w) => (viewYear != null ? `Week ${w}` : `${y} · Week ${w}`);
+  // playoff games carry the template's round name ("Quarter-Finals", "Semi-Finals", "Finals", "(C) Week 16") instead of
+  // a week number. Name the round (placement games share those weeks): the first round is the Wild Card round here.
+  const ROUND_NAMES = { "Quarter-Finals": "Wild Card round", "Semi-Finals": "Semifinal round", Finals: "Championship round" };
+  const weekLabel = (w) => {
+    if (typeof w === "number" || /^\d+$/.test(String(w))) return `Week ${w}`;
+    const consolation = String(w).match(/^\(C\) Week (\d+)$/);
+    if (consolation) return `Week ${consolation[1]} (consolation)`;
+    return ROUND_NAMES[w] ?? String(w);
+  };
+  const when = (y, w) => (viewYear != null ? weekLabel(w) : `${y} · ${weekLabel(w)}`);
 
   // ---- lists and headline cards
   const lists = $derived(recordLists(data, { year: viewYear, inProgressYear }));

@@ -318,7 +318,7 @@ export const SECTIONS = [
                             ],
                         },
                     },
-                    { p: '<b>Max points for</b> is what a team would have scored with its best possible lineup every week. The Tankathon pick column on the <a href="/standings">Standings</a> page tracks the current order.' },
+                    { p: '<b>Max points for</b> is what a team would have scored with its best possible lineup every week. The <b>Pick</b> column on the <a href="/standings">Standings</a> page shows where each team would pick if the season ended today (playoff teams by seed until the playoffs are played), and the <a href="/drafts">Drafts</a> page shows the full projected board.' },
                     { note: 'The Toilet Bowl winner also gets an extra pick at <b>3.13</b>, right after the last pick of round 3.' },
                 ],
             },

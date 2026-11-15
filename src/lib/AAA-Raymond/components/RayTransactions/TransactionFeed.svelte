@@ -10,7 +10,9 @@
   import { groupByDay, transactionSides } from "./transactionView.js";
 
   // allTransactions: the whole list this feed is a slice of (a page, the latest few), so each day's count is the
-  // day's real total: "8 of 11 waivers" when only some of them are shown here
+  // day's real total: "8 of 11 waivers" when only some of them are shown here. A kind with nothing shown for that
+  // day isn't counted (the homepage list picks the latest trades and waivers separately, so a day can show its trade
+  // without its waivers; it used to read "1 trade · 0 of 5 waivers").
   let { transactions = [], allTransactions = null, players = {}, leagueTeamManagers, compact = false } = $props();
 
   const team = (rosterID, season) => getTeamFromTeamManagers(leagueTeamManagers, rosterID, season) ?? { name: `Team ${rosterID}` };
@@ -37,8 +39,8 @@
     const count = (l, kind) => l.filter((t) => (kind === "trade" ? t.type === "trade" : t.type !== "trade")).length;
     const part = (kind) => {
       const shown = count(list, kind);
+      if (!shown) return "";
       const total = Math.max(shown, count(dayList ?? list, kind));
-      if (!total) return "";
       const noun = `${kind}${total === 1 ? "" : "s"}`;
       return shown < total ? `${shown} of ${total} ${noun}` : `${total} ${noun}`;
     };

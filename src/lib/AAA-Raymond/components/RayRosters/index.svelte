@@ -196,7 +196,7 @@
         slot,
         empty: !p,
         name: p ? fullName(p) : "Empty",
-        meta: p ? [p.pos, p.t ?? "FA", p.age ? `${p.age} yrs` : null].filter(Boolean).join(" · ") : "No one is starting here",
+        meta: p ? [p.pos, p.t ?? "FA", p.age ? `${p.age} yrs` : null].filter(Boolean).join(" · ") : "",
         injury: p?.is ? INJURY[p.is] ?? p.is : "",
         out: p?.is && p.is !== "Questionable",
         photo: p ? playerPhoto(pid, p.pos) : "",

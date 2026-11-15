@@ -203,7 +203,8 @@ All data comes live from the public Sleeper API.
   strip after round 3 ("TBD" until the Toilet Bowl final).
 - `utils/weeklyRecap.js` — the weekly recap (`weeklyRecap`, `positionGroup`, `RECAP_POSITIONS`).
 - `utils/matchupEntries.js` also has the one-week helpers `pairMatchups` and `playedEntries`.
-- `utils/managerProfile.js` — Managers pages: career stats with ranks (records), trophies (award podiums; Sleeper's
+- `utils/managerProfile.js` — Managers pages: career stats with ranks (records; `careerStats(..., { active })`: the
+  manager page ranks win % and points for among current managers only), trophies (award podiums; Sleeper's
   divisions here are unnamed, so each division winner is "Division Champion" and the best record among them, points
   for breaking ties, is "Regular Season Champion"), league
   record-book places, season-by-season history (`seasonHistory`), lineup slots / bench, placeholder-bio check.
@@ -269,6 +270,10 @@ All data comes live from the public Sleeper API.
   manager's real name).
 - Theme: `src/routes/+layout.svelte`, `src/app.html`, `src/lib/Nav/index.svelte`, `NavLarge.svelte`, `static/manifest.json`.
 - `src/lib/Footer.svelte`: hides the Blog link when `enableBlog` is off (like the nav; /blog answers 500).
+- Records → Playoffs: the template's round names become "Wild Card round" / "Semifinal round" / "Championship round"
+  (`weekLabel` in `RayRecords/index.svelte`; placement games share those weeks, so it names the round, not the game).
+- `TransactionFeed` day counts: real day totals ("8 of 11 waivers"), but a kind with nothing shown that day isn't
+  counted (the homepage list picks trades and waivers separately).
 - Lineup-slot averages are labelled "QB+SF" (QB + superflex) and "Flex" (RB/WR/TE flex) on Standings
   (`RayStandings/constants.js`) and Rosters (`SLOT_INFO`); the data keys stay `QB+Flex` / `WRT` / `IDP`
   (`positionAverages.js`), so don't rename those without updating every user.

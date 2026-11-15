@@ -13,15 +13,17 @@ export const winPct = (r) => {
 };
 
 /**
- * All-time regular season and playoff numbers for one manager, with ranks among every manager in the records.
+ * All-time regular season and playoff numbers for one manager, with ranks among every manager in the records, or
+ * only among `active` (the league's current manager IDs) when given, so a former manager doesn't make it "13th of 12".
  * Returns null when the manager has no record yet.
  */
-export function careerStats(records, managerID) {
+export function careerStats(records, managerID, { active = null } = {}) {
     const regular = records?.regularSeasonData?.leagueManagerRecords ?? {};
     const playoffs = records?.playoffData?.leagueManagerRecords ?? {};
     const r = regular[managerID];
     if (!r) return null;
-    const all = Object.values(regular);
+    const pool = active ? new Set([...active.map(String), String(managerID)]) : null;
+    const all = Object.entries(regular).filter(([id]) => !pool || pool.has(String(id))).map(([, o]) => o);
     const rank = (value) => 1 + all.filter((o) => (value(o) ?? -1) > (value(r) ?? -1)).length;
     const p = playoffs[managerID];
     return {
