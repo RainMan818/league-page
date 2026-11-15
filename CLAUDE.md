@@ -9,6 +9,10 @@ All data comes live from the public Sleeper API.
 - `npm test` — logic tests in `tests/` (plain `node --test`, no extra packages). Run after changing anything in
   `src/lib/AAA-Raymond/utils/` or `RayTransactions/transactionView.js`.
 - `npm run build` / `npm run preview` — production build
+- Raymond runs commands in **Git Bash** (Windows): give bash syntax, not PowerShell (`VAR=1 cmd`, heredocs such as
+  `git commit -F- <<'EOF'` are fine).
+- Local builds: `VERCEL=1 npm run build`. `@sveltejs/adapter-vercel` 5.5.3 refuses Node 24 outside Vercel ("Building
+  locally with unsupported Node.js version"); `VERCEL=1` skips that check and the output goes to `.vercel/` (ignored).
 - Deploys to Vercel (default adapter). Docker build uses adapter-node (`npm run docker-run`).
 - Node is pinned to 24.x in `package.json` `engines`. Don't loosen it to `>=`: Vercel then jumps to the newest
   Node, and Node 26 broke the `smui-theme` build step (yargs `require is not defined`).
@@ -269,7 +273,6 @@ All data comes live from the public Sleeper API.
 - Every file in `src/lib/utils/helperFunctions/` that calls Sleeper imports `sleeperFetch` instead of `fetch` (marked).
 - `src/lib/utils/helperFunctions/leagueTransactions.js`: the saved-copy top-up (entries carry `league`, `leg`, `ts`;
   `computeTotals` split out; newest-first order with a transaction-ID tie-break).
-- `src/lib/utils/helperFunctions/rivalryMatchups.js`: skips the current season's unplayed weeks.
 - `leagueData.js`, `leagueTeamManagers.js`, `leagueRosters.js`, `leagueAwards.js`, `leagueDrafts.js` (helperFunctions):
   finished seasons come from `utils/savedSeasons.js`. `getLeagueTeamManagers` now loads each season's league info
   before its users and rosters; `getAwards` gets past league info through `getLeagueData`; saved draft picks keep
@@ -278,7 +281,9 @@ All data comes live from the public Sleeper API.
   "Team <Sleeper username>" (the template used the user's display name, which leagueInfo.js replaces with the
   manager's real name).
 - Theme: `src/routes/+layout.svelte`, `src/app.html`, `src/lib/Nav/index.svelte`, `NavLarge.svelte`, `static/manifest.json`.
-- `src/lib/Footer.svelte`: hides the Blog link when `enableBlog` is off (like the nav; /blog answers 500).
+- `src/lib/Footer.svelte`: hides the Blog link when `enableBlog` is off (like the nav).
+- `src/routes/blog/+page.js` and `blog/[slug]/+page.js`: with `enableBlog` off they answer 404 (the site's error page)
+  instead of returning `false`, which made the page components crash with a 500.
 - Records → Playoffs: the template's round names become "Wild Card round" / "Semifinal round" / "Championship round"
   (`recordBook.js` `weekLabel`; placement games share those weeks, so it names the round, not the game). Rivalry's
   meeting labels (`rivalry.js`) also call a first round with byes "Wild Card".
@@ -305,7 +310,8 @@ Unused template components and old helper copies were deleted with `git rm` once
 `PowerRankings/`, `Records/`, `Rivalry/`, `Rosters/`, `Standings/`, `src/lib/Resources.svelte`, the unused files in
 `src/lib/Drafts/` (`Draft`, `DraftRow`), `src/lib/Matchups/` (`MatchupWeeks`, `Brackets`, `BracketsColumn`,
 `Matchup`) and `src/lib/Transactions/` (`Transactions`, `WaiverTransaction`, `TradeTransaction`, `TransactionMove`),
-`src/lib/utils/helperFunctions/leagueStandings.js` and `predictOptimalScore.js`, plus our own unused
+`src/lib/utils/helperFunctions/leagueStandings.js`, `predictOptimalScore.js` and `rivalryMatchups.js` (its
+`getRivalryMatchups` export left `helper.js`), the two committed `.DS_Store` files, plus our own unused
 `PositionAverages/PositionAverages.svelte` and `RayError/codeSvg.js`. `src/lib/components.js` no longer exports
 News, Resources, Awards, Rosters, PowerRankings or Standings. If a template update changes one of these files, git
 reports a modify/delete conflict: keep the deletion (`git rm <file>`).
