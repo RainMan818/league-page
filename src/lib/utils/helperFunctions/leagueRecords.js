@@ -13,6 +13,8 @@ import { browser } from '$app/environment';
 import { isRecordsFresh, recordsMeta } from '$lib/AAA-Raymond/utils/recordsCache.js';
 // AAA-Raymond: one request per Sleeper URL per page load (shared with every other loader)
 import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
+// AAA-Raymond: head-to-head record per team-season (Sleeper's record also counts the league-median game)
+import { headToHeadRecords } from '$lib/AAA-Raymond/utils/recordBook.js';
 
 /**
  * getLeagueRecords obtains all the record for a league since it was first created
@@ -209,6 +211,12 @@ const processRegularSeason = async ({rosters, leagueData, curSeason, week, regul
 		seasonPointsRecord = sPR;
 		matchupDifferentials = mD;
 		startWeek = sW;
+	}
+
+	// AAA-Raymond: save each team's head-to-head record (no median game) on its season entry as h2hWins/Losses/Ties
+	for(const [rosterID, h2h] of Object.entries(headToHeadRecords(matchupDifferentials))) {
+		const entry = regularSeason.leagueRosterRecords[rosterID]?.years.find((y) => y.year === year);
+		if(entry) Object.assign(entry, { h2hWins: h2h.wins, h2hLosses: h2h.losses, h2hTies: h2h.ties });
 	}
 
 	// sort matchup differentials

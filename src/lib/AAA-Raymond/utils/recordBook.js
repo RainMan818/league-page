@@ -6,7 +6,8 @@
 //
 // data = records.regularSeasonData or records.playoffData:
 //   leagueRosterRecords: { [rosterID]: { years: [{ year, wins, losses, ties, fpts, fptsAgainst, fptsPerGame,
-//                                                   potentialPoints, pOGames, byes }] } }
+//                                                   potentialPoints, pOGames, byes, h2hWins, h2hLosses, h2hTies }] } }
+//   (wins/losses/ties are Sleeper's record, median game included; h2h* leave the median game out, regular season only)
 //   leagueWeekHighs / leagueWeekLows: [{ rosterID, fpts, week, year }] (top 10, all-time)
 //   allTimeBiggestBlowouts / allTimeClosestMatchups: [{ year, week, differential, home: { rosterID, fpts }, away }]
 //   seasonWeekRecords: [{ year, seasonPointsHighs, seasonPointsLows, biggestBlowouts, closestMatchups }]
@@ -99,6 +100,31 @@ export function recordLists(data, { year = null, inProgressYear = null } = {}) {
         bestSeasons: [],
         worstSeasons: [],
     };
+}
+
+/**
+ * Head-to-head record per team from one regular season's matchups (matchupDifferentials: home = higher score).
+ * Sleeper's season record also counts the weekly league-median game; this leaves it out. Unplayed weeks (0-0) are
+ * skipped. Returns { [rosterID]: { wins, losses, ties } }.
+ */
+export function headToHeadRecords(matchups = []) {
+    const out = {};
+    const add = (rosterID, key) => {
+        out[rosterID] ??= { wins: 0, losses: 0, ties: 0 };
+        out[rosterID][key]++;
+    };
+    for (const m of matchups ?? []) {
+        if (!m?.home || !m?.away) continue;
+        if (!m.home.fpts && !m.away.fpts) continue;
+        if (m.home.fpts === m.away.fpts) {
+            add(m.home.rosterID, 'ties');
+            add(m.away.rosterID, 'ties');
+        } else {
+            add(m.home.rosterID, m.home.fpts > m.away.fpts ? 'wins' : 'losses');
+            add(m.away.rosterID, m.home.fpts > m.away.fpts ? 'losses' : 'wins');
+        }
+    }
+    return out;
 }
 
 /** Seasons that have records, newest first. */

@@ -1,7 +1,7 @@
 // Run with: npm test
 import assert from 'assert/strict';
 import { test } from 'node:test';
-import { weeksOf, teamRows, teamSeasons, recordLists, recordYears } from '../src/lib/AAA-Raymond/utils/recordBook.js';
+import { weeksOf, teamRows, teamSeasons, recordLists, recordYears, headToHeadRecords } from '../src/lib/AAA-Raymond/utils/recordBook.js';
 
 // roster 11 changed hands after 2023 (two managers, one team); 2026 has the median game (2 games a week)
 const data = {
@@ -70,4 +70,12 @@ test('closest wins skip ties; season view reads that season\'s lists', () => {
     assert.deepEqual(y.weekHighs, [{ rosterID: 3, fpts: 290, week: 6, year: 2026 }]);
     assert.deepEqual(y.bestSeasons, []);
     assert.deepEqual(recordYears(data), [2026, 2022]);
+});
+
+test('head-to-head records leave out the median game and skip unplayed weeks', () => {
+    const g = (a, af, b, bf) => ({ home: { rosterID: a, fpts: af }, away: { rosterID: b, fpts: bf } });
+    const h = headToHeadRecords([g(1, 120, 2, 100), g(2, 110, 1, 90), g(3, 100, 4, 100), g(1, 0, 2, 0)]);
+    assert.deepEqual(h[1], { wins: 1, losses: 1, ties: 0 });
+    assert.deepEqual(h[3], { wins: 0, losses: 0, ties: 1 });
+    assert.deepEqual(headToHeadRecords(null), {});
 });

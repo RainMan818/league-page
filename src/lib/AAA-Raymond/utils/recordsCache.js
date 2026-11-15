@@ -2,8 +2,11 @@
 // are still good, so the Records / Rivalry pages don't re-download every week of every season on each visit.
 // Plain functions, no site imports (tested in tests/recordsCache.test.js).
 
-/** Bump whenever the records math changes, so every browser rebuilds once. 2 = points per week (median-game fix). */
-export const RECORDS_CACHE_VERSION = 2;
+/**
+ * Bump whenever the records math changes, so every browser rebuilds once. 2 = points per week (median-game fix),
+ * 3 = head-to-head records per team-season (h2hWins / h2hLosses / h2hTies).
+ */
+export const RECORDS_CACHE_VERSION = 3;
 
 /** What gets saved next to the records: version, when, and how far Sleeper had scored the season. */
 export const recordsMeta = ({ season, lastScored, now = Date.now() }) => ({
