@@ -1,7 +1,12 @@
 import {XMLParser, XMLValidator} from 'fast-xml-parser';
-import { waitForAll } from '$lib/utils/helperFunctions/multiPromise';
 import { dynasty } from '$lib/utils/helper';
 import { json } from '@sveltejs/kit';
+// AAA-Raymond: Reddit is fetched here (it blocks browser requests), and a feed that fails adds nothing instead of
+// breaking the response
+import { processReddit } from '$lib/utils/helperFunctions/news';
+
+const REDDIT_DYNASTY = 'https://www.reddit.com/r/DynastyFF/new.json';
+const REDDIT_FANTASY = 'https://www.reddit.com/r/fantasyfootball/new.json';
 
 const FF_BALLERS= 'https://thefantasyfootballers.libsyn.com/fantasyfootball';
 const DYNASTY_LEAGUE= 'https://dynastyleaguefootball.com/feed/';
@@ -15,28 +20,50 @@ export async function GET() {
 		articles.push(getXMLArticles(DYNASTY_LEAGUE, processDynastyLeague));
 		articles.push(getXMLArticles(DYNASTY_NERDS, processDynastyNerds));
 	}
-    const responses = await waitForAll(...articles).catch((err) => { console.error(err); });
+	articles.push(getRedditArticles(dynasty ? REDDIT_DYNASTY : REDDIT_FANTASY));
+    const responses = await Promise.all(articles.map((p) => p.catch((err) => { console.error(err); return []; })));
 
 	let finalArticles = [];
 
 	for(const response of responses) {
-		finalArticles = [...finalArticles, ...response];
+		if(Array.isArray(response)) finalArticles = [...finalArticles, ...response];
 	}
 
     return json(finalArticles);
 }
 
 const getXMLArticles = async(url, callback) => {
-    const res = await fetch(url, {compress: true}).catch((err) => { console.error(err); });
-    const text = await res.text().catch((err) => { console.error(err); });
-
-    let xmlData;
-    if(XMLValidator.validate(text) === true){
-        const parser = new XMLParser();
-        xmlData = parser.parse(text);
+    // AAA-Raymond: an unreachable or malformed feed adds nothing
+    try {
+        const res = await fetch(url, {compress: true});
+        if(!res.ok) return [];
+        const text = await res.text();
+        if(XMLValidator.validate(text) !== true) return [];
+        const items = new XMLParser().parse(text)?.rss?.channel?.item;
+        return items ? callback(Array.isArray(items) ? items : [items]) : [];
+    } catch (err) {
+        console.error(err);
+        return [];
     }
-    
-    return callback(xmlData.rss.channel.item);
+}
+
+// AAA-Raymond: feed titles arrive with HTML entities ("&#124;", "&amp;"); the page shows titles as plain text
+const NAMED = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+const decodeEntities = (text) => String(text ?? '').replace(/&(#x[\da-f]+|#\d+|\w+);/gi, (m, code) => {
+    if(code[0] === '#') return String.fromCodePoint(code[1].toLowerCase() === 'x' ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10));
+    return NAMED[code.toLowerCase()] ?? m;
+});
+
+const getRedditArticles = async (url) => {
+    try {
+        const res = await fetch(url, { headers: { 'User-Agent': 'league-page/1.0 (fantasy league site)' } });
+        if(!res.ok) return [];
+        const data = await res.json();
+        return data?.data ? processReddit(data.data) : [];
+    } catch (err) {
+        console.error(err);
+        return [];
+    }
 }
 
 const processFF = (articles) => {
@@ -47,7 +74,7 @@ const processFF = (articles) => {
 		const date = stringDate(d);
 		const icon = 'newsIcons/ffballers.jpeg';
 		finalArticles.push({
-			title: article.title,
+			title: decodeEntities(article.title),
 			article: article.description,
 			link: article.link,
 			author: `Fantasy Footballers`,
@@ -90,7 +117,7 @@ const processDynastyLeague = (articles) => {
 		const date = stringDate(d);
 		const icon = 'newsIcons/dynastyLeague.png';
 		finalArticles.push({
-			title: article.title,
+			title: decodeEntities(article.title),
 			article: article.description,
 			link: article.link,
 			author: `Dynasty League Football`,
@@ -110,7 +137,7 @@ const processDynastyNerds = (articles) => {
 		const date = stringDate(d);
 		const icon = 'newsIcons/dynastyNerds.jpeg';
 		finalArticles.push({
-			title: article.title,
+			title: decodeEntities(article.title),
 			article: article.description,
 			link: article.link,
 			author: `Dynasty Nerds`,

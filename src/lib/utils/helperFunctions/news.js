@@ -1,10 +1,9 @@
-import { waitForAll } from './multiPromise';
 import { get } from 'svelte/store';
 import {news} from '$lib/stores';
-import { dynasty } from '$lib/utils/leagueInfo';
 
-const REDDIT_DYNASTY = 'https://www.reddit.com/r/DynastyFF/new.json';
-const REDDIT_FANTASY = 'https://www.reddit.com/r/fantasyfootball/new.json';
+// AAA-Raymond: every feed (podcasts, articles and now Reddit) is fetched by the site's server endpoint. Reddit blocks
+// requests made from the browser (CORS), and one failed feed used to break the whole Resources news section
+// ("(intermediate value) is not iterable"); a feed that fails now just adds nothing.
 const SERVER_API = '/api/fetch_serverside_news';
 
 export const getNews = async (servFetch, bypass = false) => {
@@ -12,38 +11,18 @@ export const getNews = async (servFetch, bypass = false) => {
 		return {articles: get(news), fresh: false};
 	}
     const smartFetch = servFetch ?? fetch;
-	const newsSources = [
-		smartFetch(SERVER_API, {compress: true}), 
-	];
-	if(dynasty) {
-		newsSources.push(getFeed(REDDIT_DYNASTY, processReddit));
-	} else {
-		newsSources.push(getFeed(REDDIT_FANTASY, processReddit));
-	}
+	const serverData = await smartFetch(SERVER_API, {compress: true})
+		.then((res) => (res.ok ? res.json() : []))
+		.catch((err) => { console.error(err); return []; });
 
-	const [serverRes, reddit] = await waitForAll(...newsSources).catch((err) => { console.error(err); });
-	const serverData = await serverRes.json().catch((err) => { console.error(err); });
-
-	const articles = [...reddit, ...serverData].sort((a, b) => (a.ts < b.ts) ? 1 : -1);
-	news.update(() => articles);
+	const articles = (Array.isArray(serverData) ? serverData : []).sort((a, b) => (a.ts < b.ts) ? 1 : -1);
+	if(articles.length) news.update(() => articles);
 
 	return {articles, fresh: true};
 }
 
-const getFeed = async (feed, callback) => {
-	const res = await fetch(feed, {compress: true}).catch((err) => { console.error(err); });
-    
-	const data = await res.json().catch((err) => { console.error(err); });
-	
-	if (res.ok && data && data.data) {
-		return callback(data.data);
-	} else {
-		console.error(data);
-        return [];
-	}
-}
-
-const processReddit = (rawArticles) => {
+// AAA-Raymond: exported for the server endpoint, which now fetches Reddit
+export const processReddit = (rawArticles) => {
 	const bannedAuthors = [
 		"AutoModerator",
 		"FFBot",
@@ -57,7 +36,7 @@ const processReddit = (rawArticles) => {
 		"default",
 	]
 	let finalArticles = [];
-	const children = rawArticles.children;
+	const children = rawArticles?.children ?? [];
 	for(const rawArticle of children) {
 		const data = rawArticle.data;
 		if(bannedAuthors.includes(data.author)) {

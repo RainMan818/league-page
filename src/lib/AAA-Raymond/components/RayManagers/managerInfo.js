@@ -3,7 +3,7 @@
 import {
     getDatesActive,
     getRosterIDFromManagerID,
-    getTeamFromTeamManagers,
+    getSeasonTeamFromTeamManagers,
 } from '$lib/utils/helperFunctions/universalFunctions';
 import { seedTeams } from '../../utils/playoffs.js';
 
@@ -18,7 +18,8 @@ export function managerBasics(manager, index, leagueTeamManagers) {
     const found = managerID ? getRosterIDFromManagerID(leagueTeamManagers, managerID) : null;
     const rosterID = found?.rosterID ?? manager.roster ?? null;
     const year = found?.year ?? null;
-    const team = rosterID != null ? getTeamFromTeamManagers(leagueTeamManagers, rosterID, year) : null;
+    // the manager's own team as of their last season (a former manager's roster now has someone else's team name)
+    const team = rosterID != null ? getSeasonTeamFromTeamManagers(leagueTeamManagers, rosterID, year) : null;
     const coManaged = (leagueTeamManagers?.teamManagersMap?.[year]?.[rosterID]?.managers?.length ?? 0) > 1;
     return {
         index,

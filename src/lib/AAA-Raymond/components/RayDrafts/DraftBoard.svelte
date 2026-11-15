@@ -2,7 +2,8 @@
   Draft board (Drafts option A): dark cells, top edge in the player's position color.
   Replaces the template's Draft.svelte in src/lib/Drafts/index.svelte (one import line); same draftData input
   ({ draftOrder, draft, accuracy, reversalRound, draftType }).
-  Upcoming draft: pick number + a cyan "→ owner" tag on picks that changed hands.
+  Upcoming draft: pick number + a cyan "→ owner" tag on picks that changed hands, plus extra picks outside Sleeper's
+  grid (draftData.extraPicks: the Toilet Bowl winner's 3.13) as a full-width strip after their round.
   Previous drafts: pick number, position tag, player, NFL team, and "by <team>" when the pick was traded.
   Click a team's name (or a "by <team>" tag) to spotlight every pick that team made / owns on every board on the
   page (shared state in draftHighlight.svelte.js; DraftPicksPanel lists them). The small ↗ opens the manager page.
@@ -61,6 +62,15 @@
 
   const board = $derived(rounds.map((r, i) => r.map((cell, col) => cellInfo(cell, i + 1, col, r.length))));
 
+  // extra picks after a round (upcoming board only): { round, pick, label, rosterID (null until decided) }
+  const extras = $derived(previous ? [] : (draftData.extraPicks ?? []).map((x) => ({
+    ...x,
+    pickLabel: `${x.round}.${x.pick}`,
+    drafter: x.rosterID != null ? Number(x.rosterID) : null,
+    owner: x.rosterID != null ? teamName(Number(x.rosterID)) : null,
+  })));
+  const extrasAfter = (roundIndex) => extras.filter((x) => x.round === roundIndex + 1);
+
   // spotlight: the selected team's picks stand out, everything else dims
   const boardKey = $derived(`${previous ? "prev" : "next"}-${year}`);
   const sel = $derived(draftHighlight.rosterID);
@@ -73,14 +83,17 @@
     registerBoard(k, {
       year,
       upcoming: !previous,
-      picks: board.flat().map((c) => ({
-        rosterID: c.drafter,
-        pick: c.pick,
-        name: c.name ?? null,
-        pos: c.pos ?? "",
-        empty: !!c.empty,
-        from: c.traded ? teamName(c.original, previous ? year : undefined) : null,
-      })),
+      picks: board.flatMap((round, i) => [
+        ...round.map((c) => ({
+          rosterID: c.drafter,
+          pick: c.pick,
+          name: c.name ?? null,
+          pos: c.pos ?? "",
+          empty: !!c.empty,
+          from: c.traded ? teamName(c.original, previous ? year : undefined) : null,
+        })),
+        ...extrasAfter(i).filter((x) => x.drafter != null).map((x) => ({ rosterID: x.drafter, pick: x.pickLabel, name: null, pos: "", empty: false, from: x.label })),
+      ]),
     });
     return () => unregisterBoard(k);
   });
@@ -117,7 +130,7 @@
       </div>
     {/each}
 
-    {#each board as round}
+    {#each board as round, ri}
       {#each round as c}
         {@const mine = sel != null && c.drafter === sel}
         {@const dim = sel != null && !mine}
@@ -140,6 +153,18 @@
             {#if c.by}<button type="button" class="rr-by" title="Highlight {teamName(c.drafter)}'s picks" onclick={() => select(c.drafter)}>by {c.by}</button>{/if}
           </div>
         {/if}
+      {/each}
+      {#each extrasAfter(ri) as x (x.pickLabel)}
+        {@const mine = sel != null && x.drafter === sel}
+        <div class="rr-cell rr-extra" class:rr-mine={mine} class:rr-dim={sel != null && !mine} class:rr-flash={flash === x.pickLabel} data-pick={x.pickLabel}>
+          <span class="rr-pick">{x.pickLabel}</span>
+          <span class="rr-extraLabel">{x.label}</span>
+          {#if x.owner}
+            <button type="button" class="rr-owner rr-extraOwner" title="Highlight {x.owner}'s picks" onclick={() => select(x.drafter)}>→ {x.owner}</button>
+          {:else}
+            <span class="rr-extraTbd">TBD · decided by the Toilet Bowl final</span>
+          {/if}
+        </div>
       {/each}
     {/each}
   </div>
@@ -330,6 +355,34 @@
   }
 
   /* upcoming: pick that changed hands */
+  /* extra pick (3.13): one strip across the board, right after its round */
+  .rr-extra {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 0;
+    border-style: dashed;
+    border-color: color-mix(in srgb, var(--or-cyan, #0b8a9a) 45%, transparent);
+  }
+
+  .rr-extraLabel {
+    font-weight: 700;
+    font-size: 0.82em;
+    color: var(--or-text, var(--g333));
+  }
+
+  .rr-extraTbd {
+    font-size: 0.78em;
+    color: var(--or-muted, var(--g999));
+  }
+
+  button.rr-extraOwner {
+    font: inherit;
+    cursor: pointer;
+  }
+
   .rr-traded {
     background: var(--draftSwapped, var(--fff));
     border-color: color-mix(in srgb, var(--or-cyan, #0b8a9a) 45%, transparent);

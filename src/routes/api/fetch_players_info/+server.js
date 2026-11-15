@@ -78,6 +78,12 @@ const computePlayers = (playerData, weeklyData, scoringSettings) => {
 
     // add weekly projections
     for(let week = 1; week <= weeklyData.length; week++) {
+        // AAA-Raymond: that week's NFL schedule (team -> opponent) from every projection, for players whose own entry
+        // has no opponent (e.g. listed out that week: Myles Garrett, 2026 weeks 8-9, so the recap showed no "vs")
+        const schedule = {};
+        for(const player of weeklyData[week - 1]) {
+            if(player.team && player.opponent) schedule[player.team] = player.opponent;
+        }
         for(const player of weeklyData[week - 1]) {
             const id = player.player_id;
             
@@ -86,7 +92,7 @@ const computePlayers = (playerData, weeklyData, scoringSettings) => {
 
             computedPlayers[id].wi[week] = {
                 p: calculateProjection(player.stats, scoringSettings),
-                o: player.opponent
+                o: player.opponent ?? schedule[player.team] ?? schedule[computedPlayers[id].t] ?? null
             }
         }
     }

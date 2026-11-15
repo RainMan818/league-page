@@ -15,6 +15,7 @@
   let loading = $state(true);
   let players = $state.raw({});
   let recent = $state.raw([]);
+  let all = $state.raw([]); // every transaction, for the day counts
   let leagueTeamManagers = $state.raw(null);
 
   // how many of each kind to show
@@ -31,12 +32,14 @@
     const [transactionsData, playersData, managers] = await waitForAll(getLeagueTransactions(false), loadPlayers(null), getLeagueTeamManagers());
     players = playersData.players;
     recent = pickRecent(transactionsData.transactions);
+    all = transactionsData.transactions;
     leagueTeamManagers = managers;
     loading = false;
 
     if (transactionsData.stale) {
       const fresh = await getLeagueTransactions(false, true);
       recent = pickRecent(fresh.transactions);
+      all = fresh.transactions;
     }
     if (playersData.stale) {
       const freshPlayers = await loadPlayers(null, true);
@@ -50,7 +53,7 @@
     <Loading message="Loading league transactions..." margin="20px auto" />
   {:else if recent.length}
     <h5>Recent Moves</h5>
-    <TransactionFeed transactions={recent} {players} {leagueTeamManagers} compact />
+    <TransactionFeed transactions={recent} allTransactions={all} {players} {leagueTeamManagers} compact />
     <button type="button" class="rr-more" onclick={() => goto("/transactions?show=both&query=&page=1")}>View all trades &amp; waivers</button>
   {:else}
     <p class="rr-none">No trades or waiver moves yet...</p>

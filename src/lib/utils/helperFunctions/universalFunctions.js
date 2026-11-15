@@ -206,10 +206,25 @@ export const getTeamData = (users, ownerID) => {
     }
 }
 
+// AAA-Raymond: team names and avatars are always the team's CURRENT ones, for every season (Raymond's call, Nov 14),
+// falling back to that season's if the roster isn't in the current season. Managers stay per season
+// (renderManagerNames). getSeasonTeamFromTeamManagers gives the team as it was that season, for a manager's own team.
+const currentTeamEntry = (teamManagers, rosterID, year) =>
+    teamManagers?.teamManagersMap?.[teamManagers.currentSeason]?.[rosterID] ?? teamManagers?.teamManagersMap?.[year]?.[rosterID];
+
+export const getSeasonTeamFromTeamManagers = (teamManagers, rosterID, year) => {
+    if(!year || year > teamManagers.currentSeason) {
+        year = teamManagers.currentSeason;
+    }
+    return teamManagers.teamManagersMap?.[year]?.[rosterID]?.team ?? currentTeamEntry(teamManagers, rosterID, year)?.team;
+}
+
 export const getAvatarFromTeamManagers = (teamManagers, rosterID, year) => {
     if(!year || year > teamManagers.currentSeason) {
         year = teamManagers.currentSeason;
     }
+    // AAA-Raymond: current team's avatar for every season
+    year = teamManagers.teamManagersMap?.[teamManagers.currentSeason]?.[rosterID] ? teamManagers.currentSeason : year;
     const yearManagers = teamManagers.teamManagersMap[year];
     if(yearManagers == null) {
         return QUESTION;
@@ -225,7 +240,8 @@ export const getTeamNameFromTeamManagers = (teamManagers, rosterID, year) => {
     if(!year || year > teamManagers.currentSeason) {
         year = teamManagers.currentSeason;
     }
-    return teamManagers.teamManagersMap[year][rosterID].team.name;
+    // AAA-Raymond: current team name for every season
+    return currentTeamEntry(teamManagers, rosterID, year).team.name;
 }
 
 export const renderManagerNames = (teamManagers, rosterID, year) => {
@@ -249,16 +265,13 @@ export const getTeamFromTeamManagers = (teamManagers, rosterID, year) => {
     if(!year || year > teamManagers.currentSeason) {
         year = teamManagers.currentSeason;
     }
-    return teamManagers.teamManagersMap[year][rosterID]['team'];
+    // AAA-Raymond: current team for every season
+    return currentTeamEntry(teamManagers, rosterID, year)?.['team'];
 }
 
 export const getNestedTeamNamesFromTeamManagers = (teamManagers, year, rosterID) => {
-    const originalName = teamManagers.teamManagersMap[year][rosterID]['team']['name'];
-    const currentName = teamManagers.teamManagersMap[teamManagers.currentSeason][rosterID]['team']['name'];
-    if(cleanName(originalName) != cleanName(currentName)) {
-        return `${originalName}<div class="curOwner">(${currentName})</div>`;
-    }
-    return originalName;
+    // AAA-Raymond: just the current name (it used to show the season's name with the current one under it)
+    return currentTeamEntry(teamManagers, rosterID, year)['team']['name'];
 }
 
 export const getDatesActive = (teamManagers, managerID) => {

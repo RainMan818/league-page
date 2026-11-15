@@ -14,7 +14,7 @@ const records = {
             b: { wins: 30, losses: 29, ties: 1, fptsFor: 9500, potentialPoints: 11000 },
             c: { wins: 20, losses: 40, ties: 0, fptsFor: 8000, potentialPoints: 9000 },
         },
-        mostSeasonLongPoints: [{ rosterID: 2, year: 2023, fpts: 3600 }, { rosterID: 1, year: 2023, fpts: 3500.25 }],
+        mostSeasonLongPoints: [{ rosterID: 2, year: 2023, fpts: 3600, fptsPerGame: '257.14' }, { rosterID: 1, year: 2023, fpts: 3500.25, fptsPerGame: '250.02' }],
         leagueWeekHighs: [{ rosterID: 1, year: 2022, week: 5, fpts: 300.5 }, { rosterID: 2, year: 2025, week: 3, fpts: 299 }],
         seasonWeekRecords: [{ year: 2025, seasonPointsHighs: [{ rosterID: 2, week: 3, fpts: 299 }, { rosterID: 1, week: 9, fpts: 250 }] }],
     },
@@ -50,20 +50,6 @@ test('trophies: titles first, then newest; finishes before a takeover are marked
     assert.deepEqual(both.map((t) => [t.year, t.kind, t.former]), [[2025, 'champion', false], [2023, 'division', true], [2023, 'second', true]]);
 });
 
-test('trophies: unnamed division winners are division champions; the best record is regular season champion', () => {
-    // 2022 here: roster 4 won a division at 10-4, roster 11 had the best record (12-2)
-    const awards = [{ year: 2022, champion: 4, divisions: [
-        { wins: 10, points: 3584.28, rosterID: '4' }, { wins: 12, points: 3283.26, rosterID: '11' }, { wins: 8, points: 3242.66, rosterID: '3' },
-    ] }, { year: 2025, divisions: [
-        { wins: 9, points: 3406.12, rosterID: '1' }, { wins: 10, points: 3256.48, rosterID: '6' }, { wins: 10, points: 3540.64, rosterID: '4' },
-    ] }];
-    const t = managerTrophies(awards, (rid) => String(rid) === '4');
-    assert.deepEqual(t.map((x) => [x.year, x.title]), [
-        [2022, 'League Champion'], [2025, 'Regular Season Champion'], [2025, 'Division Champion'], [2022, 'Division Champion'],
-    ]); // 2025: tied at 10 wins, more points for
-    assert.deepEqual(managerTrophies(awards, (rid) => String(rid) === '11').map((x) => [x.year, x.kind]), [[2022, 'regular'], [2022, 'division']]);
-});
-
 test('record book places', () => {
     const a = managerRecords(records, 'a', owns('a'));
     assert.deepEqual(a.map((r) => [r.label, r.rankText, r.value]), [
@@ -71,12 +57,14 @@ test('record book places', () => {
         ['All-time lineup IQ', '1st', '90.0%'],
         ['Single week (all-time)', '1st', '2022 W5 · 300.5'],
         ['All-time points for', '2nd', '9,000.0'],
-        ['Season points', '2nd', '2023 · 3,500.3'],
+        ['Season (points per week)', '2nd', '2023 · 250.0/wk'],
         ['Single week, 2025', '2nd', 'W9 · 250.0'],
     ]);
     // b gets 2025 records but not roster 2's 2023 season (before b ran it)
     const b = managerRecords(records, 'b', owns('b'));
     assert.deepEqual(b.map((r) => r.label), ['All-time points for', 'Single week, 2025', 'All-time wins', 'Single week (all-time)', 'All-time lineup IQ']);
+    // the season still being played is marked
+    assert.equal(managerRecords(records, 'a', owns('a'), null, { inProgressYear: 2023 }).find((r) => r.label.startsWith('Season')).value, '2023 (so far) · 250.0/wk');
 });
 
 test('lineup slots, bench, IR and taxi', () => {

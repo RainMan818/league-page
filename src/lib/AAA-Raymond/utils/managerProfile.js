@@ -89,8 +89,9 @@ export const titleYears = (trophies) => trophies.filter((t) => t.kind === 'champ
  * The manager's places in the league record books (same lists the old awards case read):
  * top 3 all-time wins, points and lineup IQ; top 10 single weeks and seasons; each season's top 3 weeks.
  * Returns [{ label, rank, rankText, value, year?, former }], best rank first.
+ * inProgressYear: the season still being played, whose season entry is marked "(so far)" (like the Records page).
  */
-export function managerRecords(records, managerID, owns, tookOver = null) {
+export function managerRecords(records, managerID, owns, tookOver = null, { inProgressYear = null } = {}) {
     const regular = records?.regularSeasonData;
     if (!regular) return [];
     const out = [];
@@ -108,7 +109,10 @@ export function managerRecords(records, managerID, owns, tookOver = null) {
     top3((r) => (r.potentialPoints ? r.fptsFor / r.potentialPoints : 0), 'All-time lineup IQ', (r) => `${((r.fptsFor * 100) / r.potentialPoints).toFixed(1)}%`);
 
     (regular.mostSeasonLongPoints ?? []).forEach((rec, i) => {
-        if (rec && owns(rec.rosterID, rec.year)) add('Season points', i + 1, `${rec.year} · ${fmtPts(rec.fpts)}`, rec.year);
+        // the list is ranked by points per week (as on the Records page), so that's the number shown
+        const soFar = Number(rec?.year) === Number(inProgressYear) ? ' (so far)' : '';
+        const ppw = Number(rec?.fptsPerGame) || 0;
+        if (rec && owns(rec.rosterID, rec.year)) add('Season (points per week)', i + 1, `${rec.year}${soFar} · ${fmtPts(ppw)}/wk`, rec.year);
     });
     (regular.leagueWeekHighs ?? []).forEach((rec, i) => {
         if (rec && owns(rec.rosterID, rec.year)) add('Single week (all-time)', i + 1, `${rec.year} W${rec.week} · ${fmtPts(rec.fpts)}`, rec.year);

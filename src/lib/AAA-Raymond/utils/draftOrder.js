@@ -66,6 +66,24 @@ export function leagueDraftOrder(teams = [], { playoffTeams = 6, bracket = [] } 
     return { order: [...tankathonOrder(out), ...playoffOrder], seeds, places };
 }
 
+/**
+ * The Toilet Bowl winner's extra pick (Constitution 7.4 / 8.2, new for 2026): pick 3.13, right after round 3,
+ * starting with the 2027 rookie draft (the first one after a Toilet Bowl under the rule).
+ */
+export const TOILET_BOWL_PICK = { round: 3, firstDraft: 2027, label: 'Toilet Bowl winner' };
+
+/**
+ * Toilet Bowl winner from Sleeper's losers bracket, the same way the Trophy Room reads it (leagueAwards.js): the
+ * winner of the last round's main game (lower score advances in this league). null until that game is played.
+ */
+export function toiletBowlWinner(losersBracket = []) {
+    const games = Array.isArray(losersBracket) ? losersBracket : [];
+    if (!games.length) return null;
+    const last = Math.max(...games.map((m) => m.r ?? 0));
+    const game = games.find((m) => m.r === last && (!m.t1_from || m.t1_from.w));
+    return game?.w != null ? String(game.w) : null;
+}
+
 /** The winners bracket is set once Sleeper has scored the whole regular season (or the league is finished). */
 export const bracketIsSet = (leagueData) =>
     leagueData?.status === 'complete' ||

@@ -42,7 +42,7 @@ test('the 2025 championship: scores, winner, labels and placement games', () => 
     assert.equal(v.final.label, 'Championship');
     assert.deepEqual(v.final.sides.map((s) => [s.rosterID, s.seed, s.points, s.won]), [['12', 4, 202.54, false], ['9', 6, 221.34, true]]);
     assert.deepEqual(v.placement.map((g) => [g.label, g.winner]), [['3rd place', '6'], ['5th place', '3']]);
-    assert.equal(v.games[1].label, 'Quarterfinals');
+    assert.equal(v.games[1].label, 'Wild Card');
     assert.equal(v.games[3].label, 'Semifinals');
     assert.ok(Object.values(v.games).every((g) => g.status === 'final'));
 });

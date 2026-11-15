@@ -2,6 +2,8 @@
 	import { goto } from '$app/navigation';
     import { managers } from '$lib/utils/helper';
 	import { tabs } from '$lib/utils/tabs';
+	// AAA-Raymond: hide the Blog link when the blog is off, like the top nav does
+	import { enableBlog } from '$lib/utils/leagueInfo';
 	import { onMount } from 'svelte';
 
 	let outOfDate = false;
@@ -111,7 +113,9 @@
 		<ul>
 			{#each tabs as tab}
 				{#if !tab.nest}
-					<li><div class="navLink" onclick={() => goto(tab.dest)}>{tab.label}</div></li>
+					{#if tab.label != 'Blog' || enableBlog}
+						<li><div class="navLink" onclick={() => goto(tab.dest)}>{tab.label}</div></li>
+					{/if}
 				{:else}
 					{#each tab.children as child}
                         <!-- Shouldn't show Managers tab unless managers has been populated -->

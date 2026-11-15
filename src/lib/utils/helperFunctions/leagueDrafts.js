@@ -9,7 +9,7 @@ import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
 // AAA-Raymond: past (finished) seasons' drafts are saved in the browser (savedSeasons.js)
 import { seasonJson, isFinishedLeague } from '$lib/AAA-Raymond/utils/savedSeasons.js';
 // AAA-Raymond: the upcoming draft follows the league's draft-order rule (same as the Standings page's Pick column)
-import { leagueDraftOrder, teamsFromRosters, bracketIsSet } from '$lib/AAA-Raymond/utils/draftOrder.js';
+import { leagueDraftOrder, teamsFromRosters, bracketIsSet, TOILET_BOWL_PICK, toiletBowlWinner } from '$lib/AAA-Raymond/utils/draftOrder.js';
 
 export const getUpcomingDraft = async () => {
 	if(get(upcomingDraft).draft) {
@@ -57,6 +57,17 @@ export const getUpcomingDraft = async () => {
 		draftOrder = buildRes.draftOrder;
 	}
 
+	// AAA-Raymond: the Toilet Bowl winner's extra pick (3.13). It comes from this season's Toilet Bowl while the next
+	// draft is still a projection, or from last season's once Sleeper has set up the new draft.
+	let extraPicks = [];
+	if(year >= TOILET_BOWL_PICK.firstDraft) {
+		const bowlLeague = officialDraft.status == "complete" ? (bracketIsSet(leagueData) ? leagueID : null) : leagueData.previous_league_id;
+		const losers = bowlLeague
+			? await sleeperFetch(`https://api.sleeper.app/v1/league/${bowlLeague}/losers_bracket`, {compress: true}).then((r) => r.json()).catch(() => [])
+			: [];
+		extraPicks = [{ round: TOILET_BOWL_PICK.round, pick: (draftOrder?.length ?? 12) + 1, label: TOILET_BOWL_PICK.label, rosterID: toiletBowlWinner(losers) }];
+	}
+
 	const draftData = {
 		year,
 		draft,
@@ -64,6 +75,7 @@ export const getUpcomingDraft = async () => {
 		accuracy,
 		draftType: officialDraft.type,
 		reversalRound: officialDraft.settings.reversal_round,
+		extraPicks, // AAA-Raymond
 	}
 	
 	upcomingDraft.update(() => draftData);

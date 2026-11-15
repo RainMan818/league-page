@@ -34,6 +34,12 @@
   ];
   let pfMode = $state("week");
   let maxMode = $state("week");
+  // Lineup efficiency: season so far by default (the Standings page's Efficiency column), or each week on its own
+  const EFF_MODES = [
+    { value: "season", label: "Season" },
+    { value: "week", label: "Each week" },
+  ];
+  let effMode = $state("season");
 
   onMount(async () => {
     try {
@@ -145,7 +151,8 @@
     const t = data.trends;
     const nTeams = t.teamIDs.length;
     const pct = (v) => `${v.toFixed(0)}%`;
-    const effR = rangeFor((s) => s.effWeek);
+    const effPick = effMode === "week" ? (s) => s.effWeek : (s) => s.effCum;
+    const effR = rangeFor(effPick);
     const sides = ["OFF", "DEF"].map((p) => {
       const pick = (s) => s.pos[p];
       return { key: p, label: POS_LABEL[p], range: rangeFor(pick), series: rankedSeries(pick), refs: [{ label: "League avg", vals: leagueAverage(t, pick) }] };
@@ -162,7 +169,12 @@
       },
       pf: scoreChart("pfCum", pfMode),
       max: scoreChart("maxCum", maxMode),
-      eff: { range: { ...effR, max: Math.min(100, effR.max) }, series: rankedSeries((s) => s.effWeek), fmt: pct },
+      eff: {
+        range: { ...effR, max: Math.min(100, effR.max) },
+        series: rankedSeries(effPick),
+        fmt: pct,
+        note: effMode === "week" ? "Points started ÷ best possible lineup, each week on its own" : "Points started ÷ best possible lineup, season so far after each week",
+      },
       ap: { series: rankedSeries((s) => s.allPlay), fmt: pct },
       sides,
       positions,
@@ -248,8 +260,11 @@
         <TrendChart title="Max PF by week" weeks={data.trends.weeks} series={charts.max.series} refs={charts.max.refs} min={charts.max.range.min} max={charts.max.range.max} ticks={charts.max.range.ticks} fmt={charts.max.fmt} tickFmt={charts.max.tickFmt} mark={charts.max.mark} {hoverID} />
       </section>
       <section class="rr-card">
-        <h3>Lineup efficiency</h3>
-        <p class="rr-note">Points started ÷ best possible lineup, each week</p>
+        <div class="rr-cardHead">
+          <h3>Lineup efficiency</h3>
+          <Toggle small label="Lineup efficiency view" options={EFF_MODES} bind:value={effMode} />
+        </div>
+        <p class="rr-note">{charts.eff.note}</p>
         <TrendChart title="Lineup efficiency by week" weeks={data.trends.weeks} series={charts.eff.series} min={charts.eff.range.min} max={charts.eff.range.max} ticks={charts.eff.range.ticks} fmt={charts.eff.fmt} tickFmt={(v) => `${v}%`} {hoverID} />
       </section>
       <section class="rr-card">

@@ -31,6 +31,8 @@
   let transactions = $state.raw(transactionsData?.transactions ?? []);
   let standing = $state.raw(null);
   let leagueStatus = $state(null); // "complete" once the current season's final is played
+  // the season still in its regular season (its season-points entry says "so far"); settled once the league loads
+  let inProgressYear = $state(Number(leagueTeamManagers.currentSeason));
   let showBench = $state(false);
   let showIR = $state(false);
   let showAllMoves = $state(false);
@@ -45,6 +47,9 @@
       .then((ctx) => {
         standing = currentStandings(ctx);
         leagueStatus = ctx?.leagueData?.status ?? null;
+        const ls = ctx?.leagueData?.settings;
+        const regularOver = leagueStatus === "complete" || (ls?.last_scored_leg ?? 0) >= (ls?.playoff_week_start ?? 15) - 1;
+        inProgressYear = regularOver ? null : Number(ctx?.leagueData?.season);
       })
       .catch((e) => console.error(e));
     const p = await loadPlayers(null);
@@ -57,7 +62,7 @@
   const career = $derived(careerStats(records, b.managerID));
   const trophies = $derived(managerTrophies(awards, b.owns, m.tookOver));
   const titles = $derived(titleYears(trophies));
-  const bookRecords = $derived(managerRecords(records, b.managerID, b.owns, m.tookOver));
+  const bookRecords = $derived(managerRecords(records, b.managerID, b.owns, m.tookOver, { inProgressYear }));
   const anyFormer = $derived(trophies.some((t) => t.former) || bookRecords.some((r) => r.former));
   const now = $derived(b.until ? null : standing?.[String(b.rosterID)]);
   const fav = $derived(favoriteTeam(m.favoriteTeam));
@@ -333,7 +338,7 @@
         {:else if showAllMoves}
           <TransactionsPage {playersInfo} transactions={teamMoves} {leagueTeamManagers} show="both" query="" page={0} perPage={10} />
         {:else}
-          <TransactionFeed transactions={teamMoves.slice(0, 5)} {players} {leagueTeamManagers} compact />
+          <TransactionFeed transactions={teamMoves.slice(0, 5)} allTransactions={teamMoves} {players} {leagueTeamManagers} compact />
         {/if}
       </section>
     </div>

@@ -1,7 +1,7 @@
 // Run with: npm test
 import assert from 'assert/strict';
 import { test } from 'node:test';
-import { playoffPlaces, leagueDraftOrder, teamsFromRosters } from '../src/lib/AAA-Raymond/utils/draftOrder.js';
+import { playoffPlaces, leagueDraftOrder, teamsFromRosters, toiletBowlWinner } from '../src/lib/AAA-Raymond/utils/draftOrder.js';
 
 // 12 teams, 3 divisions; this season's standings after week 9 (max PF = potentialPoints)
 const T = (rosterID, wins, losses, fpts, potentialPoints, division) => ({ rosterID, wins, losses, ties: 0, fpts, potentialPoints, division });
@@ -50,4 +50,16 @@ test('draft order follows the bracket once games are played', () => {
 test('teams from Sleeper rosters', () => {
     const [t] = teamsFromRosters({ 4: { roster_id: 4, settings: { wins: 9, losses: 5, ties: 0, fpts: 3540, fpts_decimal: 64, ppts: 4272, ppts_decimal: 5, division: 3 } } });
     assert.deepEqual(t, { rosterID: '4', wins: 9, losses: 5, ties: 0, fpts: 3540.64, fptsAgainst: 0, potentialPoints: 4272.05, division: 3 });
+});
+
+test("Toilet Bowl winner: the last round's main game, once played", () => {
+    const losers = [
+        { r: 1, m: 1, t1: 7, t2: 10, w: 10, l: 7 },
+        { r: 2, m: 3, t1_from: { w: 1 }, t2: 12, w: null },
+        { r: 2, m: 4, t1_from: { l: 1 }, t2: 9, w: 9, p: 3 },
+    ];
+    assert.equal(toiletBowlWinner(losers), null); // final not played yet
+    losers[1].w = 12;
+    assert.equal(toiletBowlWinner(losers), '12');
+    assert.equal(toiletBowlWinner([]), null);
 });

@@ -48,11 +48,8 @@
   );
 
   const ids = $derived(Object.keys(teams));
-  // ties: better record, then more points for
-  const tiebreak = (a, b) => {
-    const t = (id) => winPct(standings[id]) * 1e6 + (standings[id]?.fpts ?? 0);
-    return t(b) - t(a);
-  };
+  // ties: playoff seed, which already applies the league's tiebreakers (same as the Standings page)
+  const tiebreak = (a, b) => (standings[a]?.seed ?? 99) - (standings[b]?.seed ?? 99);
 
   const clickFor = (id) => (onTeamClick ? () => onTeamClick(id) : null);
 </script>

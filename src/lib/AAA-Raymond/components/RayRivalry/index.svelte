@@ -13,7 +13,7 @@
   import { goto } from "$app/navigation";
   import { leagueID as currentLeagueID } from "$lib/utils/leagueInfo";
   import { getAwards, getLeagueRecords, getLeagueTransactions, getNflState, loadPlayers, waitForAll } from "$lib/utils/helper";
-  import { getRosterIDFromManagerID, getRosterIDFromManagerIDAndYear, getTeamFromTeamManagers } from "$lib/utils/helperFunctions/universalFunctions";
+  import { getRosterIDFromManagerID, getRosterIDFromManagerIDAndYear, getTeamFromTeamManagers, getSeasonTeamFromTeamManagers } from "$lib/utils/helperFunctions/universalFunctions";
   import { leagueSeasons } from "../../utils/seasonData.js";
   import { seasonJson, seasonScores, isFinishedLeague } from "../../utils/savedSeasons.js";
   import { sleeperJson } from "../../utils/sleeperFetch.js";
@@ -58,7 +58,8 @@
   );
   const latestTeam = (id) => {
     const found = id ? getRosterIDFromManagerID(leagueTeamManagers, id) : null;
-    return found ? getTeamFromTeamManagers(leagueTeamManagers, found.rosterID, found.year) : null;
+    // the manager's own team as of their last season (for a former manager, the roster now has someone else's name)
+    return found ? getSeasonTeamFromTeamManagers(leagueTeamManagers, found.rosterID, found.year) : null;
   };
   const rosterOf = (id, year) => getRosterIDFromManagerIDAndYear(leagueTeamManagers, id, year);
   const teamIn = (rosterID, year) => (rosterID ? getTeamFromTeamManagers(leagueTeamManagers, rosterID, year) : null);

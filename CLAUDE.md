@@ -193,7 +193,10 @@ All data comes live from the public Sleeper API.
   better seed otherwise) and are projected by seed until it's set (`bracketIsSet`: regular season fully scored).
   Used by the Standings Pick column, the homepage Team Breakdown and the Drafts board's upcoming draft
   (`leagueDrafts.js` `buildFromScratch`, marked; its accuracy bar now counts weeks scored, not games).
-  `leagueContext.js` `loadWinnersBracket()` fetches the bracket only once it's set.
+  `leagueContext.js` `loadWinnersBracket()` fetches the bracket only once it's set. `TOILET_BOWL_PICK` +
+  `toiletBowlWinner(losersBracket)` (read like `leagueAwards.js`): the upcoming draft carries `extraPicks`
+  ([{ round: 3, pick: 13, label, rosterID|null }], from the 2027 draft on), drawn by `DraftBoard` as a full-width
+  strip after round 3 ("TBD" until the Toilet Bowl final).
 - `utils/weeklyRecap.js` — the weekly recap (`weeklyRecap`, `positionGroup`, `RECAP_POSITIONS`).
 - `utils/matchupEntries.js` also has the one-week helpers `pairMatchups` and `playedEntries`.
 - `utils/managerProfile.js` — Managers pages: career stats with ranks (records), trophies (award podiums; Sleeper's
@@ -261,6 +264,13 @@ All data comes live from the public Sleeper API.
   "Team <Sleeper username>" (the template used the user's display name, which leagueInfo.js replaces with the
   manager's real name).
 - Theme: `src/routes/+layout.svelte`, `src/app.html`, `src/lib/Nav/index.svelte`, `NavLarge.svelte`, `static/manifest.json`.
+- `src/lib/Footer.svelte`: hides the Blog link when `enableBlog` is off (like the nav; /blog answers 500).
+- News (Resources): `src/lib/utils/helperFunctions/news.js` only calls `/api/fetch_serverside_news`, which now also
+  fetches Reddit (blocked from the browser by CORS; usually blocked server-side too, so it adds nothing) and lets any
+  failed feed add nothing instead of breaking the section. Feed titles get HTML entities decoded (`decodeEntities`).
+- `src/routes/api/fetch_players_info/+server.js`: a projection entry without an opponent (player listed out that week)
+  gets it from that week's schedule built from every other entry (team -> opponent); bye weeks stay null. Browsers
+  keep player data 24 hours (`playersInfo` in localStorage), so fixes here show up after that.
 
 ### Template files no longer used (leave them unedited so template merges stay clean)
 - `src/lib/Transactions/Transactions.svelte`, `WaiverTransaction.svelte`, `TradeTransaction.svelte`, `TransactionMove.svelte`

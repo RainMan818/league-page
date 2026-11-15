@@ -9,14 +9,17 @@
   import { getTeamFromTeamManagers } from "$lib/utils/helperFunctions/universalFunctions";
   import { groupByDay, transactionSides } from "./transactionView.js";
 
-  let { transactions = [], players = {}, leagueTeamManagers, compact = false } = $props();
+  // allTransactions: the whole list this feed is a slice of (a page, the latest few), so each day's count is the
+  // day's real total: "8 of 11 waivers" when only some of them are shown here
+  let { transactions = [], allTransactions = null, players = {}, leagueTeamManagers, compact = false } = $props();
 
   const team = (rosterID, season) => getTeamFromTeamManagers(leagueTeamManagers, rosterID, season) ?? { name: `Team ${rosterID}` };
 
+  const dayTotals = $derived(Object.fromEntries(groupByDay(allTransactions ?? transactions).map((g) => [g.key, g.items.map((i) => i.transaction)])));
   const groups = $derived(
     groupByDay(transactions).map((g) => ({
       ...g,
-      countLabel: countLabel(g.items.map((i) => i.transaction)),
+      countLabel: countLabel(g.items.map((i) => i.transaction), dayTotals[g.key]),
       rows: g.items.map(({ transaction: t, when }) => ({
         id: t.id,
         trade: t.type === "trade",
@@ -30,12 +33,16 @@
     }))
   );
 
-  function countLabel(list) {
-    const trades = list.filter((t) => t.type === "trade").length;
-    const waivers = list.length - trades;
-    return [trades ? `${trades} trade${trades === 1 ? "" : "s"}` : "", waivers ? `${waivers} waiver${waivers === 1 ? "" : "s"}` : ""]
-      .filter(Boolean)
-      .join(" · ");
+  function countLabel(list, dayList = list) {
+    const count = (l, kind) => l.filter((t) => (kind === "trade" ? t.type === "trade" : t.type !== "trade")).length;
+    const part = (kind) => {
+      const shown = count(list, kind);
+      const total = Math.max(shown, count(dayList ?? list, kind));
+      if (!total) return "";
+      const noun = `${kind}${total === 1 ? "" : "s"}`;
+      return shown < total ? `${shown} of ${total} ${noun}` : `${total} ${noun}`;
+    };
+    return [part("trade"), part("waiver")].filter(Boolean).join(" · ");
   }
 
   const open = (side) => gotoManager({ year: side.season, leagueTeamManagers, rosterID: side.rosterID });

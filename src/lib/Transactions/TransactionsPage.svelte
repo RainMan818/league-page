@@ -271,7 +271,8 @@
 
 		<Pagination {perPage} total={totalTransactions} bind:page={page} target={top} scroll={false} />
 		<div class="transactions-child">
-			<TransactionFeed transactions={displayTransactions} {players} {leagueTeamManagers} />
+			<!-- AAA-Raymond: the filtered list too, so a day split across pages shows its real total ("8 of 11 waivers") -->
+			<TransactionFeed transactions={displayTransactions} allTransactions={subsetTransactions} {players} {leagueTeamManagers} />
 		</div>
 		<Pagination {perPage} total={totalTransactions} bind:page={page} target={top} scroll={true} />
 

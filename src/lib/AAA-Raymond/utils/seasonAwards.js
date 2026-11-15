@@ -508,7 +508,9 @@ export function postseasonAwards(input) {
         if (g.place === 1) return 'the final';
         if (g.place) return `the ${g.place === 3 ? '3rd' : `${g.place}th`}-place game`;
         const fromEnd = bracket.totalRounds - g.round;
-        return fromEnd === 1 ? 'the semifinals' : fromEnd === 2 ? 'the quarterfinals' : `playoff round ${g.round}`;
+        if (fromEnd === 1) return 'the semifinals';
+        if (g.round === 1 && bracket.byes?.length) return 'the wild card round'; // top seeds had byes
+        return fromEnd === 2 ? 'the quarterfinals' : `playoff round ${g.round}`;
     };
 
     // Bench blunder: a benched player who, swapped in for a starter at a slot he could play, flips a loss
@@ -614,6 +616,8 @@ export function playoffRoundName({ week, winnersBracket = [], playoffWeekStart, 
     for (let r = 1; r <= totalRounds; r++) {
         if (!roundWeeks(r, totalRounds, playoffWeekStart, playoffRoundType).includes(week)) continue;
         const fromEnd = totalRounds - r;
+        const hasByes = winnersBracket.some((m) => m.r > 1 && ((m.t1 != null && !m.t1_from) || (m.t2 != null && !m.t2_from)));
+        if (r === 1 && fromEnd > 1 && hasByes) return 'Wild Card'; // top seeds sit round 1 out
         return fromEnd === 0 ? 'Championship' : fromEnd === 1 ? 'Semifinals' : fromEnd === 2 ? 'Quarterfinals' : `Playoff round ${r}`;
     }
     return null;

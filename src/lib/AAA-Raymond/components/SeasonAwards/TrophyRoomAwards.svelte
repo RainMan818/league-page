@@ -25,7 +25,8 @@
 
   const teamFor = (id) => {
     const map = managers?.teamManagersMap;
-    const team = map?.[season]?.[id]?.team ?? map?.[managers?.currentSeason]?.[id]?.team;
+    // always the team's current name and avatar (Raymond's call), that season's if the roster is gone
+    const team = map?.[managers?.currentSeason]?.[id]?.team ?? map?.[season]?.[id]?.team;
     return team ? { name: team.name, avatar: team.avatar } : null;
   };
   const onTeamClick = (id) => {

@@ -41,12 +41,12 @@
   // a season picked under one switch may not exist under the other (no playoffs yet this year)
   const viewYear = $derived(year != null && years.includes(year) ? year : null);
 
-  // ---- names: the team (and manager) as it was that season; all-time rows use the current team
+  // ---- names: always the team's current name (Raymond's call); managers as they were that season
   const cur = $derived(leagueTeamManagers.currentSeason);
   const users = $derived(leagueTeamManagers.users ?? {});
   const tm = (rid, y) => leagueTeamManagers.teamManagersMap?.[y]?.[rid];
   const teamFor = (rid, y = cur) => {
-    const t = tm(rid, y)?.team ?? tm(rid, cur)?.team;
+    const t = tm(rid, cur)?.team ?? tm(rid, y)?.team;
     return { name: t?.name ?? `Team ${rid}`, avatar: t?.avatar ?? null };
   };
   const managerIDs = (rid, y = cur) => tm(rid, y)?.managers ?? [];

@@ -132,10 +132,15 @@ export function buildBracket(bracket = [], {
             : losersAdvanceDefault;
     }
 
+    // byes: a team placed straight into a later round (not fed by an earlier game) skipped round 1
+    const hasByes = (bracket ?? []).some((m) => m.r > 1 && ((m.t1 != null && !m.t1_from) || (m.t2 != null && !m.t2_from)));
     const roundName = (r) => {
         if (losers) return r === rounds ? (losersAdvance ? 'Toilet Bowl' : 'Consolation final') : `Round ${r}`;
         const fromEnd = rounds - r;
-        return fromEnd === 0 ? 'Championship' : fromEnd === 1 ? 'Semifinals' : fromEnd === 2 ? 'Quarterfinals' : `Round ${r}`;
+        if (fromEnd === 0) return 'Championship';
+        if (fromEnd === 1) return 'Semifinals';
+        if (r === 1 && hasByes) return 'Wild Card'; // the top seeds sit this round out (same name as the homepage projection)
+        return fromEnd === 2 ? 'Quarterfinals' : `Round ${r}`;
     };
     for (const g of Object.values(games)) {
         if (g.p && g.p > 1) g.label = `${ordinal(losers ? totalTeams - g.p : g.p)} place`;
