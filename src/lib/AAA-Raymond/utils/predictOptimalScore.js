@@ -1,7 +1,16 @@
 import { idpGroup } from './positions.js';
 
-export const predictScores = (players, week, leagueData) => {
+/**
+ * Best projected lineup for `week`: { score, picks: [{ slot, id }] } (one pick per starting slot that could be
+ * filled, in lineup order). predictScores is its score, so the max PF math everywhere stays the same.
+ */
+export const predictLineup = (players, week, leagueData) => {
     const starterPositions = getStarterPositions(leagueData);
+    const picks = [];
+    const take = (list, slot) => {
+        const picked = list.shift();
+        if (picked) picks.push({ slot, id: picked.id, p: parseFloat(picked.wi?.[week]?.p ?? 0) || 0 });
+    };
 
     // sort roster by highest projected points for that week
     const projectedPlayers = [...players].sort((a, b) => (b.wi && b.wi[week] ? b.wi[week].p : 0) - (a.wi && a.wi[week] ? a.wi[week].p : 0));
@@ -37,84 +46,84 @@ export const predictScores = (players, week, leagueData) => {
         const def = parseFloat(defs[0]?.wi && defs[0]?.wi[week] ? defs[0].wi[week].p : 0);
         switch (starterPosition) {
             case 'QB':
-                qbs.shift();
+                take(qbs, starterPosition);
                 powerScore += qb;
                 break;
             case 'RB':
-                rbs.shift();
+                take(rbs, starterPosition);
                 powerScore += rb;
                 break;
             case 'WR':
-                wrs.shift()
+                take(wrs, starterPosition);
                 powerScore += wr;
                 break;
             case 'TE':
-                tes.shift();
+                take(tes, starterPosition);
                 powerScore += te;
                 break;
             case 'DEF':
-                defs.shift();
+                take(defs, starterPosition);
                 powerScore += def;
                 break;
             case 'K':
-                ks.shift();
+                take(ks, starterPosition);
                 powerScore += k;
                 break;
             case 'DL':
-                dls.shift();
+                take(dls, starterPosition);
                 powerScore += dl;
                 break;
             case 'LB':
-                lbs.shift();
+                take(lbs, starterPosition);
                 powerScore += lb;
                 break;
             case 'DB':
-                dbs.shift();
+                take(dbs, starterPosition);
                 powerScore += db;
                 break;
             // Start of flex players
             case 'FLEX':
                 if (rb >= wr && rb >= te) {
-                    rbs.shift();
+                    take(rbs, starterPosition);
                     powerScore += rb;
                 } else if (wr >= rb && wr >= te) {
-                    wrs.shift();
+                    take(wrs, starterPosition);
                     powerScore += wr;
                 } else {
-                    tes.shift();
+                    take(tes, starterPosition);
                     powerScore += te;
                 }
                 break;
             case 'WRRB_FLEX':
                 if (rb >= wr) {
-                    rbs.shift();
+                    take(rbs, starterPosition);
                     powerScore += rb;
                 } else {
-                    wrs.shift();
+                    take(wrs, starterPosition);
                     powerScore += wr;
                 }
                 break;
             case 'SUPER_FLEX':
                 if (qb >= wr && qb >= te && qb >= rb) {
-                    qbs.shift();
+                    take(qbs, starterPosition);
                     powerScore += qb;
                 } else if (rb >= wr && rb >= te && rb >= qb) {
-                    rbs.shift();
+                    take(rbs, starterPosition);
                     powerScore += rb;
                 } else if (wr >= rb && wr >= te && wr >= qb) {
-                    wrs.shift();
+                    take(wrs, starterPosition);
                     powerScore += wr;
                 } else {
-                    tes.shift();
+                    take(tes, starterPosition);
                     powerScore += te;
                 }
                 break;
             case 'REC_FLEX':
                 if (wr >= te) {
-                    wrs.shift();
+                    take(wrs, starterPosition);
                     powerScore += wr;
                 } else {
-                    tes.shift();
+                    take(tes, starterPosition);
                     powerScore += te;
                 }
                 break;
@@ -122,13 +131,13 @@ export const predictScores = (players, week, leagueData) => {
             case 'IDP_FLEX':
             case 'IDP':
                 if (dl >= lb && dl >= db) {
-                    dls.shift();
+                    take(dls, starterPosition);
                     powerScore += dl;
                 } else if (lb >= dl && lb >= db) {
-                    lbs.shift();
+                    take(lbs, starterPosition);
                     powerScore += lb;
                 } else {
-                    dbs.shift();
+                    take(dbs, starterPosition);
                     powerScore += db;
                 }
                 break;
@@ -136,8 +145,10 @@ export const predictScores = (players, week, leagueData) => {
                 break;
         }
     }
-    return powerScore;
+    return { score: powerScore, picks };
 }
+
+export const predictScores = (players, week, leagueData) => predictLineup(players, week, leagueData).score;
 
 export const getStarterPositions = (leagueData) => {
     const rosterPositions = leagueData.roster_positions;

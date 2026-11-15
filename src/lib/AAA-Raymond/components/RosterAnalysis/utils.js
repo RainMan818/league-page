@@ -1,5 +1,6 @@
 import ColorScale from "color-scales";
 import { colorsGYR } from "../../utils/colorScale.js";
+import { rosterGroup, OFFENSE_GROUPS } from "../../utils/rosterBreakdown.js";
 
 export function getAgeData(managerData, rosters) {
   return {
@@ -103,11 +104,13 @@ export function getColorScales(min, max) {
 }
 
 function getAverage(numArray) {
-  const total = numArray.reduce((total, num) => {
+  // players without a known age still count as players, but not toward the average
+  const known = numArray.filter((n) => n != null && isFinite(n));
+  const total = known.reduce((total, num) => {
     total += num;
     return total;
   }, 0);
-  const average = total / numArray.length;
+  const average = total / known.length;
   if (isNaN(average)) {
     return 0;
   }
@@ -151,11 +154,12 @@ export function digestData(passedPlayers, rawPlayers, playerScores) {
   if (!rawPlayers) return ageLists;
 
   for (const singlePlayer of rawPlayers) {
-    let player = {};
-
-    if (singlePlayer == "0") {
-      continue;
-    }
+    if (singlePlayer == "0") continue;
+    const player = passedPlayers[singlePlayer];
+    // one grouping rule for the site (utils/positions.js): listed position first, so a DE counts as DL
+    // and DL players count on defense (they used to be added to offense)
+    const group = rosterGroup(player);
+    if (!group) continue;
 
     let coefficientOfVariation;
     if (playerScores[singlePlayer]) {
@@ -163,77 +167,12 @@ export function digestData(passedPlayers, rawPlayers, playerScores) {
       const stdDeviation = standardDeviation(singePlayerScores);
       const averagePoints = Math.max(getAverage(singePlayerScores), 0);
       coefficientOfVariation = stdDeviation / averagePoints;
-    } else {
-      console.error("singlePlayer err", singlePlayer)
     }
-    const positions = passedPlayers[singlePlayer]?.positions || passedPlayers[singlePlayer]?.pos;
-    const age = passedPlayers[singlePlayer].age;
-
-    ageLists.Team.push(age);
-    if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Team.push(coefficientOfVariation);
-    if (positions?.length === 2) {
-      if (positions.includes("DL")) {
-        ageLists.DL.push(age);
-        if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.DL.push(coefficientOfVariation);
-        ageLists.Def.push(age);
-        if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Def.push(coefficientOfVariation);
-        continue;
-      } else if (positions.includes("DB")) {
-        ageLists.DB.push(age);
-        if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.DB.push(coefficientOfVariation);
-        ageLists.Def.push(age);
-        if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Def.push(coefficientOfVariation);
-        continue;
-      }
-    }
-    if (positions.includes("QB")) {
-      ageLists.QB.push(age);
-      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.QB.push(coefficientOfVariation);
-      ageLists.Off.push(age);
-      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Off.push(coefficientOfVariation);
-      continue;
-    }
-    if (positions.includes("RB")) {
-      ageLists.RB.push(age);
-      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.RB.push(coefficientOfVariation);
-      ageLists.Off.push(age);
-      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Off.push(coefficientOfVariation);
-      continue;
-    }
-    if (positions.includes("WR")) {
-      ageLists.WR.push(age);
-      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.WR.push(coefficientOfVariation);
-      ageLists.Off.push(age);
-      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Off.push(coefficientOfVariation);
-      continue;
-    }
-    if (positions.includes("TE")) {
-      ageLists.TE.push(age);
-      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.TE.push(coefficientOfVariation);
-      ageLists.Off.push(age);
-      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Off.push(coefficientOfVariation);
-      continue;
-    }
-    if (positions.includes("DL")) {
-      ageLists.DL.push(age);
-      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.DL.push(coefficientOfVariation);
-      ageLists.Off.push(age);
-      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Off.push(coefficientOfVariation);
-      continue;
-    }
-    if (positions.includes("LB")) {
-      ageLists.LB.push(age);
-      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.LB.push(coefficientOfVariation);
-      ageLists.Def.push(age);
-      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Def.push(coefficientOfVariation);
-      continue;
-    }
-    if (positions.includes("DB")) {
-      ageLists.DB.push(age);
-      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.DB.push(coefficientOfVariation);
-      ageLists.Def.push(age);
-      if (isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation)) cvData.Def.push(coefficientOfVariation);
-      continue;
+    const validCv = isFinite(coefficientOfVariation) && !isNaN(coefficientOfVariation);
+    const side = OFFENSE_GROUPS.includes(group) ? "Off" : "Def";
+    for (const key of ["Team", side, group]) {
+      ageLists[key].push(player.age);
+      if (validCv) cvData[key].push(coefficientOfVariation);
     }
   }
 

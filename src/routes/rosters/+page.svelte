@@ -1,9 +1,9 @@
 <script>
-	import LinearProgress from '@smui/linear-progress';
-	import { Rosters, RosterAnalysis } from '$lib/components'
+	// AAA-Raymond: the Rosters page is our redesign (team strip, lineup, position breakdown, depth chart, picks;
+	// "All teams" shows Roster analysis). The template's Rosters cards are no longer used here.
+	import RayRosters from '$lib/AAA-Raymond/components/RayRosters/index.svelte';
 
 	export let data;
-	const rostersInfo = data.rostersInfo;
 </script>
 
 <style>
@@ -11,28 +11,8 @@
 		position: relative;
 		z-index: 1;
 	}
-	.loading {
-		display: block;
-		width: 85%;
-		max-width: 500px;
-		margin: 80px auto;
-	}
 </style>
 
 <div class="holder">
-	<RosterAnalysis standingsData={data.standingsData} />
-
-	{#await rostersInfo}
-		<div class="loading">
-			<p>Retrieving roster data...</p>
-			<br />
-			<LinearProgress indeterminate />
-		</div>
-	{:then [leagueData, rosterData, leagueTeamManagers, playersInfo]}
-		<!-- promise was fulfilled -->
-		<Rosters {leagueData} {rosterData} {leagueTeamManagers} {playersInfo} /> <!-- displays rosters -->
-	{:catch error}
-		<!-- promise was rejected -->
-		<p>Something went wrong: {error.message}</p>
-	{/await}
+	<RayRosters standingsData={data.standingsData} />
 </div>

@@ -16,7 +16,7 @@ All data comes live from the public Sleeper API.
 ## League facts
 - Sleeper league ID `1314319869289717760`, set in `src/lib/utils/leagueInfo.js` with manager bios
 - 12 teams, dynasty, half-PPR, superflex, IDP, **3 divisions of 4** (Sleeper settings), plus a weekly
-  league-median game (records are 2 games per week). The constitution text still describes 2 divisions.
+  league-median game (records are 2 games per week). The rules are on the Constitution page.
 - Starting lineup (Sleeper `roster_positions`): QB, RB×2, WR×2, TE, FLEX×3, SUPER_FLEX, IDP_FLEX, DL×3, LB×3, DB×3.
   Code reads the lineup from `roster_positions`; nothing hard-codes slot indexes any more.
 
@@ -35,7 +35,7 @@ All data comes live from the public Sleeper API.
   current league is never saved. Use `seasonJson(path, finished)` for any new past-season download.
   Measured Nov 12 2026 (fresh page load after the first visit, browser): Home 20, Matchups 18 (+2 for the playoff
   bracket, +3 for a past season's), Standings / Trends /
-  Rosters / Managers 18, Drafts 8, a manager page 20, Trades & Waivers / Records / Rivalry 6 (72 with two managers
+  Managers 18, Rosters 19 (18 + the league's `traded_picks`, measured Nov 14), Drafts 8, a manager page 20, Trades & Waivers / Records / Rivalry 6 (72 with two managers
   picked), Trophy Room 4; 238 for one load of every page (1,318 before the request work started).
 
 ### Pages
@@ -111,18 +111,41 @@ All data comes live from the public Sleeper API.
   week (`last_scored_leg`), the season changes or `RECORDS_CACHE_VERSION` in `utils/recordsCache.js` is bumped (bump it
   whenever the records math changes). A rebuild downloads every week of every season (about 90 Sleeper requests);
   records are never built on the server.
-- **Rosters** — `RosterAnalysis` at the top of the page (age, count and spread by position).
+- **Rosters** — `RayRosters/index.svelte` (option B, revised; rendered by `src/routes/rosters/+page.svelte`). Team
+  strip in seed order (URL `?team=<rosterID>`, remembered in localStorage `rr-rosters-team`; "All teams" shows the old
+  `RosterAnalysis` table and charts), then one team: header (manager, record, seed, PF; players, taxi / IR, future
+  picks), starting lineup (Sleeper's current lineup, slot chips softly tinted in the position colors, flex slots as
+  gradients, no points), position breakdown (points per week by player position and by lineup slot from the Standings
+  position averages, then average age, then players; each with the league average and rank, pink = highest / cyan =
+  lowest), depth chart and draft picks. Depth chart "starting" = the best lineup from **season-level** projections:
+  projected points per game over the rest of the regular season (at least 4 weeks), byes skipped
+  (`seasonProjection` + `predictLineup`), so a bye week never benches a starter; no projections (offseason) → Sleeper's
+  current lineup. Math in `utils/rosterBreakdown.js` (`tests/rosterBreakdown.test.js`). `RosterAnalysis/utils.js`
+  groups players the same way (`rosterGroup`; single-position DL players used to be counted on offense).
 - **Managers** (`/managers`) and **manager pages** (`/manager?manager=N`, N = index in leagueInfo.js `managers`) —
   `RayManagers/ManagersList` (option A "trading cards": team, years in the league, favorite NFL team, all-time
   record, titles, this season's record; sort by league order / titles / all-time win % / this season) and
   `RayManagers/ManagerPage` (banner with facts, bio and previous/next; tiles for all-time, playoffs, titles, points
-  for and this season; trophy case + league records; profile; starting lineup with bench / IR & taxi; recent moves,
-  expandable to all of them). Swapped in for the template's `AllManagers` / `Manager` in `components.js`.
+  for and this season; trophy case + league records; profile; "Season by season" charts (`RayManagers/SeasonCharts`:
+  wins as bars from zero, head-to-head only (the weekly median game is left out, Raymond's call: `h2hWins` etc.),
+  points for and max PF as zoomed lines, each with league rank and league average, hover tooltip, table view;
+  regular season, finished seasons the manager ran only, from `seasonHistory()` over `leagueRosterRecords`; the current season joins once Sleeper's league status is `complete`); starting lineup with
+  offense in the left column and defense in the right (`rosterLineup` returns `offense` / `defense`), then taxi
+  always shown and Bench and IR as separate sections collapsed by default; recent moves, expandable to all of them).
+  Swapped in for the template's `AllManagers` / `Manager` in `components.js`.
   Placeholder bios ("Lorem ipsum...", "TODO") are hidden. **Manager pages count per manager** (Raymond's call):
   career numbers come from `leagueManagerRecords`, so a manager's page shows only the seasons they ran the team
   (unlike Records, which counts per team). Numbers in `utils/managerProfile.js`
   (`tests/managerProfile.test.js`); site glue (team managers, standings places, NFL team names) in
   `RayManagers/managerInfo.js`.
+- **Constitution** (`/constitution`, prerendered) — `RayConstitution`. **The rules text lives in
+  `RayConstitution/content.js`** (sections → subsections → blocks: `p`, `list`, `steps`, `table`, `note`, `example`;
+  simple HTML allowed; `isNew: true` tags a rule "New" and links it from the top). `index.svelte` is layout only: key
+  facts strip (`GLANCE`), "New this season" links, sticky contents column with scroll highlight (a collapsible Contents
+  box under 1000px), numbered section cards; every rule number links to itself (`#taxi-2`). Rewritten Nov 14 2026 from
+  the league's pinned Sleeper messages plus live Sleeper settings (lineup, 22 bench, 4 IR, 6 taxi ≤2 yrs, $100 FAAB,
+  6 veto votes, no trade deadline, 6-round linear rookie draft, scoring). Dues are $70 ($50 pot + $20 in-season
+  payouts); `dues` in leagueInfo.js (50) is no longer used by this page.
 - **Error page** (404, 500, ...) — `RayError` (wired in by `src/routes/+error.svelte`): the status code in the logo's
   chrome block letters (`RayError/codeSvg.js`, built from `OutrunLogo/glyphs.js`, which now has the digits 0–9) over a
   neon sun and a rolling grid horizon (a dark sky in both themes, like the header; the grid stops under
@@ -145,6 +168,11 @@ All data comes live from the public Sleeper API.
 - `utils/positions.js` — position grouping (DE→DL, CB→DB, …: `groupOf`, `playerGroup`, `idpGroup`), position colors
   (`posColor` → `--or-pos-*`, Sleeper's colors) and `playerPhoto`. Use it instead of writing new position maps.
 - `utils/positionAverages.js` — per-week averages by lineup slot / player position, from `roster_positions`.
+- `utils/predictOptimalScore.js` — `predictLineup(players, week, leagueData)` = best projected lineup
+  (`{ score, picks: [{ slot, id, p }] }`, players need an `id`); `predictScores` is its score (max PF everywhere).
+- `utils/rosterBreakdown.js` — Rosters page: `rosterAgeCounts` (players / average age per position, `rosterGroup`
+  = listed position first), `leagueRanks` (average + dense rank, 1 = highest), `rankShade`, `projectionWeeks` /
+  `seasonProjection`, `depthChart`, `pickSeasons` / `ownedPicks` (future picks from `traded_picks`).
 - `utils/leagueTrends.js` — week-by-week series for the Trends page (place via `seedTeams`, record incl. median game,
   PF, max PF via `predictScores`, efficiency, all-play, position / OFF / DEF averages) from `standings.matchups`.
   `placesByWeek()` + `movesForWeek()` give the recap's Movers; both share one record/seeding loop with `leagueTrends()`.
@@ -157,7 +185,7 @@ All data comes live from the public Sleeper API.
 - `utils/weeklyRecap.js` — the weekly recap (`weeklyRecap`, `positionGroup`, `RECAP_POSITIONS`).
 - `utils/matchupEntries.js` also has the one-week helpers `pairMatchups` and `playedEntries`.
 - `utils/managerProfile.js` — Managers pages: career stats with ranks (records), trophies (award podiums), league
-  record-book places, lineup slots / bench, placeholder-bio check.
+  record-book places, season-by-season history (`seasonHistory`), lineup slots / bench, placeholder-bio check.
 - `utils/seasonAwards.js` — end-of-season award math (plain functions, `tests/seasonAwards.test.js`). Player awards
   count points scored in a starting lineup. Waiver Wizard and the Pickups credit each start to how the
   team got that player (latest waiver, free-agent, trade or commissioner add in a leg <= that week; otherwise
@@ -194,8 +222,8 @@ All data comes live from the public Sleeper API.
   the playoffs too), buttons renamed Championship / Toilet Bowl, no `bracketsData`, and Regular Season goes back to
   the week you were on (else the current week) instead of week 1; `src/routes/matchups/+page.js`
   no longer loads `getBrackets()`.
-- Wiring: `src/routes/+page.svelte`, `src/routes/+error.svelte`, `src/routes/awards/` (season awards only), `src/routes/standings/+page.js` (passes `fetch`), `src/routes/trends/` (new), `src/routes/rosters/+page.js`
-  and `+page.svelte`, `src/lib/components.js`, `src/lib/utils/helper.js`, `src/lib/utils/tabs.js` (nav tabs),
+- Wiring: `src/routes/+page.svelte`, `src/routes/+error.svelte`, `src/routes/constitution/+page.svelte`, `src/routes/awards/` (season awards only), `src/routes/standings/+page.js` (passes `fetch`), `src/routes/trends/` (new), `src/routes/rosters/+page.js`
+  (standings only) and `+page.svelte` (renders `RayRosters`), `src/lib/components.js`, `src/lib/utils/helper.js`, `src/lib/utils/tabs.js` (nav tabs),
   `src/lib/Matchups/MatchupsAndBrackets.svelte`, `src/lib/Drafts/index.svelte`,
   `src/lib/Transactions/TransactionsPage.svelte`.
 - `src/lib/utils/helperFunctions/leagueMatchups.js` keeps extra fields per team (`players`, `playersPoints`,
@@ -204,7 +232,9 @@ All data comes live from the public Sleeper API.
 - `src/lib/utils/helperFunctions/leagueRecords.js` `analyzeRosters`: points per game is points per WEEK (games ÷ 2 when
   the league plays the median game; 2026 seasons were halved before). `getLeagueRecords`: the in-session check looks at
   `regularSeasonData` (it checked a key one level down and never matched), saved records carry `meta` and stay fresh
-  until a new week is scored (`utils/recordsCache.js`), and nothing is built on the server.
+  until a new week is scored (`utils/recordsCache.js`), and nothing is built on the server. `processRegularSeason`
+  also saves each team-season's head-to-head record without the median game (`h2hWins` / `h2hLosses` / `h2hTies`,
+  from `recordBook.js` `headToHeadRecords`; `RECORDS_CACHE_VERSION` 3). Sleeper's `wins`/`losses` include the median.
 - Every file in `src/lib/utils/helperFunctions/` that calls Sleeper imports `sleeperFetch` instead of `fetch` (marked).
 - `src/lib/utils/helperFunctions/leagueTransactions.js`: the saved-copy top-up (entries carry `league`, `leg`, `ts`;
   `computeTotals` split out; newest-first order with a transaction-ID tie-break).
@@ -227,6 +257,7 @@ All data comes live from the public Sleeper API.
 - `src/lib/Records/` (`index`, `AllTimeRecords`, `PerSeasonRecords`, `RecordsAndRankings`, `RecordTeam`)
 - `src/lib/PowerRankings/index.svelte`, `PowerRankingsDisplay.svelte`
 - `src/lib/Standings/` (the /standings route uses `RayStandings`)
+- `src/lib/Rosters/` (`Rosters`, `RosterSorter`, `Roster`, `RosterRow`; the /rosters route uses `RayRosters`)
 - `src/lib/utils/helperFunctions/leagueStandings.js` and `predictOptimalScore.js` (old copies; should eventually be
   restored to the upstream versions)
 
