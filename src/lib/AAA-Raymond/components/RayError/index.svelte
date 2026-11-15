@@ -1,16 +1,15 @@
 <!--
   Error page (404, 500, ...), wired in by src/routes/+error.svelte.
-  The status code in chrome block letters (codeSvg.js, same letters as the site logo) over a neon sun and a rolling
-  grid horizon, then what happened and where to go next. The scene is a dark sky in both themes, like the header.
+  "Wide right": neon goalposts on a starry night field, a dashed kick path and a football sailing past the right
+  upright, with the status code in outlined Orbitron beside "NO GOOD". Then what happened and where to go next.
+  Deliberately not the header's look (no sun, no grid, no chrome letters). The scene is dark in both themes.
 -->
 <script>
   import { page } from "$app/state";
-  import { codeSvg } from "./codeSvg.js";
 
   const status = $derived(page.status || 500);
   const notFound = $derived(status === 404);
   const serverSide = $derived(status >= 500);
-  const path = $derived(page.url?.pathname ?? "");
   // SvelteKit's own messages ("Not Found", "Internal Error") add nothing to the copy below; show anything else
   const detail = $derived.by(() => {
     const m = page.error?.message?.trim();
@@ -19,13 +18,11 @@
 
   const copy = $derived(
     notFound
-      ? { kicker: `Hut, hut, blue ${status}!`, title: "Page not found", text: "That page isn't in the playbook. It may have moved, or the link has a typo." }
+      ? { kicker: "Wide right", title: "Page not found", text: "That page isn't in the playbook. It may have moved, or the link has a typo." }
       : serverSide
         ? { kicker: "Flag on the play", title: "Something broke", text: "The site hit an error loading this page. Sleeper can be slow to answer, so give it a minute and try again." }
         : { kicker: "Flag on the play", title: "Can't open this page", text: "This page couldn't be shown." }
   );
-
-  const svg = $derived(codeSvg(status));
 
   function back() {
     if (history.length > 1) history.back();
@@ -39,10 +36,44 @@
 
 <div class="rr-errPage">
   <div class="rr-errScene">
-    <div class="rr-errStars"></div>
-    <div class="rr-errSun"></div>
-    <div class="rr-errFloor"><div class="rr-errGrid"></div></div>
-    <div class="rr-errCode">{@html svg}</div>
+    <svg viewBox="0 0 760 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Error {status}: a field goal sailing wide right of the uprights">
+      <defs>
+        <filter id="rre-glowCyan" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="4" result="b" />
+          <feMerge><feMergeNode in="b" /><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+        <filter id="rre-glowPink" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="3.5" result="b" />
+          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+        <linearGradient id="rre-turf" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stop-color="#2a0a4a" />
+          <stop offset="1" stop-color="#0a0218" />
+        </linearGradient>
+      </defs>
+
+      <!-- field -->
+      <rect x="0" y="322" width="760" height="38" fill="url(#rre-turf)" />
+      <line x1="0" y1="322" x2="760" y2="322" stroke="#b537f2" stroke-width="2" opacity="0.7" />
+
+      <!-- goalposts: post, gooseneck, crossbar, uprights; pink pad at the base -->
+      <g stroke="#05d9e8" stroke-width="7" stroke-linecap="round" fill="none" filter="url(#rre-glowCyan)">
+        <path d="M380 322 V214 Q380 200 366 200 H250 M366 200 H510 M250 200 V36 M510 200 V36" />
+      </g>
+      <rect x="370" y="268" width="20" height="54" rx="3" fill="none" stroke="#ff2a6d" stroke-width="3" filter="url(#rre-glowPink)" />
+
+      <!-- the kick: dashed path, then the ball just outside the right upright -->
+      <path class="rr-errPath" d="M368 352 C 392 236, 470 140, 560 112" fill="none" stroke="#ffeaf6" stroke-width="3" stroke-dasharray="10 18" stroke-linecap="round" opacity="0.8" />
+      <g class="rr-errBall" filter="url(#rre-glowPink)">
+        <ellipse cx="576" cy="106" rx="20" ry="12" transform="rotate(-24 576 106)" fill="#1a0630" stroke="#ff2a6d" stroke-width="3.5" />
+        <path d="M562 106 H590 M567 101.5 V110.5 M573 101.5 V110.5 M579 101.5 V110.5 M585 101.5 V110.5" transform="rotate(-24 576 106)" stroke="#ffeaf6" stroke-width="2" stroke-linecap="round" />
+        <path d="M604 92 H636 M608 104 H650 M604 116 H630" stroke="#ff2a6d" stroke-width="3" stroke-linecap="round" opacity="0.7" />
+      </g>
+
+      <!-- status code -->
+      <text x="40" y="150" class="rr-errCode" font-size="82" fill="none" stroke="#ff2a6d" stroke-width="3" filter="url(#rre-glowPink)">{status}</text>
+      <text x="42" y="186" class="rr-errCall" font-size="17" fill="#7ff6ff">NO GOOD</text>
+    </svg>
   </div>
 
   <p class="rr-errKicker">{copy.kicker}</p>
@@ -60,7 +91,6 @@
       <button type="button" class="rr-btn" onclick={back}>Go back</button>
     {/if}
   </div>
-
 </div>
 
 <style>
@@ -71,35 +101,15 @@
     margin: 0 auto;
     padding: 32px 16px 5em;
     text-align: center;
-
-    /* scene colors: a dark sky in both themes (like the header) */
-    --rre-sky: linear-gradient(180deg, #070114 0%, #1a0638 55%, #3a0d52 100%);
-    --rre-floor: linear-gradient(180deg, #2a0846 0%, #10031f 100%);
-    --rre-line: rgba(255, 42, 109, 0.75);
-    --rre-horizon: #ff2a6d;
   }
 
-  :global(html[data-theme="day"]) .rr-errPage {
-    --rre-sky: linear-gradient(180deg, #2c0b52 0%, #7b1f74 50%, #e0457b 82%, #ff9e5e 100%);
-    --rre-floor: linear-gradient(180deg, #3a0d52 0%, #1d0636 100%);
-    --rre-line: rgba(255, 158, 94, 0.8);
-    --rre-horizon: #ffb36b;
-  }
-
-  /* ---------- scene ---------- */
+  /* ---------- scene (dark in both themes) ---------- */
   .rr-errScene {
     position: relative;
-    height: 330px;
+    aspect-ratio: 760 / 360;
     border-radius: 16px;
     overflow: hidden;
-    background: var(--rre-sky);
-    border: 1px solid var(--or-table-border, rgba(181, 55, 242, 0.38));
-    box-shadow: 0 0 30px var(--or-glow-pink, rgba(255, 42, 109, 0.4)), 0 10px 40px rgba(0, 0, 0, 0.35);
-  }
-
-  .rr-errStars {
-    position: absolute;
-    inset: 0 0 40% 0;
+    background-color: #0a0218;
     background-image:
       radial-gradient(1.5px 1.5px at 12% 22%, #fff 50%, transparent 51%),
       radial-gradient(1px 1px at 28% 12%, #ffd6f0 50%, transparent 51%),
@@ -108,85 +118,61 @@
       radial-gradient(1.5px 1.5px at 78% 26%, #ffd6f0 50%, transparent 51%),
       radial-gradient(1px 1px at 90% 14%, #c9fdff 50%, transparent 51%),
       radial-gradient(1px 1px at 6% 46%, #fff 50%, transparent 51%),
-      radial-gradient(1px 1px at 94% 44%, #fff 50%, transparent 51%);
-    opacity: 0.85;
+      radial-gradient(1px 1px at 94% 44%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 20% 60%, #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 70% 58%, #ffd6f0 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 54% 72%, #c9fdff 50%, transparent 51%),
+      radial-gradient(1px 1px at 84% 80%, #fff 50%, transparent 51%);
+    border: 1px solid var(--or-table-border, rgba(181, 55, 242, 0.38));
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35), 0 0 30px rgba(5, 217, 232, 0.18);
   }
 
-  /* the sun: sunset gradient with widening slits toward the horizon */
-  .rr-errSun {
+  .rr-errScene svg {
     position: absolute;
-    left: 50%;
-    bottom: 34%;
-    width: 270px;
-    height: 270px;
-    transform: translate(-50%, 22%);
-    border-radius: 50%;
-    background: linear-gradient(180deg, #ffe27a 0%, #ffb347 30%, #ff6a5e 55%, #ff2a6d 75%, #b537f2 100%);
-    box-shadow: 0 0 60px rgba(255, 106, 94, 0.55);
-    -webkit-mask-image: linear-gradient(180deg, #000 0 46%, transparent 46% 49%, #000 49% 57%, transparent 57% 61%, #000 61% 68%, transparent 68% 73%, #000 73% 79%, transparent 79% 85%, #000 85%);
-    mask-image: linear-gradient(180deg, #000 0 46%, transparent 46% 49%, #000 49% 57%, transparent 57% 61%, #000 61% 68%, transparent 68% 73%, #000 73% 79%, transparent 79% 85%, #000 85%);
+    inset: 0;
+    width: 100%;
+    height: 100%;
   }
 
-  /* the floor covers the bottom of the sun; the grid rolls toward the viewer */
-  .rr-errFloor {
-    position: absolute;
-    inset: 66% 0 0 0;
-    overflow: hidden;
-    background: var(--rre-floor);
-    border-top: 2px solid var(--rre-horizon);
-    box-shadow: 0 0 18px var(--rre-horizon);
-    perspective: 240px;
-  }
-
-  .rr-errGrid {
-    position: absolute;
-    left: -100%;
-    width: 300%;
-    top: 0;
-    height: 220%;
-    transform-origin: top center;
-    transform: rotateX(68deg);
-    background-image:
-      linear-gradient(var(--rre-line) 2px, transparent 2px),
-      linear-gradient(90deg, var(--rre-line) 2px, transparent 2px);
-    background-size: 46px 46px;
-    background-position: center 0;
-    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%);
-    mask-image: linear-gradient(180deg, transparent 0%, #000 22%);
-    animation: rr-errRoll 1.4s linear infinite;
-  }
-
-  @keyframes rr-errRoll {
-    to {
-      background-position: center 46px;
-    }
+  .rr-errCode,
+  .rr-errCall {
+    font-family: "Orbitron", "Eurostile", "Arial Black", sans-serif;
   }
 
   .rr-errCode {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: min(380px, 78%);
-    transform: translate(-50%, -50%);
-    line-height: 0;
-    animation: rr-errFloat 4s ease-in-out infinite;
+    font-weight: 900;
   }
 
-  .rr-errCode :global(svg) {
-    width: 100%;
-    height: auto;
-    overflow: visible;
+  .rr-errCall {
+    font-weight: 700;
+    letter-spacing: 6px;
   }
 
-  @keyframes rr-errFloat {
+  /* the dashes march along the kick path; the ball bobs */
+  .rr-errPath {
+    animation: rr-errMarch 1.2s linear infinite;
+  }
+
+  @keyframes rr-errMarch {
+    to {
+      stroke-dashoffset: -28;
+    }
+  }
+
+  .rr-errBall {
+    transform-origin: 576px 106px;
+    animation: rr-errBob 2.4s ease-in-out infinite;
+  }
+
+  @keyframes rr-errBob {
     50% {
-      transform: translate(-50%, calc(-50% - 6px));
+      transform: translate(4px, -4px) rotate(-8deg);
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .rr-errGrid,
-    .rr-errCode {
+    .rr-errPath,
+    .rr-errBall {
       animation: none;
     }
   }
@@ -219,21 +205,10 @@
     line-height: 1.5;
   }
 
-  .rr-errPath,
   .rr-errDetail {
     margin: 12px auto 0;
     font-size: 0.85em;
     color: var(--or-muted, var(--g999));
-  }
-
-  .rr-errPath code {
-    padding: 2px 8px;
-    border-radius: 6px;
-    border: 1px solid var(--or-table-border, var(--ccc));
-    background: var(--fff);
-    color: var(--or-pink, var(--blueOne));
-    font-size: 0.95em;
-    overflow-wrap: anywhere;
   }
 
   /* ---------- actions ---------- */
@@ -286,13 +261,6 @@
   }
 
   @media (max-width: 800px) {
-    .rr-errScene {
-      height: 250px;
-    }
-    .rr-errSun {
-      width: 190px;
-      height: 190px;
-    }
     h1.rr-pageTitle {
       font-size: 1.5rem;
     }

@@ -1,7 +1,7 @@
 // Run with: npm test
 import assert from 'assert/strict';
 import { test } from 'node:test';
-import { parseTransactionDate, transactionSides, groupByDay, sortNewestFirst } from '../src/lib/AAA-Raymond/components/RayTransactions/transactionView.js';
+import { parseTransactionDate, transactionSides, groupByDay, sortNewestFirst, dayCountLabel } from '../src/lib/AAA-Raymond/components/RayTransactions/transactionView.js';
 
 const players = {
     1: { fn: 'Sam', ln: 'Roush', pos: 'TE', t: 'CHI' },
@@ -46,4 +46,16 @@ test('grouping by day and newest-first sorting', () => {
     const g = groupByDay([waiver, { ...waiver, id: 'w2', date: 'Nov 8 2026, 6:00AM' }, trade]);
     assert.deepEqual(g.map((x) => `${x.label}:${x.items.length}`), ['Sun, Nov 8:2', 'Tue, Oct 13:1']);
     assert.deepEqual(sortNewestFirst([trade, waiver]).map((t) => t.id), ['w', 't']);
+});
+
+test('day count: the day\'s real totals, and kinds with nothing shown are left out', () => {
+    const trade = { type: 'trade' }, waiver = { type: 'waiver' }, fa = { type: 'free_agent' };
+    assert.equal(dayCountLabel([trade, waiver, fa]), '1 trade · 2 waivers');
+    // a page shows 8 of the day's 11 waivers
+    const day = Array.from({ length: 11 }, () => waiver);
+    assert.equal(dayCountLabel(day.slice(0, 8), day), '8 of 11 waivers');
+    // the homepage shows the day's trade but none of its 5 waivers: no "0 of 5 waivers"
+    assert.equal(dayCountLabel([trade], [trade, ...day.slice(0, 5)]), '1 trade');
+    assert.equal(dayCountLabel([trade], [trade, trade]), '1 of 2 trades');
+    assert.equal(dayCountLabel([]), '');
 });

@@ -4,6 +4,7 @@ import { json } from '@sveltejs/kit';
 // AAA-Raymond: Reddit is fetched here (it blocks browser requests), and a feed that fails adds nothing instead of
 // breaking the response
 import { processReddit } from '$lib/utils/helperFunctions/news';
+import { decodeEntities } from '$lib/AAA-Raymond/utils/feedText.js';
 
 const REDDIT_DYNASTY = 'https://www.reddit.com/r/DynastyFF/new.json';
 const REDDIT_FANTASY = 'https://www.reddit.com/r/fantasyfootball/new.json';
@@ -46,13 +47,6 @@ const getXMLArticles = async(url, callback) => {
         return [];
     }
 }
-
-// AAA-Raymond: feed titles arrive with HTML entities ("&#124;", "&amp;"); the page shows titles as plain text
-const NAMED = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
-const decodeEntities = (text) => String(text ?? '').replace(/&(#x[\da-f]+|#\d+|\w+);/gi, (m, code) => {
-    if(code[0] === '#') return String.fromCodePoint(code[1].toLowerCase() === 'x' ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10));
-    return NAMED[code.toLowerCase()] ?? m;
-});
 
 const getRedditArticles = async (url) => {
     try {

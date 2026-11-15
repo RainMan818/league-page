@@ -22,3 +22,11 @@ test('a new season, an older version or records saved before this check are rebu
     assert.equal(isRecordsFresh({ ...saved, version: RECORDS_CACHE_VERSION - 1 }, { season: '2026', lastScored: 9, now }), false);
     assert.equal(isRecordsFresh(undefined, { season: '2026', lastScored: 9, now }), false);
 });
+
+test('missing values: an empty season and week 0; no saved meta is never fresh', () => {
+    const meta = recordsMeta({ season: undefined, lastScored: undefined, now: 5 });
+    assert.deepEqual(meta, { version: RECORDS_CACHE_VERSION, savedAt: 5, season: '', lastScored: 0 });
+    assert.equal(isRecordsFresh(meta), true); // nothing scored yet, nothing to rebuild
+    assert.equal(isRecordsFresh(null, { season: '2026', lastScored: 9 }), false);
+    assert.equal(isRecordsFresh(undefined), false);
+});

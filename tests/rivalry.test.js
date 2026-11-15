@@ -29,7 +29,7 @@ test('every meeting: regular season and playoff games, newest first, the live we
     assert.equal(m[0].live, true);
     assert.equal(m[0].winner, null);
     const qf = m.find((x) => x.season === 2024 && x.kind === 'playoff');
-    assert.equal(qf.label, 'Quarterfinal');
+    assert.equal(qf.label, 'Wild Card'); // team 6 had a bye into round 2
     assert.deepEqual([qf.a, qf.b, qf.winner, qf.margin], [236.38, 345.98, 'b', 109.6]);
     assert.equal(m.find((x) => x.season === 2023 && x.kind === 'playoff').label, 'Semifinal');
     assert.ok(!m.some((x) => x.season === 2026 && x.week === 4)); // they played other teams that week
@@ -55,4 +55,16 @@ test('managers who never met', () => {
     assert.equal(s.count, 0);
     assert.equal(s.streak, null);
     assert.equal(s.biggest, null);
+});
+
+test('playoff labels: quarterfinal without byes, placement games by place', () => {
+    const s = (bracket, weeks) => [{ season: 2030, leagueID: 'L', rosterA: 1, rosterB: 4, playoffWeekStart: 15, roundType: 0, weeks, winnersBracket: bracket }];
+    const pts = (a, b) => [{ roster_id: 1, points: a }, { roster_id: 4, points: b }];
+    // 8-team bracket, no byes: round 1 of 3 is a quarterfinal
+    const eight = [{ m: 1, r: 1, t1: 1, t2: 4, w: 1, l: 4 }, { m: 5, r: 2, t1_from: { w: 1 }, t2_from: { w: 2 } }, { m: 7, r: 3, p: 1, t1_from: { w: 5 }, t2_from: { w: 6 } }];
+    assert.equal(rivalryMeetings(s(eight, { 15: pts(120, 110) }))[0].label, 'Quarterfinal');
+    const placement = [{ m: 1, r: 1, t1: 2, t2: 3 }, { m: 3, r: 2, p: 3, t1: 1, t2: 4, w: 4, l: 1 }, { m: 4, r: 2, p: 5, t1: 7, t2: 8 }];
+    assert.equal(rivalryMeetings(s(placement, { 16: pts(90, 95) }))[0].label, '3rd place game');
+    const fifth = [{ m: 1, r: 1, t1: 2, t2: 3 }, { m: 4, r: 2, p: 5, t1: 1, t2: 4, w: 1, l: 4 }];
+    assert.equal(rivalryMeetings(s(fifth, { 16: pts(100, 95) }))[0].label, '5th place game');
 });

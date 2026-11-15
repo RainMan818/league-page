@@ -150,13 +150,22 @@ All data comes live from the public Sleeper API.
   the league's pinned Sleeper messages plus live Sleeper settings (lineup, 22 bench, 4 IR, 6 taxi ≤2 yrs, $100 FAAB,
   6 veto votes, no trade deadline, 6-round linear rookie draft, scoring). Dues are $70 ($50 pot + $20 in-season
   payouts); `dues` in leagueInfo.js (50) is no longer used by this page.
-- **Error page** (404, 500, ...) — `RayError` (wired in by `src/routes/+error.svelte`): the status code in the logo's
-  chrome block letters (`RayError/codeSvg.js`, built from `OutrunLogo/glyphs.js`, which now has the digits 0–9) over a
-  neon sun and a rolling grid horizon (a dark sky in both themes, like the header; the grid stops under
-  `prefers-reduced-motion`), then a kicker ("Hut, hut, blue 404!" / "Flag on the play"), a title, the missing path,
-  and Back to Home + Go back (Try again for 5xx). SvelteKit's own "Not Found" / "Internal Error" messages are hidden;
-  any other `error.message` is shown. Don't use a `<nav>` element in page content: the theme styles every `nav` as
-  the header.
+- **Resources** (`/resources`) — `RayResources` (option A, Nov 15; rendered by `src/routes/resources/+page.svelte`):
+  the template's links in four cards (`RayResources/links.js`: trade values & calculators, analysis & rankings,
+  podcasts, community; `dynastyOnly` / `redraftOnly` / `premium` as in the template, premium shown as "Paywall"), then
+  "Latest news" from `/api/fetch_serverside_news` with source filter chips, 9 rows then "Show 15 more". Rows open the
+  story in a new tab. `utils/newsFeed.js` (`tests/newsFeed.test.js`) builds the rows: plain-text title / excerpt
+  (WordPress "The post … appeared first on …" dropped), entity-decoded links (feeds send `&#038;`), source badge,
+  Article / Podcast / Post, time ago; duplicates are link + title (the Footballers link every episode to their home
+  page). No Sleeper requests.
+- **Error page** (404, 500, ...) — `RayError` (wired in by `src/routes/+error.svelte`), "Wide right" (Nov 15):
+  an inline SVG of neon goalposts on a starry night field, a dashed kick path and a football sailing past the right
+  upright, with the status code in outlined Orbitron beside "NO GOOD". Deliberately unlike the header (no sun, grid
+  or chrome letters); the scene is dark in both themes and keeps a 760:360 aspect ratio; the dashes and ball stop
+  under `prefers-reduced-motion`. Then a kicker ("Wide right" / "Flag on the play"), a title, the text, and Back to
+  Home + Go back (Try again for 5xx). SvelteKit's own "Not Found" / "Internal Error" messages are hidden; any other
+  `error.message` is shown. `RayError/codeSvg.js` (the old chrome-letter code) is no longer used and can be deleted.
+  Don't use a `<nav>` element in page content: the theme styles every `nav` as the header.
 
 ### Shared building blocks
 - `utils/leagueContext.js` — `loadLeagueBasics()` (nflState, managers, leagueData, rosters, `divisions`
@@ -245,7 +254,7 @@ All data comes live from the public Sleeper API.
   the week you were on (else the current week) instead of week 1; `src/routes/matchups/+page.js`
   no longer loads `getBrackets()`.
 - Wiring: `src/routes/+page.svelte`, `src/routes/+error.svelte`, `src/routes/constitution/+page.svelte`, `src/routes/awards/` (season awards only), `src/routes/standings/+page.js` (passes `fetch`), `src/routes/trends/` (new), `src/routes/rosters/+page.js`
-  (standings only) and `+page.svelte` (renders `RayRosters`), `src/lib/components.js`, `src/lib/utils/helper.js`, `src/lib/utils/tabs.js` (nav tabs),
+  (standings only) and `+page.svelte` (renders `RayRosters`), `src/routes/resources/+page.svelte` (renders `RayResources`), `src/lib/components.js`, `src/lib/utils/helper.js`, `src/lib/utils/tabs.js` (nav tabs),
   `src/lib/Matchups/MatchupsAndBrackets.svelte`, `src/lib/Drafts/index.svelte`,
   `src/lib/Transactions/TransactionsPage.svelte`.
 - `src/lib/utils/helperFunctions/leagueMatchups.js` keeps extra fields per team (`players`, `playersPoints`,
@@ -271,9 +280,12 @@ All data comes live from the public Sleeper API.
 - Theme: `src/routes/+layout.svelte`, `src/app.html`, `src/lib/Nav/index.svelte`, `NavLarge.svelte`, `static/manifest.json`.
 - `src/lib/Footer.svelte`: hides the Blog link when `enableBlog` is off (like the nav; /blog answers 500).
 - Records → Playoffs: the template's round names become "Wild Card round" / "Semifinal round" / "Championship round"
-  (`weekLabel` in `RayRecords/index.svelte`; placement games share those weeks, so it names the round, not the game).
+  (`recordBook.js` `weekLabel`; placement games share those weeks, so it names the round, not the game). Rivalry's
+  meeting labels (`rivalry.js`) also call a first round with byes "Wild Card".
 - `TransactionFeed` day counts: real day totals ("8 of 11 waivers"), but a kind with nothing shown that day isn't
-  counted (the homepage list picks trades and waivers separately).
+  counted (`transactionView.js` `dayCountLabel`; the homepage list picks trades and waivers separately).
+- Logic that used to live in components / server endpoints is in plain, tested modules: `utils/feedText.js`
+  (`decodeEntities`, news titles) and `utils/playerSchedule.js` (`weekSchedule` / `opponentFor`, players' opponents).
 - Lineup-slot averages are labelled "QB+SF" (QB + superflex) and "Flex" (RB/WR/TE flex) on Standings
   (`RayStandings/constants.js`) and Rosters (`SLOT_INFO`); the data keys stay `QB+Flex` / `WRT` / `IDP`
   (`positionAverages.js`), so don't rename those without updating every user.
@@ -297,6 +309,7 @@ All data comes live from the public Sleeper API.
 - `src/lib/PowerRankings/index.svelte`, `PowerRankingsDisplay.svelte`
 - `src/lib/Standings/` (the /standings route uses `RayStandings`)
 - `src/lib/Rosters/` (`Rosters`, `RosterSorter`, `Roster`, `RosterRow`; the /rosters route uses `RayRosters`)
+- `src/lib/Resources.svelte` and `src/lib/News/` (`index`, `SingleNews`; the /resources route uses `RayResources`)
 - `src/lib/utils/helperFunctions/leagueStandings.js` and `predictOptimalScore.js` (old copies; should eventually be
   restored to the upstream versions)
 

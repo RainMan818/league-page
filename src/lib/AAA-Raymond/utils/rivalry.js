@@ -9,14 +9,16 @@ const pointsOf = (entries, rosterID) => {
     return e && typeof e.points === 'number' ? e : null;
 };
 
-const playoffLabel = (game, rounds) => {
+const playoffLabel = (game, rounds, hasByes = false) => {
     if (game.p === 1) return 'Championship';
     if (game.p && game.p > 1) {
         const n = game.p;
         return `${n}${n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th'} place game`;
     }
     const fromEnd = rounds - game.r;
-    return fromEnd === 1 ? 'Semifinal' : fromEnd === 2 ? 'Quarterfinal' : `Playoff round ${game.r}`;
+    if (fromEnd === 1) return 'Semifinal';
+    if (game.r === 1 && hasByes) return 'Wild Card'; // the top seeds sit round 1 out (as on the bracket and Home)
+    return fromEnd === 2 ? 'Quarterfinal' : `Playoff round ${game.r}`;
 };
 
 /**
@@ -54,6 +56,8 @@ export function rivalryMeetings(seasons = []) {
         // playoffs: championship-bracket games between them (including placement games)
         const bracket = s.winnersBracket ?? [];
         const rounds = Math.max(0, ...bracket.map((g) => g.r));
+        // a team placed straight into a later round (not fed by an earlier game) had a first-round bye
+        const hasByes = bracket.some((g) => g.r > 1 && ((g.t1 != null && !g.t1_from) || (g.t2 != null && !g.t2_from)));
         for (const g of bracket) {
             const teams = [String(g.t1), String(g.t2)];
             if (!(teams.includes(A) && teams.includes(B))) continue;
@@ -61,7 +65,7 @@ export function rivalryMeetings(seasons = []) {
             const st = g.w != null ? 'final' : status(weeks);
             if (st === 'upcoming') continue;
             const sum = (rid) => weeks.reduce((t, w) => t + (pointsOf(s.weeks?.[w], rid)?.points ?? 0), 0);
-            push({ season: Number(s.season), leagueID: s.leagueID, week: weeks[0], weeks, kind: 'playoff', label: playoffLabel(g, rounds), a: Math.round(sum(A) * 100) / 100, b: Math.round(sum(B) * 100) / 100, live: st === 'live' });
+            push({ season: Number(s.season), leagueID: s.leagueID, week: weeks[0], weeks, kind: 'playoff', label: playoffLabel(g, rounds, hasByes), a: Math.round(sum(A) * 100) / 100, b: Math.round(sum(B) * 100) / 100, live: st === 'live' });
         }
     }
     return out.sort((x, y) => y.season - x.season || y.week - x.week);

@@ -104,3 +104,14 @@ test('bracket, seeding, all-play, efficiency and the season simulation', () => {
   const med = I.simulateSeason({ teams: Object.values(record), schedule, expected, sd, playoffTeams: 6, playoffWeeks: [15, 16, 17], sims: 500, medianGame: true });
   assert.ok(Math.abs(med.odds[0].projWins + med.odds[0].projLosses + med.odds[0].projTies - 19) < 1e-9);
 });
+
+test('expected scores: projection blended with the season average; no projection and no games falls back to the league average', () => {
+  const leagueData = { roster_positions: ['QB', 'BN'] };
+  const rosters = { 1: { players: ['a'] }, 2: { players: [] } };
+  const players = { a: { pos: 'QB', positions: ['QB'], wi: { 10: { p: '100' } } } };
+  const matchupsData = [[{ roster_id: 1, matchup_id: 1, points: 120 }, { roster_id: 3, matchup_id: 1, points: 80 }]];
+  const { expected, factor } = playoffs.expectedScores({ rosters, players, leagueData, weeks: [10], matchupsData });
+  assert.equal(factor, 1); // league scoring (100) matches projections (100)
+  assert.equal(expected[1][10], 0.7 * 100 + 0.3 * 120);
+  assert.equal(expected[2][10], 100); // empty roster, no games: the league average
+});

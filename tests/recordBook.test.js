@@ -1,7 +1,7 @@
 // Run with: npm test
 import assert from 'assert/strict';
 import { test } from 'node:test';
-import { weeksOf, teamRows, teamSeasons, recordLists, recordYears, headToHeadRecords } from '../src/lib/AAA-Raymond/utils/recordBook.js';
+import { weeksOf, teamRows, teamSeasons, recordLists, recordYears, headToHeadRecords, weekLabel } from '../src/lib/AAA-Raymond/utils/recordBook.js';
 
 // roster 11 changed hands after 2023 (two managers, one team); 2026 has the median game (2 games a week)
 const data = {
@@ -78,4 +78,14 @@ test('head-to-head records leave out the median game and skip unplayed weeks', (
     assert.deepEqual(h[1], { wins: 1, losses: 1, ties: 0 });
     assert.deepEqual(h[3], { wins: 0, losses: 0, ties: 1 });
     assert.deepEqual(headToHeadRecords(null), {});
+});
+
+test('record "when": week numbers, and playoff rounds by name (the first round is the Wild Card round)', () => {
+    assert.equal(weekLabel(5), 'Week 5');
+    assert.equal(weekLabel('12'), 'Week 12');
+    assert.equal(weekLabel('Quarter-Finals'), 'Wild Card round');
+    assert.equal(weekLabel('Semi-Finals'), 'Semifinal round');
+    assert.equal(weekLabel('Finals'), 'Championship round');
+    assert.equal(weekLabel('(C) Week 16'), 'Week 16 (consolation)');
+    assert.equal(weekLabel('Qualifiers'), 'Qualifiers');
 });

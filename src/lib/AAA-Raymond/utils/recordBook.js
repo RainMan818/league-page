@@ -130,3 +130,16 @@ export function headToHeadRecords(matchups = []) {
 /** Seasons that have records, newest first. */
 export const recordYears = (data) =>
     (data?.seasonWeekRecords ?? []).map((r) => Number(r.year)).filter(Boolean).sort((a, b) => b - a);
+
+// Playoff games in the records carry the template's round name ("Quarter-Finals", "Semi-Finals", "Finals",
+// "(C) Week 16") instead of a week number. Name the round (placement games share those weeks): the first round is the
+// Wild Card round here (the top two seeds have byes).
+const ROUND_NAMES = { 'Quarter-Finals': 'Wild Card round', 'Semi-Finals': 'Semifinal round', Finals: 'Championship round' };
+
+/** "Week 5", "Wild Card round", "Week 16 (consolation)": the "when" of a record entry. */
+export function weekLabel(w) {
+    if (typeof w === 'number' || /^\d+$/.test(String(w))) return `Week ${w}`;
+    const consolation = String(w).match(/^\(C\) Week (\d+)$/);
+    if (consolation) return `Week ${consolation[1]} (consolation)`;
+    return ROUND_NAMES[w] ?? String(w);
+}

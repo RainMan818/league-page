@@ -1,35 +1,9 @@
 <script>
-	import LinearProgress from '@smui/linear-progress';
-	import { News, Resources } from '$lib/components';
+	// AAA-Raymond: the Resources page is our redesign (link cards + news feed with source filters). The template's
+	// Resources and News components are no longer used here.
+	import RayResources from '$lib/AAA-Raymond/components/RayResources/index.svelte';
 
 	export let data;
-	const articlesData = data.articlesData;
 </script>
 
-<style>
-	.loading {
-		position: relative;
-		z-index: 1;
-        width: 85%;
-        margin: 0 auto 60px;
-        max-width: 800px;
-    }
-</style>
-
-<Resources />
-
-<hr />
-
-{#await articlesData}
-	<div class="loading">
-		<p>Retrieving fantasy news...</p>
-		<br />
-		<LinearProgress indeterminate />
-	</div>
-{:then news}
-	<!-- promise was fulfilled -->
-	<News {news}/>
-{:catch error}
-	<!-- promise was rejected -->
-	<p>Something went wrong: {error.message}</p>
-{/await}
+<RayResources articlesData={data.articlesData} />

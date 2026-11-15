@@ -85,3 +85,21 @@ export function groupByDay(transactions) {
 /** Newest first, for lists that mix waivers and trades (the homepage). */
 export const sortNewestFirst = (transactions) =>
     [...transactions].sort((a, b) => (parseTransactionDate(b.date)?.date ?? 0) - (parseTransactionDate(a.date)?.date ?? 0));
+
+/**
+ * A day's count line on the transaction feed: "1 trade · 2 waivers", or "8 of 11 waivers" when only part of the day
+ * is shown here (a page, the homepage's latest few). list = the day's transactions shown, dayList = all of that day's.
+ * A kind with nothing shown isn't mentioned (the homepage picks trades and waivers separately, so a day can show its
+ * trade without its waivers).
+ */
+export function dayCountLabel(list = [], dayList = list) {
+    const count = (l, kind) => (l ?? []).filter((t) => (kind === 'trade' ? t.type === 'trade' : t.type !== 'trade')).length;
+    const part = (kind) => {
+        const shown = count(list, kind);
+        if (!shown) return '';
+        const total = Math.max(shown, count(dayList ?? list, kind));
+        const noun = `${kind}${total === 1 ? '' : 's'}`;
+        return shown < total ? `${shown} of ${total} ${noun}` : `${total} ${noun}`;
+    };
+    return [part('trade'), part('waiver')].filter(Boolean).join(' · ');
+}

@@ -11,7 +11,7 @@
   import SortableTable from "../Shared/SortableTable.svelte";
   import Toggle from "../Shared/Toggle.svelte";
   import RecordList from "./RecordList.svelte";
-  import { teamRows, recordLists, recordYears } from "../../utils/recordBook.js";
+  import { teamRows, recordLists, recordYears, weekLabel } from "../../utils/recordBook.js";
   import "../Shared/common.css";
 
   let { leagueData, totals, stale, leagueTeamManagers } = $props();
@@ -72,15 +72,7 @@
   const open = (rid, y = cur) => () => gotoManager({ year: y, leagueTeamManagers, rosterID: parseInt(rid) });
 
   const fmt = (v, d = 2) => Number(v ?? 0).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
-  // playoff games carry the template's round name ("Quarter-Finals", "Semi-Finals", "Finals", "(C) Week 16") instead of
-  // a week number. Name the round (placement games share those weeks): the first round is the Wild Card round here.
-  const ROUND_NAMES = { "Quarter-Finals": "Wild Card round", "Semi-Finals": "Semifinal round", Finals: "Championship round" };
-  const weekLabel = (w) => {
-    if (typeof w === "number" || /^\d+$/.test(String(w))) return `Week ${w}`;
-    const consolation = String(w).match(/^\(C\) Week (\d+)$/);
-    if (consolation) return `Week ${consolation[1]} (consolation)`;
-    return ROUND_NAMES[w] ?? String(w);
-  };
+  // weekLabel (recordBook.js): "Week 5", or the playoff round's name ("Wild Card round", ...)
   const when = (y, w) => (viewYear != null ? weekLabel(w) : `${y} · ${weekLabel(w)}`);
 
   // ---- lists and headline cards

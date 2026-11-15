@@ -133,3 +133,17 @@ test('standings moves for a week', () => {
     assert.equal(movesForWeek(places, 3), null); // not played
     assert.equal(movesForWeek({}, 2), null);
 });
+
+test('a tied game is a tie for both; one-point charts sit in the middle; inverted scales put the top value low', () => {
+    const tie = [{ roster_id: 1, matchup_id: 1, points: 100 }, { roster_id: 2, matchup_id: 1, points: 100 }];
+    assert.deepEqual(weekResults(tie)['1'], { wins: 0, losses: 0, ties: 1 });
+    assert.deepEqual(weekResults(tie)['2'], { wins: 0, losses: 0, ties: 1 });
+    const pad = { l: 10, r: 10, t: 0, b: 0 };
+    const one = scales({ w: 120, h: 50, pad, n: 1, min: 0, max: 10 });
+    assert.equal(one.X(0), 60);
+    const inv = scales({ w: 120, h: 50, pad, n: 2, min: 1, max: 12, invert: true });
+    assert.equal(inv.Y(1), 0); // rank 1 at the top
+    assert.equal(inv.Y(12), 50);
+    const flat = scales({ w: 120, h: 50, pad, n: 2, min: 5, max: 5 });
+    assert.equal(flat.Y(5), 50); // no range: no division by zero
+});

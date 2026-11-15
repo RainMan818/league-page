@@ -1,7 +1,7 @@
 // Run with: npm test
 import assert from 'assert/strict';
 import { test } from 'node:test';
-import { playoffPlaces, leagueDraftOrder, teamsFromRosters, toiletBowlWinner } from '../src/lib/AAA-Raymond/utils/draftOrder.js';
+import { playoffPlaces, leagueDraftOrder, teamsFromRosters, toiletBowlWinner, bracketIsSet } from '../src/lib/AAA-Raymond/utils/draftOrder.js';
 
 // 12 teams, 3 divisions; this season's standings after week 9 (max PF = potentialPoints)
 const T = (rosterID, wins, losses, fpts, potentialPoints, division) => ({ rosterID, wins, losses, ties: 0, fpts, potentialPoints, division });
@@ -62,4 +62,20 @@ test("Toilet Bowl winner: the last round's main game, once played", () => {
     losers[1].w = 12;
     assert.equal(toiletBowlWinner(losers), '12');
     assert.equal(toiletBowlWinner([]), null);
+});
+
+test('the bracket is read once the regular season is fully scored or the league is finished', () => {
+    assert.equal(bracketIsSet({ status: 'in_season', settings: { last_scored_leg: 9, playoff_week_start: 15 } }), false);
+    assert.equal(bracketIsSet({ status: 'in_season', settings: { last_scored_leg: 14, playoff_week_start: 15 } }), true);
+    assert.equal(bracketIsSet({ status: 'complete', settings: {} }), true);
+    assert.equal(bracketIsSet(null), false);
+});
+
+test('other playoff sizes: playoff teams pick worst finish first; odd brackets are ignored', () => {
+    const four = leagueDraftOrder(teams, { playoffTeams: 4 });
+    // seeds 1-4 (lokk, gibbs, sud, globo) pick last, 4th place first, champion (by seed) last
+    assert.deepEqual(four.order.slice(-4), ['globo', 'sud', 'gibbs', 'lokk']);
+    assert.equal(four.order.length, 12);
+    assert.deepEqual(playoffPlaces({ not: 'a bracket' }, {}), {});
+    assert.deepEqual(playoffPlaces([{ r: 1, m: 1, t1: 'a', t2_from: { w: 9 } }], {}), {}); // a side that can't be filled yet
 });

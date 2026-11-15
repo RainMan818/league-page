@@ -2,7 +2,7 @@
 import assert from 'assert/strict';
 import { test } from 'node:test';
 import {
-  regularSeasonAwards, postseasonAwards, acquisitionIndex, allLeagueTeam, roundWeeks, bracketGames,
+  regularSeasonAwards, postseasonAwards, seasonAwards, acquisitionIndex, allLeagueTeam, roundWeeks, bracketGames,
   playoffRecapEntries, playoffRoundName, isRookie,
 } from '../src/lib/AAA-Raymond/utils/seasonAwards.js';
 import { pickValue, pickShare } from '../src/lib/AAA-Raymond/utils/pickValues.js';
@@ -225,4 +225,12 @@ test('round weeks and playoff recap entries', () => {
   assert.equal(entries.find((e) => e.roster_id === 1).matchup_id, entries.find((e) => e.roster_id === 5).matchup_id);
   assert.equal(playoffRoundName({ week: 17, winnersBracket: wb, playoffWeekStart: 15 }), 'Championship');
   assert.equal(playoffRoundName({ week: 16, winnersBracket: wb, playoffWeekStart: 15 }), 'Semifinals');
+});
+
+test('both award groups for a season, post-season empty until there is a champion', () => {
+  const all = seasonAwards({ ...playoffInput, season: 2025 });
+  assert.equal(all.season, 2025);
+  assert.deepEqual(all.regular, regularSeasonAwards(playoffInput));
+  assert.equal(all.post.champion.rosterID, '2');
+  assert.equal(seasonAwards({ ...base, season: 2026 }).post, null);
 });

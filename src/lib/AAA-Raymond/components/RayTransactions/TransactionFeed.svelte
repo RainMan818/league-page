@@ -7,7 +7,7 @@
 <script>
   import { gotoManager } from "$lib/utils/helper";
   import { getTeamFromTeamManagers } from "$lib/utils/helperFunctions/universalFunctions";
-  import { groupByDay, transactionSides } from "./transactionView.js";
+  import { groupByDay, transactionSides, dayCountLabel } from "./transactionView.js";
 
   // allTransactions: the whole list this feed is a slice of (a page, the latest few), so each day's count is the
   // day's real total: "8 of 11 waivers" when only some of them are shown here. A kind with nothing shown for that
@@ -21,7 +21,7 @@
   const groups = $derived(
     groupByDay(transactions).map((g) => ({
       ...g,
-      countLabel: countLabel(g.items.map((i) => i.transaction), dayTotals[g.key]),
+      countLabel: dayCountLabel(g.items.map((i) => i.transaction), dayTotals[g.key]),
       rows: g.items.map(({ transaction: t, when }) => ({
         id: t.id,
         trade: t.type === "trade",
@@ -34,18 +34,6 @@
       })),
     }))
   );
-
-  function countLabel(list, dayList = list) {
-    const count = (l, kind) => l.filter((t) => (kind === "trade" ? t.type === "trade" : t.type !== "trade")).length;
-    const part = (kind) => {
-      const shown = count(list, kind);
-      if (!shown) return "";
-      const total = Math.max(shown, count(dayList ?? list, kind));
-      const noun = `${kind}${total === 1 ? "" : "s"}`;
-      return shown < total ? `${shown} of ${total} ${noun}` : `${total} ${noun}`;
-    };
-    return [part("trade"), part("waiver")].filter(Boolean).join(" · ");
-  }
 
   const open = (side) => gotoManager({ year: side.season, leagueTeamManagers, rosterID: side.rosterID });
   const sign = { add: "+", drop: "−" };
