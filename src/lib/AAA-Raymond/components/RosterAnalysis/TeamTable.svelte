@@ -2,14 +2,17 @@
   import { gotoManager } from "$lib/utils/helper";
   import DataTable, { Head, Body, Row, Cell } from "@smui/data-table";
 
-  export let currentManagers, dataType, colorScales;
+  // AAA-Raymond: leagueTeamManagers so a team's name opens its manager page (gotoManager takes an object; it was
+  // given the row number and threw)
+  export let currentManagers, dataType, colorScales, leagueTeamManagers;
 </script>
 
 <DataTable class="teamInner" table$aria-label="Team Name">
   <Head>
     <Row>
-      <Cell class="header">Manager</Cell>
+      <!-- AAA-Raymond: the rows are teams; the first number is the whole roster -->
       <Cell class="header">Team</Cell>
+      <Cell class="header">All</Cell>
       <Cell class="header">Off.</Cell>
       <Cell class="header">QB</Cell>
       <Cell class="header">RB</Cell>
@@ -24,9 +27,12 @@
   <Body>
     {#each Object.values(currentManagers) as manager, ix}
       <Row>
-        <Cell class="interactive" on:click={() => gotoManager(ix)}>
-          <img class="avatar" alt="avatar" src={manager.avatar} />
-          {manager.name}
+        <Cell class="interactive">
+          <!-- a real button: SMUI's Cell doesn't pass on:click through under Svelte 5 -->
+          <button type="button" class="rr-teamLink" title="{manager.name}'s manager page" on:click={() => gotoManager({ leagueTeamManagers, rosterID: manager.rosterId })}>
+            <img class="avatar" alt="" src={manager.avatar} />
+            {manager.name}
+          </button>
         </Cell>
         <Cell class="age-cell">
           {#if dataType == "age"}
@@ -266,6 +272,23 @@
 </DataTable>
 
 <style>
+  .rr-teamLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .rr-teamLink:hover {
+    text-decoration: underline;
+  }
+
   :global(.teamInner) {
     box-shadow:
       0px 3px 3px -2px var(--boxShadowOne),

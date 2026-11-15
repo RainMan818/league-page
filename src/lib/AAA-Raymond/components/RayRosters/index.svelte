@@ -140,8 +140,8 @@
     REC_FLEX: { label: "W/T", groups: ["WR", "TE"] },
     SUPER_FLEX: { label: "SF", groups: ["QB", "RB", "WR", "TE"] },
     IDP_FLEX: { label: "IDP", groups: ["DL", "LB", "DB"] },
-    "QB+Flex": { label: "QB+Flex", groups: ["QB", "RB", "WR", "TE"] },
-    WRT: { label: "WRT", groups: ["RB", "WR", "TE"] },
+    "QB+Flex": { label: "QB+SF", groups: ["QB", "RB", "WR", "TE"] }, // same names as the Standings averages table
+    WRT: { label: "Flex", groups: ["RB", "WR", "TE"] },
     IDP: { label: "IDP", groups: ["DL", "LB", "DB"] },
   };
   const GROUP_OF_SLOT = { DE: "DL", DT: "DL", CB: "DB", S: "DB" };

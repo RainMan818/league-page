@@ -16,11 +16,11 @@ export const rosterPositionAveragesColumnOrder = [
     { name: "Total", field: "Team" },
     { name: "All Offense", field: "Off" },
     { name: "All Defense", field: "Def" },
-    { name: "QB+Flex", field: "QB+Flex" },
+    { name: "QB+SF", field: "QB+Flex" }, // QB + superflex slots (field name kept: it's the data key)
     { name: "RB", field: "RB" },
     { name: "WR", field: "WR" },
     { name: "TE", field: "TE" },
-    { name: "WRT", field: "WRT" },
+    { name: "Flex", field: "WRT" }, // the RB/WR/TE flex slots
     { name: "IDP", field: "IDP" },
     { name: "DL", field: "DL" },
     { name: "LB", field: "LB" },

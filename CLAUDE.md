@@ -111,6 +111,10 @@ All data comes live from the public Sleeper API.
   week (`last_scored_leg`), the season changes or `RECORDS_CACHE_VERSION` in `utils/recordsCache.js` is bumped (bump it
   whenever the records math changes). A rebuild downloads every week of every season (about 90 Sleeper requests);
   records are never built on the server.
+- **Rivalry** (`/rivalry`) — `RayRivalry/index.svelte` (+ `utils/rivalry.js`, `tests/rivalry.test.js`): two manager
+  pickers (URL `player_one` / `player_two`), head-to-head record with points in their games, last meeting, streak,
+  biggest win, closest game, career comparison (all-time, regular season unless noted), every meeting (click for both
+  lineups) and the trades between them.
 - **Rosters** — `RayRosters/index.svelte` (option B, revised; rendered by `src/routes/rosters/+page.svelte`). Team
   strip in seed order (URL `?team=<rosterID>`, remembered in localStorage `rr-rosters-team`; "All teams" shows the old
   `RosterAnalysis` table and charts), then one team: header (manager, record, seed, PF; players, taxi / IR, future
@@ -265,6 +269,12 @@ All data comes live from the public Sleeper API.
   manager's real name).
 - Theme: `src/routes/+layout.svelte`, `src/app.html`, `src/lib/Nav/index.svelte`, `NavLarge.svelte`, `static/manifest.json`.
 - `src/lib/Footer.svelte`: hides the Blog link when `enableBlog` is off (like the nav; /blog answers 500).
+- Lineup-slot averages are labelled "QB+SF" (QB + superflex) and "Flex" (RB/WR/TE flex) on Standings
+  (`RayStandings/constants.js`) and Rosters (`SLOT_INFO`); the data keys stay `QB+Flex` / `WRT` / `IDP`
+  (`positionAverages.js`), so don't rename those without updating every user.
+- `RosterAnalysis/TeamTable.svelte`: columns "Team" / "All" (whole-roster average); team names are buttons calling
+  `gotoManager({ leagueTeamManagers, rosterID })` (SMUI's `Cell` drops `on:click` under Svelte 5, and the old call
+  passed the row number).
 - News (Resources): `src/lib/utils/helperFunctions/news.js` only calls `/api/fetch_serverside_news`, which now also
   fetches Reddit (blocked from the browser by CORS; usually blocked server-side too, so it adds nothing) and lets any
   failed feed add nothing instead of breaking the section. Feed titles get HTML entities decoded (`decodeEntities`).

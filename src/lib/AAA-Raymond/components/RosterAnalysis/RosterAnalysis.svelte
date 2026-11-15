@@ -324,6 +324,7 @@
             : getColorScales(minVariation, maxVariation)}
           {currentManagers}
           {dataType}
+          {leagueTeamManagers}
         />
       </div>
     {:else if chartType === "stack"}
