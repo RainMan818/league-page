@@ -1,7 +1,7 @@
 // Run with: npm test
 import assert from 'assert/strict';
 import { test } from 'node:test';
-import { careerStats, managerTrophies, titleYears, managerRecords, rosterLineup, isPlaceholderText, winPct } from '../src/lib/AAA-Raymond/utils/managerProfile.js';
+import { careerStats, managerTrophies, titleYears, managerRecords, rosterLineup, seasonHistory, isPlaceholderText, winPct } from '../src/lib/AAA-Raymond/utils/managerProfile.js';
 
 // manager "a" ran roster 1 every season; manager "b" took over roster 2 in 2024 (roster 2 was someone else before)
 const runs = { a: { 1: [2022, 2023, 2024, 2025] }, b: { 2: [2024, 2025] } };
@@ -70,8 +70,44 @@ test('lineup slots, bench, IR and taxi', () => {
     const roster = { starters: ['q', '0', 'r'], players: ['q', 'r', 'b1', 'ir'], reserve: ['ir'], taxi: [] };
     const l = rosterLineup(roster, ['QB', 'SUPER_FLEX', 'IDP_FLEX', 'BN', 'BN'], players);
     assert.deepEqual(l.starters.map((s) => [s.slot, s.name]), [['QB', 'Drew Lock'], ['SF', null], ['IDP', 'Run Ner']]);
+    assert.deepEqual(l.offense.map((s) => s.slot), ['QB', 'SF']);
+    assert.deepEqual(l.defense.map((s) => s.slot), ['IDP']);
     assert.deepEqual(l.bench.map((p) => p.name), ['Ben Ch']);
     assert.deepEqual(l.reserve.map((p) => p.name), ['Hurt Guy']);
+});
+
+test('season history: finished seasons the manager ran, with ranks and league averages', () => {
+    const recs = {
+        regularSeasonData: {
+            leagueRosterRecords: {
+                1: { years: [
+                    { year: 2026, wins: 11, losses: 7, ties: 0, fpts: 2083.68, potentialPoints: 2689.74 },
+                    { year: 2024, wins: 8, losses: 6, ties: 0, fpts: 3000, potentialPoints: 4000 },
+                    { year: 2023, wins: 11, losses: 3, ties: 0, fpts: 3500, potentialPoints: 4200 },
+                    { year: 2022, wins: 9, losses: 5, ties: 0, fpts: 3200, potentialPoints: 3900 },
+                ] },
+                2: { years: [
+                    { year: 2024, wins: 8, losses: 6, ties: 0, fpts: 3400, potentialPoints: 3800 },
+                    { year: 2023, wins: 3, losses: 11, ties: 0, fpts: 2900, potentialPoints: 3600 },
+                    { year: 2022, wins: 5, losses: 9, ties: 0, fpts: 3000, potentialPoints: 4100 },
+                ] },
+            },
+        },
+    };
+    const h = seasonHistory(recs, owns('a'), (year) => year < 2026);
+    assert.deepEqual(h.map((s) => s.year), [2022, 2023, 2024]); // 2026 is still being played
+    assert.deepEqual(h[2].rank, { wins: 1, pf: 2, maxPF: 1 }); // 2024: tied on wins share 1st
+    assert.equal(h[0].avg.wins, 7);
+    assert.equal(h[1].maxPF, 4200);
+    // manager b took over roster 2 in 2024, so only that season is theirs
+    assert.deepEqual(seasonHistory(recs, owns('b'), (year) => year < 2026).map((s) => [s.year, s.rank.pf]), [[2024, 1]]);
+    assert.deepEqual(seasonHistory(null, owns('a')), []);
+    // median-game seasons use the head-to-head record (11-7 with the median, 6-3 without)
+    const withMedian = seasonHistory(recs, (rosterID) => rosterID === '1', () => true).find((s) => s.year === 2026);
+    assert.equal(withMedian.wins, 11);
+    recs.regularSeasonData.leagueRosterRecords[1].years[0] = { ...recs.regularSeasonData.leagueRosterRecords[1].years[0], h2hWins: 6, h2hLosses: 3, h2hTies: 0 };
+    const h2hOnly = seasonHistory(recs, (rosterID) => rosterID === '1', () => true).find((s) => s.year === 2026);
+    assert.deepEqual([h2hOnly.wins, h2hOnly.losses], [6, 3]);
 });
 
 test('placeholder bios are hidden', () => {

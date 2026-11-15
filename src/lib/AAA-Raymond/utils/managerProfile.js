@@ -114,11 +114,14 @@ export function managerRecords(records, managerID, owns, tookOver = null) {
 }
 
 const SLOT_LABELS = { SUPER_FLEX: 'SF', IDP_FLEX: 'IDP', REC_FLEX: 'W/T', WRRB_FLEX: 'W/R', BN: 'BN' };
+// lineup slots that hold defenders (IDP slots plus a team defense); every other slot counts as offense
+const DEFENSE_SLOTS = new Set(['IDP_FLEX', 'DL', 'DE', 'DT', 'NT', 'LB', 'OLB', 'ILB', 'MLB', 'DB', 'CB', 'S', 'SS', 'FS', 'DEF']);
 
 /**
  * A roster split into lineup slots and bench for display.
  * roster: Sleeper roster { starters, players, reserve, taxi }; rosterPositions: league roster_positions;
  * players: the site's player map ({ fn, ln, pos, t }). Empty slots have name null.
+ * `offense` / `defense` are the starters split by slot type, each in Sleeper's slot order.
  */
 export function rosterLineup(roster, rosterPositions = [], players = {}) {
     const person = (id) => {
@@ -130,16 +133,65 @@ export function rosterLineup(roster, rosterPositions = [], players = {}) {
     const starters = slots.map((slot, i) => {
         const id = startersList[i];
         const p = id && id !== '0' ? person(id) : { id: null, name: null, pos: '', nfl: '' };
-        return { slot: SLOT_LABELS[slot] ?? slot, ...p };
+        return { slot: SLOT_LABELS[slot] ?? slot, defense: DEFENSE_SLOTS.has(slot), ...p };
     });
     const taken = new Set([...startersList, ...(roster?.reserve ?? []), ...(roster?.taxi ?? [])]);
     const bench = (roster?.players ?? []).filter((id) => !taken.has(id)).map(person);
     return {
         starters,
+        offense: starters.filter((s) => !s.defense),
+        defense: starters.filter((s) => s.defense),
         bench,
         reserve: (roster?.reserve ?? []).map(person),
         taxi: (roster?.taxi ?? []).map(person),
     };
+}
+
+// head-to-head record (no weekly median game; seasons before the median game have no h2h fields and don't need them)
+const h2h = (y) => ({ wins: Number(y.h2hWins ?? y.wins) || 0, losses: Number(y.h2hLosses ?? y.losses) || 0, ties: Number(y.h2hTies ?? y.ties) || 0 });
+const SEASON_STATS = { wins: (y) => h2h(y).wins, pf: (y) => Number(y.fpts) || 0, maxPF: (y) => Number(y.potentialPoints) || 0 };
+
+/**
+ * Regular-season numbers for each finished season this manager ran a team, oldest first, for the season charts.
+ * Each stat comes with the team's league rank that season (1 = best; ties share a rank) and the league average.
+ * records: getLeagueRecords(); leagueRosterRecords[rosterID].years = [{ year, wins, losses, ties, fpts, potentialPoints }]
+ * isComplete(year): whether that season is over (the in-progress season is left out).
+ * Wins, losses and ties are head-to-head only: the weekly league-median game (from 2026) is left out.
+ * Returns [{ year, rosterID, wins, losses, ties, pf, maxPF, teams, rank: { wins, pf, maxPF }, avg: { wins, pf, maxPF } }]
+ */
+export function seasonHistory(records, owns, isComplete = () => true) {
+    const byYear = {};
+    for (const [rosterID, rec] of Object.entries(records?.regularSeasonData?.leagueRosterRecords ?? {})) {
+        for (const y of rec?.years ?? []) {
+            const year = Number(y.year);
+            if (!isComplete(year)) continue;
+            (byYear[year] ??= []).push({ rosterID: String(rosterID), y });
+        }
+    }
+    const out = [];
+    for (const [yearKey, teams] of Object.entries(byYear)) {
+        const year = Number(yearKey);
+        const mine = teams.find((t) => owns(t.rosterID, year));
+        if (!mine) continue;
+        const value = (y, stat) => SEASON_STATS[stat](y);
+        const rank = {}, avg = {};
+        for (const stat of Object.keys(SEASON_STATS)) {
+            const v = value(mine.y, stat);
+            rank[stat] = 1 + teams.filter((t) => value(t.y, stat) > v).length;
+            avg[stat] = teams.reduce((a, t) => a + value(t.y, stat), 0) / teams.length;
+        }
+        out.push({
+            year,
+            rosterID: mine.rosterID,
+            ...h2h(mine.y),
+            pf: value(mine.y, 'pf'),
+            maxPF: value(mine.y, 'maxPF'),
+            teams: teams.length,
+            rank,
+            avg,
+        });
+    }
+    return out.sort((a, b) => a.year - b.year);
 }
 
 /** Template placeholder bios ("Lorem ipsum...", "TODO") aren't shown. */

@@ -1,7 +1,8 @@
 <!--
   /manager?manager=N (option A "profile dashboard"): banner (photo, team, facts, bio, previous/next), five stat
   tiles, then a trophy case + league records and the profile (philosophy, desire to trade, favorite player, rival)
-  on the left, and the starting lineup + recent moves on the right. Same props as the template's Manager.svelte
+  and season-by-season charts (SeasonCharts) on the left, and the starting lineup + recent moves on the right.
+  Same props as the template's Manager.svelte
   (swapped in via components.js). Numbers from utils/managerProfile.js; nothing here fetches new Sleeper data
   beyond the cached helpers the page already used (players, standings).
 -->
@@ -12,9 +13,10 @@
   import TransactionsPage from "$lib/Transactions/TransactionsPage.svelte";
   import TransactionFeed from "../RayTransactions/TransactionFeed.svelte";
   import PosChip from "../Shared/PosChip.svelte";
+  import SeasonCharts from "./SeasonCharts.svelte";
   import { ordinal } from "../Shared/format.js";
   import { loadLeagueContext } from "../../utils/leagueContext.js";
-  import { careerStats, managerTrophies, titleYears, managerRecords, rosterLineup, isPlaceholderText } from "../../utils/managerProfile.js";
+  import { careerStats, managerTrophies, titleYears, managerRecords, rosterLineup, seasonHistory, isPlaceholderText } from "../../utils/managerProfile.js";
   import { managerBasics, currentStandings, favoriteTeam, recordText, pctText } from "./managerInfo.js";
 
   let { manager, managers, rostersData, leagueTeamManagers, rosterPositions, transactionsData, awards, records } = $props();
@@ -28,7 +30,9 @@
   let playersInfo = $state.raw(null);
   let transactions = $state.raw(transactionsData?.transactions ?? []);
   let standing = $state.raw(null);
+  let leagueStatus = $state(null); // "complete" once the current season's final is played
   let showBench = $state(false);
+  let showIR = $state(false);
   let showAllMoves = $state(false);
 
   onMount(async () => {
@@ -38,7 +42,10 @@
         .catch((e) => console.error(e));
     }
     loadLeagueContext({ standingsData: getLeagueStandings(), leagueTeamManagersData: leagueTeamManagers })
-      .then((ctx) => (standing = currentStandings(ctx)))
+      .then((ctx) => {
+        standing = currentStandings(ctx);
+        leagueStatus = ctx?.leagueData?.status ?? null;
+      })
       .catch((e) => console.error(e));
     const p = await loadPlayers(null);
     playersInfo = p;
@@ -58,6 +65,9 @@
   const roster = $derived(b.year == leagueTeamManagers.currentSeason ? rostersData?.rosters?.[b.rosterID] : null);
   const lineup = $derived(roster ? rosterLineup(roster, rosterPositions, players) : null);
   const teamMoves = $derived(transactions.filter((t) => t.rosters.includes(parseInt(b.rosterID))));
+  // finished seasons only: the current one counts once Sleeper marks the league complete
+  const seasonDone = (year) => year < Number(leagueTeamManagers.currentSeason) || (year === Number(leagueTeamManagers.currentSeason) && leagueStatus === "complete");
+  const seasons = $derived(seasonHistory(records, b.owns, seasonDone));
   const bio = $derived(isPlaceholderText(m.bio) ? "" : m.bio);
   const philosophy = $derived(isPlaceholderText(m.philosophy) ? "" : m.philosophy);
   const favPlayer = $derived(m.favoritePlayer ? players[m.favoritePlayer] : null);
@@ -92,6 +102,7 @@
     if (n < 0 || n >= managers.length) return;
     idx = n;
     showBench = false;
+    showIR = false;
     showAllMoves = false;
     goto(`/manager?manager=${n}`, { noScroll });
   };
@@ -131,6 +142,33 @@
       <span class="rr-empty">Empty</span>
     {/if}
   </div>
+{/snippet}
+
+<!-- a roster group under the lineup; collapsible ones (bench, IR) start closed, taxi is always open -->
+{#snippet group(label, list, slot, open, toggle = null)}
+  {#if toggle}
+    <button type="button" class="rr-groupHead rr-groupBtn" aria-expanded={open} onclick={toggle}>
+      <span class="rr-k">{label}</span>
+      <span class="rr-count">{list.length}</span>
+      <span class="rr-chev" class:rr-open={open} aria-hidden="true">▸</span>
+    </button>
+  {:else}
+    <div class="rr-groupHead">
+      <span class="rr-k">{label}</span>
+      <span class="rr-count">{list.length}</span>
+    </div>
+  {/if}
+  {#if open}
+    {#if list.length}
+      <div class="rr-lineup">
+        {#each list as p (p.id)}
+          {@render player(p, slot)}
+        {/each}
+      </div>
+    {:else}
+      <p class="rr-muted">Nobody here.</p>
+    {/if}
+  {/if}
 {/snippet}
 
 <div class="rr-managerPage">
@@ -240,45 +278,40 @@
           {#if m.mode}<span class="rr-fact"><span class="rr-k">Win now or rebuild</span><b>{m.mode}</b></span>{/if}
         </div>
       </section>
+
+      <SeasonCharts {seasons} />
     </div>
 
     <div class="rr-col">
       {#if !b.until}
         <section class="rr-card">
-          <div class="rr-cardHead">
-            <h2 class="rr-h">Starting lineup</h2>
-            {#if lineup && lineup.bench.length}
-              <button type="button" class="rr-linkBtn" aria-expanded={showBench} onclick={() => (showBench = !showBench)}>
-                {showBench ? "Hide bench" : `Bench (${lineup.bench.length})`}
-              </button>
-            {/if}
-          </div>
+          <h2 class="rr-h">Starting lineup</h2>
           {#if !playersInfo}
             <p class="rr-muted">Loading players…</p>
           {:else if lineup}
-            <div class="rr-lineup">
-              {#each lineup.starters as p, i (i)}
-                {@render player(p, p.slot)}
-              {/each}
-            </div>
-            {#if showBench}
-              <span class="rr-k rr-recHead">Bench</span>
+            {#if lineup.defense.length}
+              <!-- offense down the left column, defense down the right (stacked on phones) -->
               <div class="rr-lineup">
-                {#each lineup.bench as p (p.id)}
-                  {@render player(p, "BN")}
+                {#each [["Offense", lineup.offense], ["Defense", lineup.defense]] as [side, list] (side)}
+                  <div class="rr-side">
+                    <span class="rr-k rr-sideHead">{side}</span>
+                    {#each list as p, i (i)}
+                      {@render player(p, p.slot)}
+                    {/each}
+                  </div>
+                {/each}
+              </div>
+            {:else}
+              <div class="rr-lineup">
+                {#each lineup.starters as p, i (i)}
+                  {@render player(p, p.slot)}
                 {/each}
               </div>
             {/if}
-            {#if lineup.reserve.length || lineup.taxi.length}
-              <span class="rr-k rr-recHead">IR &amp; taxi</span>
-              <div class="rr-lineup">
-                {#each lineup.reserve as p (p.id)}
-                  {@render player(p, "IR")}
-                {/each}
-                {#each lineup.taxi as p (p.id)}
-                  {@render player(p, "TX")}
-                {/each}
-              </div>
+            {@render group("Taxi squad", lineup.taxi, "TX", true)}
+            {@render group("Bench", lineup.bench, "BN", showBench, () => (showBench = !showBench))}
+            {#if lineup.reserve.length}
+              {@render group("Injured reserve", lineup.reserve, "IR", showIR, () => (showIR = !showIR))}
             {/if}
           {/if}
         </section>
@@ -698,6 +731,59 @@
     gap: 0 18px;
   }
 
+  .rr-side {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .rr-sideHead {
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--or-table-border, var(--ccc));
+  }
+
+  .rr-groupHead {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    padding: 8px 0 2px;
+    border-top: 1px solid var(--or-table-border, var(--ccc));
+  }
+
+  .rr-groupBtn {
+    width: 100%;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .rr-groupBtn:hover .rr-k,
+  .rr-groupBtn:hover .rr-chev {
+    color: var(--or-cyan, #0b8a9a);
+  }
+
+  .rr-count {
+    font: 700 0.72em "Orbitron", sans-serif;
+    color: var(--or-cyan, #0b8a9a);
+  }
+
+  .rr-chev {
+    margin-left: auto;
+    font-size: 0.8em;
+    color: var(--or-muted, var(--g999));
+    transition: transform 0.15s;
+  }
+
+  .rr-chev.rr-open {
+    transform: rotate(90deg);
+  }
+
   .rr-player {
     display: grid;
     grid-template-columns: 38px auto minmax(0, 1fr) auto;
@@ -786,6 +872,10 @@
 
     .rr-lineup {
       grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rr-side + .rr-side {
+      margin-top: 14px;
     }
   }
 </style>
