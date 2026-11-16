@@ -281,7 +281,13 @@ All data comes live from the public Sleeper API.
   `common.css` (`rr-tableWrap` / `rr-table` tables and `rr-pageSub` subtitles). The table selectors are two classes
   deep, so a component's scoped override needs more (e.g. `.rr-avg table.rr-avgTable td`).
 - `Insights/config.js` — `SHOW_PLAYOFF_ODDS = false` hides all percentages, projected records and title odds
-  (bracket shows seeds only). Raymond doesn't want league mates seeing the odds yet.
+  (bracket shows seeds only) from everyone. Raymond doesn't want league mates seeing the odds yet.
+  **Secret switch (Nov 15):** `?odds=on` on any page shows them in that browser from then on, `?odds=off` hides them
+  again (localStorage `rr-odds`; the parameter is removed from the address so screenshots and copied links don't show
+  it). Logic in `utils/oddsSwitch.js` (`tests/oddsSwitch.test.js`); `Insights/OddsSwitch.svelte` (mounted in
+  `src/routes/+layout.svelte`) applies it; `PlayoffProjection` and `TeamBreakdown` read `Insights/playoffOdds.svelte.js`
+  instead of the constant. Each browser (and a home-screen app) keeps its own choice. Not real security: anyone
+  reading the site's code could find it.
 - `RayPowerRankings` uses the template's `src/lib/BarChart.svelte` with `controlsOnTop` (Raymond's addition).
 
 ### Template files we changed (check these after merging template updates)
@@ -318,7 +324,7 @@ All data comes live from the public Sleeper API.
 - `src/lib/utils/helperFunctions/universalFunctions.js` `getTeamData`: a team without a Sleeper team name is called
   "Team <Sleeper username>" (the template used the user's display name, which leagueInfo.js replaces with the
   manager's real name).
-- Theme: `src/routes/+layout.svelte` (also mounts the player card), `src/app.html`, `src/lib/Nav/index.svelte`, `NavLarge.svelte`, `static/manifest.json`.
+- Theme: `src/routes/+layout.svelte` (also mounts the player card and the odds switch), `src/app.html`, `src/lib/Nav/index.svelte`, `NavLarge.svelte`, `static/manifest.json`.
 - `src/lib/Footer.svelte`: hides the Blog link when `enableBlog` is off (like the nav).
 - `src/routes/blog/+page.js` and `blog/[slug]/+page.js`: with `enableBlog` off they answer 404 (the site's error page)
   instead of returning `false`, which made the page components crash with a 500.

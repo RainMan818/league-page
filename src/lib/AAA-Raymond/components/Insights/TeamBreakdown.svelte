@@ -1,6 +1,6 @@
 <!--
   One sortable table: playoff seed, season record, Tankathon draft order, all-play & luck, lineup efficiency,
-  and (when SHOW_PLAYOFF_ODDS is on) projected record and playoff odds.
+  and (when the playoff odds are on: config.js / ?odds=on) projected record and playoff odds.
   Replaces the old Tankathon table. Inputs are built in index.svelte from the standings and utils/teamStats.js.
 -->
 <script>
@@ -8,13 +8,13 @@
   import SortableTable from "../Shared/SortableTable.svelte";
   import { pct, record, projRecord, signed, pts } from "../Shared/format.js";
   import "../Shared/common.css";
-  import { SHOW_PLAYOFF_ODDS } from "./config.js";
+  import { playoffOdds } from "./playoffOdds.svelte.js";
   import { streakValue, streakLabel } from "../../utils/teamStats.js";
 
   let { standings, projection = null, luck = [], efficiency = [], teams, divisions = 0, onTeamClick = null } = $props();
 
   const byId = (list) => Object.fromEntries(list.map((r) => [r.rosterID, r]));
-  const showOdds = $derived(SHOW_PLAYOFF_ODDS && !!projection);
+  const showOdds = $derived(playoffOdds.show && !!projection);
   const oddsById = $derived(byId(projection?.odds ?? []));
   const luckById = $derived(byId(luck));
   const effById = $derived(byId(efficiency));

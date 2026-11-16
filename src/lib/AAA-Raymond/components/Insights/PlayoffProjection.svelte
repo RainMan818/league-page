@@ -6,7 +6,7 @@
   import TeamChip from "../Shared/TeamChip.svelte";
   import { pct } from "../Shared/format.js";
   import "../Shared/common.css";
-  import { SHOW_PLAYOFF_ODDS } from "./config.js";
+  import { playoffOdds } from "./playoffOdds.svelte.js";
 
   let { projection, teams, playoffWeeks, fromWeek, regularSeasonLength, divisions = 0, onTeamClick = null } = $props();
 
@@ -52,10 +52,10 @@
   {#if s.seed}
     {@const id = seeds[s.seed - 1]}
     {@const o = oddsById[id]}
-    <div class="rr-slot" title={SHOW_PLAYOFF_ODDS ? `${pct(o?.playoffs)} to make the playoffs · ${pct(o?.title)} to win it all` : null}>
+    <div class="rr-slot" title={playoffOdds.show ? `${pct(o?.playoffs)} to make the playoffs · ${pct(o?.title)} to win it all` : null}>
       <span class="rr-seed">{s.seed}</span>
       <span class="rr-team"><TeamChip team={teams[id]} onclick={clickFor(id)} size={24} /></span>
-      {#if SHOW_PLAYOFF_ODDS}<span class="rr-slotPct">{pct(o?.playoffs)}</span>{/if}
+      {#if playoffOdds.show}<span class="rr-slotPct">{pct(o?.playoffs)}</span>{/if}
     </div>
   {:else}
     <div class="rr-slot rr-tbd">
@@ -86,7 +86,7 @@
         </div>
       </div>
     {/each}
-    {#if SHOW_PLAYOFF_ODDS}
+    {#if playoffOdds.show}
     <div class="rr-round">
       <div class="rr-roundLabel">Title odds</div>
       <div class="rr-games">

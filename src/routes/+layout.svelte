@@ -6,6 +6,8 @@
     import { injectAnalytics } from '@vercel/analytics/sveltekit';
     // AAA-Raymond: the player card (opens from any element with data-player-id)
     import PlayerCard from "$lib/AAA-Raymond/components/PlayerCard/index.svelte";
+    // AAA-Raymond: the secret playoff-odds switch (?odds=on / ?odds=off)
+    import OddsSwitch from "$lib/AAA-Raymond/components/Insights/OddsSwitch.svelte";
  
     injectAnalytics({ mode: dev ? 'development' : 'production' });
 </script>
@@ -18,4 +20,5 @@
     <Footer /> <!-- adds the footer -->
 
     <PlayerCard /> <!-- AAA-Raymond -->
+    <OddsSwitch /> <!-- AAA-Raymond -->
 </main>
