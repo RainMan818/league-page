@@ -11,8 +11,11 @@ All data comes live from the public Sleeper API.
 - `npm run build` / `npm run preview` — production build
 - Raymond runs commands in **Git Bash** (Windows): give bash syntax, not PowerShell (`VAR=1 cmd`, heredocs such as
   `git commit -F- <<'EOF'` are fine).
-- Local builds: `VERCEL=1 npm run build`. `@sveltejs/adapter-vercel` 5.5.3 refuses Node 24 outside Vercel ("Building
-  locally with unsupported Node.js version"); `VERCEL=1` skips that check and the output goes to `.vercel/` (ignored).
+- `@sveltejs/adapter-vercel` is pinned to 6.2.x (exact version in `package.json`, Nov 15): 6.2.0 added Node 24
+  support, so `npm run build` works locally on Node 24 (5.x refused Node 24 outside Vercel). Don't let it float up:
+  6.3.1+ reads `builder.config.kit.experimental.remoteFunctions`, which SvelteKit 2.16.1 doesn't have, and the build
+  crashes ("Cannot read properties of undefined (reading 'remoteFunctions')") even though its peer range says
+  `^2.4.0`. Update SvelteKit first, then the adapter. Build output goes to `.vercel/` (ignored).
 - Deploys to Vercel (default adapter). Docker build uses adapter-node (`npm run docker-run`).
 - Node is pinned to 24.x in `package.json` `engines`. Don't loosen it to `>=`: Vercel then jumps to the newest
   Node, and Node 26 broke the `smui-theme` build step (yargs `require is not defined`).
