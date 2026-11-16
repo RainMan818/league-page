@@ -1,10 +1,18 @@
 // Resources page links (from the template's Resources.svelte), grouped. dynastyOnly / redraftOnly work as in the
 // template (this league is dynasty); premium = some or all of it is behind a paywall.
 
-const today = new Date();
-const month = today.toLocaleString('en-US', { month: 'long' }).toLowerCase();
-// FantasyPros posts a new chart each month at a dated address
-const fantasyProsChart = `https://www.fantasypros.com/${today.getFullYear()}/${today.getMonth() + 1}/fantasy-football-rankings-dynasty-trade-value-chart-${month}-${today.getFullYear()}-update/`;
+/**
+ * FantasyPros posts a new chart each month at a dated address, e.g.
+ * /2026/03/fantasy-football-rankings-dynasty-trade-value-chart-march-2026-update/ (two-digit month; the template
+ * wrote /2026/3/, which broke the link January through September).
+ */
+export function fantasyProsChartUrl(date = new Date()) {
+    const year = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const month = date.toLocaleString('en-US', { month: 'long' }).toLowerCase();
+    return `https://www.fantasypros.com/${year}/${mm}/fantasy-football-rankings-dynasty-trade-value-chart-${month}-${year}-update/`;
+}
+const fantasyProsChart = fantasyProsChartUrl();
 
 export const RESOURCE_GROUPS = [
     {

@@ -142,7 +142,7 @@
     {#if slot != null}<span class="rr-slot">{slot}</span>{/if}
     {#if p.name}
       <PosChip pos={p.pos} size="0.66em" />
-      <b class="rr-pName">{p.name}</b>
+      <b class="rr-pName" data-player-id={p.id} role="button" tabindex="0">{p.name}</b>
       <span class="rr-nfl">{p.nfl}</span>
     {:else}
       <span class="rr-empty">Empty</span>

@@ -167,7 +167,9 @@ All data comes live from the public Sleeper API.
   story in a new tab. `utils/newsFeed.js` (`tests/newsFeed.test.js`) builds the rows: plain-text title / excerpt
   (WordPress "The post … appeared first on …" dropped), entity-decoded links (feeds send `&#038;`), source badge,
   Article / Podcast / Post, time ago; duplicates are link + title (the Footballers link every episode to their home
-  page). No Sleeper requests.
+  page). No Sleeper requests. The FantasyPros trade chart address is built by `fantasyProsChartUrl(date)` with a
+  two-digit month (`/2026/03/`; the template wrote `/2026/3/`, which broke the link January through September;
+  `tests/resourceLinks.test.js`).
 - **Error page** (404, 500, ...) — `RayError` (wired in by `src/routes/+error.svelte`), "Wide right" (Nov 15):
   an inline SVG of neon goalposts on a starry night field, a dashed kick path and a football sailing past the right
   upright, with the status code in outlined Orbitron beside "NO GOOD". Deliberately unlike the header (no sun, grid
@@ -176,6 +178,30 @@ All data comes live from the public Sleeper API.
   Home + Go back (Try again for 5xx). SvelteKit's own "Not Found" / "Internal Error" messages are hidden; any other
   `error.message` is shown.
   Don't use a `<nav>` element in page content: the theme styles every `nav` as the header.
+- **Player card** (every page, Nov 15) — `PlayerCard/index.svelte` (option A with tabs; canvas boards PlayerCardA4 /
+  PlayerCardRB / PlayerCardIDP), mounted once in `src/routes/+layout.svelte`. **Any element with
+  `data-player-id="<Sleeper ID>"` opens it** (the card listens for clicks and Enter / Space on the page, capture phase,
+  so a row's own click handler doesn't also fire); add `role="button" tabindex="0"` with it. Wired on Rosters (lineup,
+  depth chart), Matchups (lineups), manager pages (lineup), Drafts (past picks), Trades & Waivers (player names) and
+  the recap's players of the week. `openPlayerCard(id)` in `PlayerCard/playerCard.svelte.js` opens it from code.
+  Pop-up ≥700px, bottom sheet below (fixed height so tabs don't jump); Escape / ✕ / backdrop close it.
+  Overview: tiles (points and per game through Sleeper's last scored week, position rank among rostered players or the
+  best game, projected per game over the next 4 game weeks), a scrollable strip of week cards (played / LIVE weeks
+  open their scoring breakdown: every stat × the league's scoring; projected, bye and "didn't play" weeks are shown,
+  not clickable) and the breakdown. Stats: six stat tiles per position and the game log. History: "Transactions"
+  (draft picks, trades with what every team got, waiver claims / pickups / drops) and the career table.
+  **Game log and career share one set of columns per position** (`statGroups` in `utils/playerCard.js`, Raymond's
+  calls): WK/SEASON, OPP/G, SNAPS/PTS, PTS/PER G, then the stat groups; non-QB offense = Receiving + Rushing (WR/TE
+  receiving first, RB rushing first), QB = Passing + Rushing, IDP = Tackles (TKL, SOLO, TFL), Rush (SCK, HIT), Cover
+  (PD, INT), Fumbles (FF, FR), DB with Cover before Rush. Group labels are gray, column headers cyan, zeros dimmed;
+  no group is highlighted over another. No "league scoring" labels anywhere: every point is this league's.
+  Math in `utils/playerCard.js` (`tests/playerCard.test.js`, real Sleeper answers whose points match the matchups);
+  glue in `PlayerCard/cardData.js`. Requests: opening a card = 1 (the season week by week, shared per page load); the
+  rank only uses matchups the page already loaded (no download, else the tile shows the best game); History adds the
+  drafts and transactions loaders (shared with those pages, mostly saved) and one request per past season the first
+  time (`utils/playerStats.js` `seasonTotals`, saved for good under `pstats/v1/<id>/<season>` in `rr-pastSeasons`;
+  bump `PLAYER_STATS_VERSION` if `trimStats` changes). Before a season's first game the card shows last season.
+  Team names follow the site rule (each team's current name in every season); manager names are per season.
 
 ### Shared building blocks
 - `utils/leagueContext.js` — `loadLeagueBasics()` (nflState, managers, leagueData, rosters, `divisions`
@@ -292,7 +318,7 @@ All data comes live from the public Sleeper API.
 - `src/lib/utils/helperFunctions/universalFunctions.js` `getTeamData`: a team without a Sleeper team name is called
   "Team <Sleeper username>" (the template used the user's display name, which leagueInfo.js replaces with the
   manager's real name).
-- Theme: `src/routes/+layout.svelte`, `src/app.html`, `src/lib/Nav/index.svelte`, `NavLarge.svelte`, `static/manifest.json`.
+- Theme: `src/routes/+layout.svelte` (also mounts the player card), `src/app.html`, `src/lib/Nav/index.svelte`, `NavLarge.svelte`, `static/manifest.json`.
 - `src/lib/Footer.svelte`: hides the Blog link when `enableBlog` is off (like the nav).
 - `src/routes/blog/+page.js` and `blog/[slug]/+page.js`: with `enableBlog` off they answer 404 (the site's error page)
   instead of returning `false`, which made the page components crash with a 500.
@@ -375,6 +401,14 @@ reports a modify/delete conflict: keep the deletion (`git rm <file>`).
 - Transaction dates from the template look like "Nov 4 2026, 2:6AM" (minutes not padded); parse them with
   `transactionView.js`.
 - Division records are counted once in `getLeagueStandings` (they used to be double-counted).
+- Player stats (the player card, Nov 15): Sleeper's
+  unofficial `https://api.sleeper.com/stats/nfl/player/<id>?season_type=regular&season=<year>&grouping=week` (or
+  `grouping=season`) returns one player's whole season in one request: opponent, snaps, targets and every stat.
+  Multiplying each stat by the league's `scoring_settings` (same key names) reproduces the matchup points exactly
+  (checked: Amon-Ra St. Brown, week 1, 28.7 both ways). The bulk `stats/nfl/<year>?season_type=regular&position[]=...`
+  file is about 4.9 MB, so anything built on it (e.g. best available free agents) needs a trimming, cached server
+  route like `fetch_players_info`. The players map (`loadPlayers`) has `fn`, `ln`, `pos`, `positions`, `t`, `age`,
+  `experience`, `number`, `wi` (weekly projection + opponent).
 - The template's stores (`standingsStore`, `matchupsStore`, ...) are module-level, so on the server they persist
   between requests until the instance restarts. The browser re-runs the loads after hydration, so pages show fresh
   data, but server-rendered HTML can be a little stale.

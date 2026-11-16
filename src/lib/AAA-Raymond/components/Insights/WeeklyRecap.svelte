@@ -42,7 +42,7 @@
 {#snippet playerCard(p)}
   <div class="rr-card rr-player" style="--pos: var(--{p.pos}, var(--or-pink, #c2185b))">
     <div class="rr-pos">{p.pos}</div>
-    <div class="rr-pname" title={p.name}>{p.name}</div>
+    <div class="rr-pname" title={p.name} data-player-id={p.playerID} role="button" tabindex="0">{p.name}</div>
     <div class="rr-owner" title={name(p.rosterID)}>→ {name(p.rosterID)}</div>
     <div class="rr-pts">{pts(p.points)}</div>
     <div class="rr-opp">{p.opponent ? `vs ${p.opponent}` : " "}</div>

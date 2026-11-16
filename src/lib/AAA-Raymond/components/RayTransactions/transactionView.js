@@ -47,6 +47,7 @@ export function transactionSides(transaction, players = {}, teamName = (id) => `
                 const p = players[cell.player];
                 const isDef = p?.pos === 'DEF';
                 side.items.push({
+                    id: String(cell.player),
                     kind: cell.type === 'Dropped' ? 'drop' : transaction.type === 'waiver' ? 'add' : 'player',
                     name: p ? `${p.fn ?? ''} ${p.ln ?? ''}`.trim() : String(cell.player),
                     info: p ? [p.pos, isDef ? null : p.t].filter(Boolean).join(' · ') : '',

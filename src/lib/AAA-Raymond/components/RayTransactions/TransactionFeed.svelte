@@ -51,7 +51,7 @@
     {#each list as it}
       <span class="rr-item rr-{it.kind}">
         {#if sign[it.kind]}<b class="rr-sign" aria-label={it.kind === "add" ? "Added" : "Dropped"}>{sign[it.kind]}</b>{/if}
-        <span class="rr-itemName">{it.name}</span>
+        {#if it.id}<span class="rr-itemName" data-player-id={it.id} role="button" tabindex="0">{it.name}</span>{:else}<span class="rr-itemName">{it.name}</span>{/if}
         {#if it.info}<span class="rr-itemInfo">{it.info}</span>{/if}
       </span>
     {/each}

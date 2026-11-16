@@ -49,6 +49,7 @@
     const isDef = p?.pos === "DEF";
     return {
       pick,
+      id: cell.player,
       name: p ? `${p.fn ?? ""} ${p.ln ?? ""}`.trim() : String(cell.player),
       pos: p?.pos ?? "",
       color: posColor(p?.pos),
@@ -148,7 +149,7 @@
               <span class="rr-pick">{c.pick}</span>
               <PosChip pos={c.pos} />
             </span>
-            <span class="rr-player">{c.name}</span>
+            <span class="rr-player" data-player-id={c.id} role="button" tabindex="0">{c.name}</span>
             {#if c.nfl}<span class="rr-nfl">{c.nfl}</span>{/if}
             {#if c.by}<button type="button" class="rr-by" title="Highlight {teamName(c.drafter)}'s picks" onclick={() => select(c.drafter)}>by {c.by}</button>{/if}
           </div>

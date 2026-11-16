@@ -64,7 +64,7 @@
     <span class="rr-player rr-{side}">
       <span class="rr-photo" style={p.photo} aria-hidden="true"></span>
       <span class="rr-pText">
-        <span class="rr-pName">{p.name}</span>
+        <span class="rr-pName" data-player-id={p.id} role="button" tabindex="0">{p.name}</span>
         <span class="rr-pMeta"><b style="color: {p.color}">{p.pos}</b>{p.meta ? ` · ${p.meta}` : ""}</span>
       </span>
     </span>

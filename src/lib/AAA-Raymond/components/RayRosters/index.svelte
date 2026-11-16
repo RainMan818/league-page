@@ -194,6 +194,7 @@
       const p = pid && pid !== "0" ? players[pid] : null;
       return {
         slot,
+        id: p ? pid : null,
         empty: !p,
         name: p ? fullName(p) : "Empty",
         meta: p ? [p.pos, p.t ?? "FA", p.age ? `${p.age} yrs` : null].filter(Boolean).join(" · ") : "",
@@ -320,7 +321,7 @@
                 <span class="rr-chip rr-slotChip" style={chipStyle(r.slot)}>{slotLabel(r.slot)}</span>
                 {#if r.empty}<span class="rr-photo rr-noPhoto" aria-hidden="true"></span>{:else}<span class="rr-photo" style={r.photo} aria-hidden="true"></span>{/if}
                 <span class="rr-pText">
-                  <span class="rr-pName">{r.name}</span>
+                  {#if r.id}<span class="rr-pName" data-player-id={r.id} role="button" tabindex="0">{r.name}</span>{:else}<span class="rr-pName">{r.name}</span>{/if}
                   <span class="rr-pMeta">{r.meta}</span>
                 </span>
                 {#if r.injury}<span class="rr-inj" class:rr-out={r.out}>{r.injury}</span>{/if}
@@ -382,7 +383,7 @@
                 <span class="rr-chip" style={chipStyle(g.pos)}>{g.pos}</span>
                 <div class="rr-dcList">
                   {#each g.players as p (p.id)}
-                    <span class="rr-dc" class:rr-dcStart={p.tag === "start"} class:rr-dcTaxi={p.tag === "T"} class:rr-dcIR={p.tag === "IR"} style={p.tag === "start" ? `--pos: var(--or-pos-${g.pos})` : ""} title={p.title}>
+                    <span class="rr-dc" class:rr-dcStart={p.tag === "start"} class:rr-dcTaxi={p.tag === "T"} class:rr-dcIR={p.tag === "IR"} style={p.tag === "start" ? `--pos: var(--or-pos-${g.pos})` : ""} title={p.title} data-player-id={p.id} role="button" tabindex="0">
                       {#if p.tag === "T" || p.tag === "IR"}<b>{p.tag}</b>{/if}{p.name}
                     </span>
                   {/each}
