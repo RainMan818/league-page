@@ -11,11 +11,12 @@ All data comes live from the public Sleeper API.
 - `npm run build` / `npm run preview` — production build
 - Raymond runs commands in **Git Bash** (Windows): give bash syntax, not PowerShell (`VAR=1 cmd`, heredocs such as
   `git commit -F- <<'EOF'` are fine).
-- `@sveltejs/adapter-vercel` is pinned to 6.2.x (exact version in `package.json`, Nov 15): 6.2.0 added Node 24
-  support, so `npm run build` works locally on Node 24 (5.x refused Node 24 outside Vercel). Don't let it float up:
-  6.3.1+ reads `builder.config.kit.experimental.remoteFunctions`, which SvelteKit 2.16.1 doesn't have, and the build
-  crashes ("Cannot read properties of undefined (reading 'remoteFunctions')") even though its peer range says
-  `^2.4.0`. Update SvelteKit first, then the adapter. Build output goes to `.vercel/` (ignored).
+- SvelteKit 2.70.4 with `@sveltejs/adapter-vercel` 6.3.5 (Nov 15), so `npm run build` works locally on Node 24
+  (adapter 5.x refused Node 24 outside Vercel; Node 24 support arrived in 6.2.0). Update the two together: adapter
+  6.3.1+ reads `builder.config.kit.experimental.remoteFunctions`, which old SvelteKit (2.16) doesn't have, so the
+  build crashes ("Cannot read properties of undefined (reading 'remoteFunctions')") even though the adapter's peer
+  range says `^2.4.0`. After changing packages, restart `npm run dev` (a dev server started before the update fails
+  with "`__SVELTEKIT_APP_VERSION__` is not defined"). Build output goes to `.vercel/` (ignored).
 - Deploys to Vercel (default adapter). Docker build uses adapter-node (`npm run docker-run`).
 - Node is pinned to 24.x in `package.json` `engines`. Don't loosen it to `>=`: Vercel then jumps to the newest
   Node, and Node 26 broke the `smui-theme` build step (yargs `require is not defined`).
@@ -116,8 +117,10 @@ All data comes live from the public Sleeper API.
   per team-season) and transaction totals (`totals.seasons`, per roster). Swapped in for the template's `Records` in
   `components.js`. Records are saved in the browser (localStorage `records`) and rebuilt only when Sleeper scores a new
   week (`last_scored_leg`), the season changes or `RECORDS_CACHE_VERSION` in `utils/recordsCache.js` is bumped (bump it
-  whenever the records math changes). A rebuild downloads every week of every season (about 90 Sleeper requests);
-  records are never built on the server.
+  whenever the records math changes). A rebuild downloads only the current season's weeks (Nov 15: 12 requests at
+  week 9, was about 90): finished seasons' weekly scores, brackets and playoff weeks come from the browser's saved
+  copies (`savedSeasons.js` `seasonScores` / `seasonJson`, shared with Rivalry and the Trophy Room), and the playoff
+  downloads are skipped until the playoffs start. Records are never built on the server.
 - **Rivalry** (`/rivalry`) — `RayRivalry/index.svelte` (+ `utils/rivalry.js`, `tests/rivalry.test.js`): two manager
   pickers (URL `player_one` / `player_two`), head-to-head record with points in their games, last meeting, streak,
   biggest win, closest game, career comparison (all-time, regular season unless noted), every meeting (click for both
@@ -273,6 +276,12 @@ All data comes live from the public Sleeper API.
   until a new week is scored (`utils/recordsCache.js`), and nothing is built on the server. `processRegularSeason`
   also saves each team-season's head-to-head record without the median game (`h2hWins` / `h2hLosses` / `h2hTies`,
   from `recordBook.js` `headToHeadRecords`; `RECORDS_CACHE_VERSION` 3). Sleeper's `wins`/`losses` include the median.
+  Weekly scores come from `seasonScores` (saved for good for finished seasons), and `processPlayoffs` returns before
+  downloading anything until the playoffs start.
+- `src/lib/utils/helperFunctions/leagueBrackets.js` `getBrackets` (used only by the records): brackets via
+  `seasonJson` and playoff weeks via `seasonScores` (saved for finished seasons); a team's playoff points are its weekly
+  total (`weekPoints`) instead of adding up `starters_points`. Checked Nov 15: all 4,520 record values match the old
+  build (the new totals just lose float noise, e.g. 345.98 instead of 345.97999999999996).
 - Every file in `src/lib/utils/helperFunctions/` that calls Sleeper imports `sleeperFetch` instead of `fetch` (marked).
 - `src/lib/utils/helperFunctions/leagueTransactions.js`: the saved-copy top-up (entries carry `league`, `leg`, `ts`;
   `computeTotals` split out; newest-first order with a transaction-ID tie-break).

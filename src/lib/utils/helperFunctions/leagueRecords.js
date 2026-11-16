@@ -11,8 +11,9 @@ import { getBrackets } from './leagueBrackets';
 import { browser } from '$app/environment';
 // AAA-Raymond: keep saved records while they're still good (see recordsCache.js)
 import { isRecordsFresh, recordsMeta } from '$lib/AAA-Raymond/utils/recordsCache.js';
-// AAA-Raymond: one request per Sleeper URL per page load (shared with every other loader)
-import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
+// AAA-Raymond: weekly scores, saved for good once a season is finished (shared with Rivalry); the current season's
+// weeks are one request per URL per page load, shared with every other loader
+import { seasonScores, isFinishedLeague } from '$lib/AAA-Raymond/utils/savedSeasons.js';
 // AAA-Raymond: head-to-head record per team-season (Sleeper's record also counts the league-median game)
 import { headToHeadRecords } from '$lib/AAA-Raymond/utils/recordBook.js';
 
@@ -112,7 +113,7 @@ export const getLeagueRecords = async (refresh = false) => {
 		} = await processRegularSeason({leagueData, rosters, curSeason, week, regularSeason})
 
 		// post season data
-		const pS = await processPlayoffs({year, curSeason, week, playoffRecords, rosters})
+		const pS = await processPlayoffs({year, curSeason, week, playoffRecords, rosters, leagueData})
 
 		if(pS) {
 			playoffRecords = pS; // update the regular season records
@@ -179,25 +180,17 @@ const processRegularSeason = async ({rosters, leagueData, curSeason, week, regul
 	}
 
 	// loop through each week of the season
-	const matchupsPromises = [];
+	// AAA-Raymond: scores only (team, matchup, points: all processMatchups reads), from the browser's saved copy for a
+	// finished season (savedSeasons.js seasonScores), so a rebuild downloads only the current season's weeks
+	const finished = isFinishedLeague(leagueData, leagueID);
+	const weeks = [];
 	let startWeek = parseInt(week);
 	while(week > 0) {
-		matchupsPromises.push(sleeperFetch(`https://api.sleeper.app/v1/league/${curSeason}/matchups/${week}`, {compress: true}))
+		weeks.push(week);
 		week--;
 	}
 
-	const matchupsRes = await waitForAll(...matchupsPromises).catch((err) => { console.error(err); });
-
-	// convert the json matchup responses
-	const matchupsJsonPromises = [];
-	for(const matchupRes of matchupsRes) {
-		const data = matchupRes.json();
-		matchupsJsonPromises.push(data)
-		if (!matchupRes.ok) {
-			console.error(data);
-		}
-	}
-	const matchupsData = await waitForAll(...matchupsJsonPromises).catch((err) => { console.error(err); });
+	const matchupsData = await waitForAll(...weeks.map((w) => seasonScores(curSeason, w, finished))).catch((err) => { console.error(err); });
 
 	// now that we've used the current season ID for everything we need, set it to the previous season
 	curSeason = leagueData.previous_league_id;
@@ -410,7 +403,13 @@ const processMatchups = ({matchupWeek, seasonPointsRecord, record, startWeek, ma
 	}
 }
 
-const processPlayoffs = async ({curSeason, playoffRecords, year, week, rosters}) => {
+const processPlayoffs = async ({curSeason, playoffRecords, year, week, rosters, leagueData}) => {
+	// AAA-Raymond: decide before downloading: before the playoffs there are no brackets to fetch (6 requests saved on
+	// every mid-season rebuild)
+	if(!year || week <= parseInt(leagueData?.settings?.playoff_week_start)) {
+		return null;
+	}
+
 	const {
         playoffsStart,
         playoffRounds,
@@ -548,4 +547,4 @@ const getStartWeek = (i, playoffRounds, consolation, playoffsStart) => {
 		default:
 			return "Qualifiers";
 	}
-}
+}

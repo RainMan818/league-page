@@ -4,8 +4,9 @@ import { getLeagueRosters } from './leagueRosters';
 import {waitForAll} from './multiPromise';
 import { get } from 'svelte/store';
 import {brackets} from '$lib/stores';
-// AAA-Raymond: one request per Sleeper URL per page load (shared with every other loader)
-import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
+// AAA-Raymond: a finished season's brackets and playoff-week scores are saved in the browser (savedSeasons.js; the
+// brackets under the same keys the Trophy Room uses); the current season's are one request per URL per page load
+import { seasonJson, seasonScores, isFinishedLeague } from '$lib/AAA-Raymond/utils/savedSeasons.js';
 
 export const getBrackets = async (queryLeagueID = leagueID) => {
     if(get(brackets).champs && queryLeagueID == leagueID) {
@@ -22,9 +23,11 @@ export const getBrackets = async (queryLeagueID = leagueID) => {
     const numRosters = Object.keys(rosterRes.rosters).length;
 
     // get bracket data for winners and losers
+    // AAA-Raymond: saved for finished seasons (see the import)
+    const finished = isFinishedLeague(leagueData, leagueID);
     const bracketsAndMatchupFetches = [
-        sleeperFetch(`https://api.sleeper.app/v1/league/${queryLeagueID}/winners_bracket`, {compress: true}),
-        sleeperFetch(`https://api.sleeper.app/v1/league/${queryLeagueID}/losers_bracket`, {compress: true}),
+        seasonJson(`league/${queryLeagueID}/winners_bracket`, finished),
+        seasonJson(`league/${queryLeagueID}/losers_bracket`, finished),
     ]
 
     // variables for playoff records
@@ -50,23 +53,14 @@ export const getBrackets = async (queryLeagueID = leagueID) => {
 
     // add each week after the regular season to the fetch array
     for(let i = playoffsStart; i < 19; i++) {
-        // Get the matchup data (starters) for the playoff weeks
-        bracketsAndMatchupFetches.push(sleeperFetch(`https://api.sleeper.app/v1/league/${queryLeagueID}/matchups/${i}`, {compress: true}));
+        // Get the matchup data for the playoff weeks
+        // AAA-Raymond: scores only (team, matchup, points), saved for good once the season is finished
+        bracketsAndMatchupFetches.push(seasonScores(queryLeagueID, i, finished));
     }
     
     // Simultaneously fetch the bracket and matchup data
-    const bracketsAndMatchupResps = await waitForAll(...bracketsAndMatchupFetches).catch((err) => { console.error(err); });
-
-    // an array to hold all the JSON being converted
-    const bracketsAndMatchupJson = [];
-
-    // convert all the returned data from JSON
-    for(const bracketsAndMatchupResp of bracketsAndMatchupResps) {
-        bracketsAndMatchupJson.push(bracketsAndMatchupResp.json());
-    }
-
-    // wait for promises to fulfill
-    const playoffMatchups = await waitForAll(...bracketsAndMatchupJson).catch((err) => { console.error(err); });
+    // AAA-Raymond: already JSON (seasonJson / seasonScores)
+    const playoffMatchups = await waitForAll(...bracketsAndMatchupFetches).catch((err) => { console.error(err); });
 
     // The first element above was the winners bracket, so remove that
     const winnersData = playoffMatchups.shift();
@@ -209,6 +203,9 @@ const processPlayoffMatchup = ({playoffBracket, playoffMatchups, i, consolationM
     return matchup;
 }
 
+// AAA-Raymond: a team's points for one playoff week as a list (starters' points when the full week was downloaded)
+const weekPoints = (weekEntry) => (weekEntry ? weekEntry.starters_points ?? [weekEntry.points ?? 0] : undefined);
+
 const generateMatchupData = (t, tFrom, {m, r, playoffMatchups, i, playoffType, winners, fromWinners, consolation, p}) => {
     let matchup = {
         roster_id: null,
@@ -227,14 +224,15 @@ const generateMatchupData = (t, tFrom, {m, r, playoffMatchups, i, playoffType, w
         let tMatchupStarters = {}
         tMatchupStarters[1] = tMatchup?.starters;
         const tMatchupStartersPoints = {};
-        tMatchupStartersPoints[1] = tMatchup?.starters_points;
+        // AAA-Raymond: saved scores carry the team's points, not each starter's; the records add these lists up
+        tMatchupStartersPoints[1] = weekPoints(tMatchup);
         
         // playoffType 2: 2 weeks per round
         // playoffType 1: 1 weeks per round, 2 in championship round
         if(playoffType == 2 || (p && p == 1 && playoffType == 1)) {
             const secondWeek = playoffMatchups[i+1].filter(ma => ma.roster_id == t)[0];
             tMatchupStarters[2] = secondWeek?.starters;
-            tMatchupStartersPoints[2] = secondWeek?.starters_points;
+            tMatchupStartersPoints[2] = weekPoints(secondWeek);
         }
 
         matchup.starters = tMatchupStarters;
