@@ -227,3 +227,45 @@ export function weeksLabel(weeks = []) {
 /** Filter chips: 'All', 'Offense', 'IDP' or one group. */
 export const matchesFilter = (row, filter) =>
     filter === 'All' || (filter === 'Offense' ? OFFENSE.includes(row.group) : filter === 'IDP' ? isDefender(row.group) : row.group === filter);
+
+// ---------------------------------------------------------------- best available
+
+/** Top free agents: per game needs at least this many games played (so one big game doesn't top the list). */
+export const BEST_RULES = { minGamesPerGame: 3, recentGames: 3, snapGames: 2 };
+
+/**
+ * Top free agents (Players page, second section): free agents on an NFL team, by season points so far ('total') or
+ * points per game played ('perGame', 3+ games): [{ id, group, team, points, games, perGame, recent (his team's last
+ * 3 games, missed games as 0), snaps (last 2 team games), weeks (bars), adds }].
+ */
+export function bestAvailable({ weeks = {}, players = {}, rostered = [], adds = {}, sort = 'total', rules = BEST_RULES }) {
+    const series = seasonSeries(weeks);
+    const onRoster = new Set((rostered ?? []).map(String));
+    const rows = [];
+    for (const [id, games] of Object.entries(series.byPlayer)) {
+        if (onRoster.has(id)) continue;
+        const p = players?.[id];
+        const group = playerGroup(p, TREND_GROUPS);
+        if (!group || !p?.t) continue; // not on an NFL team now
+        const played = Object.values(games);
+        const points = round1(played.reduce((s, g) => s + g.pts, 0));
+        const lines = teamLines(series, id, p.t);
+        const recentLines = lines.slice(-rules.recentGames);
+        rows.push({
+            id,
+            group,
+            team: p.t,
+            points,
+            games: played.length,
+            perGame: round1(points / played.length),
+            recent: round1(avg(recentLines.map((l) => l.pts))),
+            snaps: Math.round(avg(lines.slice(-rules.snapGames).map((l) => l.snap))),
+            weeks: shownWeeks(series, id, p.t, recentLines.map((l) => l.week)),
+            adds: adds?.[id] ?? null,
+        });
+    }
+    if (sort === 'perGame') {
+        return rows.filter((r) => r.games >= rules.minGamesPerGame).sort((a, b) => b.perGame - a.perGame || b.points - a.points);
+    }
+    return rows.sort((a, b) => b.points - a.points || b.perGame - a.perGame);
+}

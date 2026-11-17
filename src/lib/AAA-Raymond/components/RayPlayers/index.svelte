@@ -5,10 +5,12 @@
   status), his own injury status, and how many Sleeper leagues added him today. Filter chips by side / position and
   a switch to leave fill-ins out. Names open the player card. Data: /api/fetch_trending (Sleeper's weekly stats,
   trimmed and cached on the server) + the league's rosters and players (already loaded); math in utils/trending.js.
+  Second section, "Top free agents" (Nov 16): free agents by season points (or points per game, 3+ games), with the
+  last 3 games, recent snap share, the same weekly bars, injury status and Sleeper adds; its own filters. Same data.
 -->
 <script>
   import { loadLeagueBasics } from "../../utils/leagueContext.js";
-  import { trendingPlayers, matchesFilter, weeksLabel, TREND_RULES } from "../../utils/trending.js";
+  import { trendingPlayers, bestAvailable, matchesFilter, weeksLabel, TREND_RULES, BEST_RULES } from "../../utils/trending.js";
   import { posColor } from "../../utils/positions.js";
   import Loading from "../Shared/Loading.svelte";
 
@@ -23,6 +25,11 @@
   let filter = $state("All");
   let withFillIns = $state(true);
   let shown = $state(FIRST);
+  // Top free agents
+  let source = $state.raw(null);
+  let bestFilter = $state("All");
+  let bestSort = $state("total"); // total | perGame
+  let bestShown = $state(FIRST);
 
   $effect(() => {
     let cancelled = false;
@@ -39,6 +46,7 @@
         players = basics.players;
         through = data.through;
         rows = trendingPlayers({ weeks: data.weeks, players: basics.players, rostered, adds: data.adds });
+        source = { weeks: data.weeks, players: basics.players, rostered, adds: data.adds };
         status = "ready";
       })
       .catch((e) => {
@@ -53,6 +61,24 @@
   const pick = (f) => {
     filter = f;
     shown = FIRST;
+  };
+
+  const best = $derived(source ? bestAvailable({ ...source, sort: bestSort }) : []);
+  const bestVisible = $derived(best.filter((r) => matchesFilter(r, bestFilter)));
+  const pickBest = (f) => {
+    bestFilter = f;
+    bestShown = FIRST;
+  };
+  const sortBest = (s) => {
+    bestSort = s;
+    bestShown = FIRST;
+  };
+  const bestNotes = (r) => {
+    const out = [];
+    const own = players[r.id]?.is;
+    if (own) out.push({ tone: "own", text: `Listed ${STATUS[own] ?? own}` });
+    if (r.adds) out.push({ tone: "adds", text: `Added in ${r.adds >= 1000 ? `${Math.round(r.adds / 1000)}K` : r.adds} Sleeper leagues today` });
+    return out;
   };
 
   const name = (id) => (players[id] ? `${players[id].fn} ${players[id].ln}` : id);
@@ -103,6 +129,75 @@
 
 <div class="rr-players">
   <h1 class="rr-pageTitle">Players</h1>
+
+<section class="rr-card">
+    <div class="rr-head">
+      <div>
+        <h2>Top free agents</h2>
+        <p class="rr-sub">The free agents who have scored the most this season, with how their last 3 games went.</p>
+      </div>
+    </div>
+
+    <div class="rr-controls">
+      <div class="rr-chips" role="group" aria-label="Filter best available by position">
+        {#each FILTERS as f (f)}
+          <button type="button" class="rr-chip" class:rr-on={bestFilter === f} aria-pressed={bestFilter === f} onclick={() => pickBest(f)}>{f}</button>
+        {/each}
+      </div>
+      <div class="rr-seg" role="group" aria-label="Sort best available">
+        <button type="button" class:rr-on={bestSort === "total"} aria-pressed={bestSort === "total"} onclick={() => sortBest("total")}>Total points</button>
+        <button type="button" class:rr-on={bestSort === "perGame"} aria-pressed={bestSort === "perGame"} onclick={() => sortBest("perGame")}>Per game</button>
+      </div>
+    </div>
+
+    {#if status === "loading"}
+      <Loading message="Finding the best free agents..." />
+    {:else if status === "error"}
+      <Loading message="Sleeper's stats couldn't be loaded right now. Try again later." progress={false} />
+    {:else if !bestVisible.length}
+      <p class="rr-empty">{#if !through}No games finished yet this season.{:else}No free agents at this position have played yet.{/if}</p>
+    {:else}
+      <div class="rr-table" role="table" aria-label="Top free agents">
+        <div class="rr-row rr-bestRow rr-headRow" role="row">
+          <span role="columnheader"></span>
+          <span role="columnheader">Player</span>
+          <span role="columnheader" class="rr-statHead"><span>Total</span><span>Per game</span><span>Last 3</span></span>
+          <span role="columnheader">Snaps <small>last 2</small></span>
+          <span role="columnheader">Weeks {firstWeek}–{through} <small>snaps · pts</small></span>
+          <span role="columnheader">Notes</span>
+        </div>
+        {#each bestVisible.slice(0, bestShown) as r, i (r.id)}
+          {@const p = players[r.id]}
+          <div class="rr-row rr-bestRow" role="row">
+            <span class="rr-rank" role="cell">{i + 1}</span>
+            <span class="rr-who" role="cell">
+              <span class="rr-name" data-player-id={r.id} role="button" tabindex="0">{name(r.id)}</span>
+              <span class="rr-meta"><span class="rr-pos" style="--pos: {posColor(r.group)}">{r.group}</span>{r.team}{p?.age ? ` · ${p.age} yrs` : ""}</span>
+            </span>
+            <span class="rr-stats" role="cell">
+              <span class="rr-stat" class:rr-sorted={bestSort === "total"}><span class="rr-label">Total</span><b>{fmt(r.points)}</b><small>{r.games} game{r.games === 1 ? "" : "s"}</small></span>
+              <span class="rr-stat" class:rr-sorted={bestSort === "perGame"}><span class="rr-label">Per game</span><b>{fmt(r.perGame)}</b></span>
+              <span class="rr-stat"><span class="rr-label">Last 3</span><b>{fmt(r.recent)}</b></span>
+            </span>
+            <span class="rr-num rr-bestSnaps" role="cell"><span class="rr-label">Snaps</span><b>{r.snaps}%</b></span>
+            <span class="rr-chart" role="cell">{@render bars(r)}</span>
+            <span class="rr-why" role="cell">
+              {#each bestNotes(r) as x, xi (xi)}
+                <span class="rr-note rr-{x.tone}"><b aria-hidden="true">{ICON[x.tone]}</b><span>{x.text}</span></span>
+              {/each}
+            </span>
+          </div>
+        {/each}
+      </div>
+      {#if bestVisible.length > bestShown}
+        <button type="button" class="rr-more" onclick={() => (bestShown += FIRST)}>Show {Math.min(FIRST, bestVisible.length - bestShown)} more ▾</button>
+      {/if}
+      <p class="rr-foot">
+        Free agents = on no roster in this league, on an NFL team now. Points with this league's scoring; per game counts the games he played
+        ({BEST_RULES.minGamesPerGame}+ to be ranked); last 3 = his team's last 3 games, missed games as 0. Through week {through}.
+      </p>
+    {/if}
+  </section>
 
   <section class="rr-card">
     <div class="rr-head">
@@ -529,6 +624,64 @@
     font-size: 0.85rem;
   }
 
+  /* ---- best available */
+  .rr-bestRow {
+    grid-template-columns: 26px minmax(170px, 1.3fr) 230px 70px 168px minmax(150px, 1fr);
+  }
+
+  .rr-statHead,
+  .rr-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .rr-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rr-stat b,
+  .rr-bestSnaps b {
+    font-size: 0.85rem;
+    color: var(--or-heading, var(--g111));
+  }
+
+  .rr-stat small {
+    font-size: 0.62rem;
+    color: var(--or-muted, var(--g999));
+  }
+
+  .rr-stat:not(.rr-sorted) b {
+    font-weight: 500;
+    color: var(--or-text, var(--g111));
+  }
+
+  .rr-seg {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid var(--or-table-border, var(--ccc));
+  }
+
+  .rr-seg button {
+    padding: 4px 12px;
+    border: 0;
+    border-radius: 7px;
+    background: none;
+    font: 500 0.75rem "Roboto", sans-serif;
+    color: var(--or-text, var(--g111));
+    cursor: pointer;
+  }
+
+  .rr-seg button.rr-on {
+    background: var(--or-pink, #c2185b);
+    color: #fff;
+    font-weight: 700;
+  }
+
   /* narrower screens: name + numbers on one line, bars and reasons below */
   @media (max-width: 899.98px) {
     .rr-card {
@@ -595,6 +748,29 @@
 
     .rr-why {
       grid-area: why;
+    }
+
+    .rr-bestRow {
+      grid-template-columns: 22px minmax(0, 1fr) auto;
+      grid-template-areas:
+        "rank who snaps"
+        ". stats stats"
+        ". chart chart"
+        ". why why";
+    }
+
+    .rr-bestRow .rr-stats {
+      grid-area: stats;
+      max-width: 300px;
+    }
+
+    .rr-bestSnaps {
+      grid-area: snaps;
+      align-items: flex-end;
+    }
+
+    .rr-bestRow .rr-why:empty {
+      display: none;
     }
   }
 </style>

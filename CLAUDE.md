@@ -213,6 +213,10 @@ All data comes live from the public Sleeper API.
   corrections, older weeks never), 4 at a time; plus `players/nfl/trending/add` (hourly). The answer has
   `cache-control: public, max-age=600, s-maxage=3600, stale-while-revalidate=86400`, so visitors share the CDN copy.
   A cold start fetches nflState + league + every finished week (12 requests at week 10; 1.3 s locally).
+  **Top free agents** (second section, Nov 16): free agents on an NFL team ranked by season points ("Total points")
+  or points per game played ("Per game", 3+ games, `BEST_RULES`), with games, last 3 (his team's last 3 games, missed
+  games as 0), snap share over the last 2, the same weekly bars, his injury status and Sleeper adds; own filter
+  chips. `bestAvailable` in `utils/trending.js` (tests in `tests/trending.test.js`); same route data, no extra requests.
 - **Player card** (every page, Nov 15) — `PlayerCard/index.svelte` (option A with tabs; canvas boards PlayerCardA4 /
   PlayerCardRB / PlayerCardIDP), mounted once in `src/routes/+layout.svelte`. **Any element with
   `data-player-id="<Sleeper ID>"` opens it** (the card listens for clicks and Enter / Space on the page, capture phase,

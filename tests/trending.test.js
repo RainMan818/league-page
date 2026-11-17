@@ -5,7 +5,7 @@ import assert from 'assert/strict';
 import { test } from 'node:test';
 import {
     completedWeeks, trimWeek, seasonSeries, teamLines, trend, isTrendingUp, samePosition, fillIns, shownWeeks,
-    trendingPlayers, weeksLabel, matchesFilter, TREND_RULES,
+    trendingPlayers, weeksLabel, matchesFilter, TREND_RULES, bestAvailable, BEST_RULES,
 } from '../src/lib/AAA-Raymond/utils/trending.js';
 
 // [id, team, snap %, points] per week; GB has a bye in week 5 here
@@ -108,7 +108,7 @@ test('the list: free agents only, trending up, best first, with fill-ins and Sle
     assert.equal(rows[0].adds, 1234);
     assert.deepEqual(rows[0].fillIns.map((f) => f.id), ['franklin']);
     assert.ok(rows[0].score > rows[1].score);
-    assert.equal(rows[0].score, 13.4); // 32.5 snap jump / 10 + (14 typical - 3.8 earlier)
+    assert.equal(rows[0].score, 13.5); // 32.5 snap jump / 10 + (14 typical - 3.8 earlier) = 13.45
     assert.deepEqual(trendingPlayers({ weeks: WEEKS, players: PLAYERS, rostered: ['mcduffie', 's1'] }).map((r) => r.id), []);
     assert.equal(TREND_RULES.snapGames, 2);
     assert.equal(TREND_RULES.pointGames, 3);
@@ -126,4 +126,19 @@ test('labels and filters', () => {
     assert.equal(matchesFilter(wr, 'Offense'), true);
     assert.equal(matchesFilter(wr, 'WR'), true);
     assert.equal(matchesFilter(wr, 'TE'), false);
+});
+
+test('best available: free agents on an NFL team, by total or per game (3+ games)', () => {
+    const players = { ...PLAYERS, gone: { fn: 'No', ln: 'Team', pos: 'WR', t: null }, two: { fn: 'Two', ln: 'Games', pos: 'WR', t: 'NYJ' } };
+    const weeks = { ...WEEKS, 8: [...WEEKS[8], ['gone', 'NYJ', 90, 40], ['two', 'NYJ', 80, 20]], 9: [...WEEKS[9], ['two', 'NYJ', 85, 22]] };
+    const total = bestAvailable({ weeks, players, rostered: ['franklin'], adds: { nyj: 50 } });
+    assert.deepEqual(total.map((r) => `${r.id}:${r.points}`), ['mcduffie:52.5', 'two:42', 'spike:36', 'nyj:32', 'cb1:27', 's1:25']);
+    assert.ok(!total.some((r) => r.id === 'franklin' || r.id === 'gone')); // rostered / no NFL team
+    const m = total[0];
+    assert.deepEqual({ games: m.games, perGame: m.perGame, recent: m.recent, snaps: m.snaps }, { games: 5, perGame: 10.5, recent: 15, snaps: 98 });
+    assert.deepEqual(m.weeks.filter((w) => w.recent).map((w) => w.week), [7, 8, 9]);
+    assert.equal(total.find((r) => r.id === 'nyj').adds, 50);
+    const perGame = bestAvailable({ weeks, players, rostered: ['franklin'], sort: 'perGame' });
+    assert.deepEqual(perGame.map((r) => `${r.id}:${r.perGame}`), ['mcduffie:10.5', 'spike:7.2', 'cb1:6.8', 'nyj:5.3', 's1:5']); // 'two' has 2 games
+    assert.equal(BEST_RULES.minGamesPerGame, 3);
 });
