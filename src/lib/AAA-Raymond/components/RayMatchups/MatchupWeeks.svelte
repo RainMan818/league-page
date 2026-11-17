@@ -97,7 +97,7 @@
 
     if (!queryWeek || queryWeek < 1) {
       displayWeek = Number(week) || 1;
-      goto(`/matchups?week=${displayWeek}`, { noscroll: true });
+      goto(`/matchups?week=${displayWeek}`, { noScroll: true });
       if (displayWeek > regularSeasonLength) selection = "champions";
       return;
     }
@@ -108,7 +108,7 @@
     displayWeek = newWeek;
     active = null;
     refreshError = "";
-    goto(`/matchups?week=${newWeek}`, { noscroll: true });
+    goto(`/matchups?week=${newWeek}`, { noScroll: true });
   };
 </script>
 

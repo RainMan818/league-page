@@ -67,7 +67,7 @@
   const choose = (a, b) => {
     one = a;
     two = b;
-    if (a && b && a !== b) goto(`/rivalry?player_one=${a}&player_two=${b}`, { noscroll: true, keepfocus: true });
+    if (a && b && a !== b) goto(`/rivalry?player_one=${a}&player_two=${b}`, { noScroll: true, keepFocus: true });
   };
   const swap = () => choose(two, one);
 

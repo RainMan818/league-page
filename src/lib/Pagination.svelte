@@ -1,6 +1,7 @@
 <script>
 	import { Icon } from '@smui/tab';
-    export let total, perPage, page, target, scroll = true;
+    // AAA-Raymond: onchange(dest) runs when a page is picked (Trades & Waivers scrolls after its URL update)
+    export let total, perPage, page, target, scroll = true, onchange = null;
 
     let pageLabels = [];
 
@@ -29,6 +30,7 @@
         if(scroll) {
             window.scrollTo({left: 0, top: target, behavior: 'smooth'});
         }
+        onchange?.(dest);
         page = dest;
     }
 

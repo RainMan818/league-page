@@ -6,6 +6,7 @@
 	import Pagination from '../Pagination.svelte';
 	import { match } from 'fuzzyjs';
 	import { goto } from '$app/navigation';
+	import { tick } from 'svelte';
 	import { getLeagueTransactions, loadPlayers } from '$lib/utils/helper';
 	// AAA-Raymond: trades & waivers grouped by day
 	import TransactionFeed from '../AAA-Raymond/components/RayTransactions/TransactionFeed.svelte';
@@ -72,7 +73,7 @@
 	// (queryPage never changes, so going back to that page used to be ignored and the list didn't update)
 	let shownPage = page;
 	const changePage = (dest, pageChange = false) => {
-		if(shownPage == dest && pageChange) return;
+		if(shownPage == dest && pageChange) { scrollToList = false; return; }
 		page = dest;
 		if(dest > (filteredTransactions.length / perPage) || dest < 0) {
 			page = 0;
@@ -80,7 +81,9 @@
 		shownPage = page;
 		displayTransactions = setQuery(query, filteredTransactions);
 		if(postUpdate) {
-            goto(`/transactions?show=${show}&query=${query}&page=${page+1}`, {noscroll: true,  keepfocus: true});
+            goto(`/transactions?show=${show}&query=${query}&page=${page+1}`, {noScroll: true,  keepFocus: true}).then(scrollIfAsked);
+		} else {
+			tick().then(scrollIfAsked);
 		}
 	}
 
@@ -91,7 +94,7 @@
 	const debounce = (dest) => {
 		clearTimeout(timer);
 		timer = setTimeout(() => {
-            goto(dest,{noscroll: true,  keepfocus: true});
+            goto(dest,{noScroll: true,  keepFocus: true});
 		}, 750);
 	}
 
@@ -109,7 +112,7 @@
 	const clearSearch = () => {
 		query = "";
 		if(postUpdate) {
-			goto(`/transactions?show=${show}&query=&page=${page+1}`, {noscroll: true,  keepfocus: true});
+			goto(`/transactions?show=${show}&query=&page=${page+1}`, {noScroll: true,  keepFocus: true});
 		}
 	}
 	
@@ -138,7 +141,16 @@
 
     let el;
 
-    $: top = el?.getBoundingClientRect() ? el?.getBoundingClientRect().top  : 0;
+    // AAA-Raymond: the bottom page buttons scroll to the top of the list (its heading), measured when clicked, and
+    // only after the URL update: with noScroll, SvelteKit puts the scroll back where it was when goto started, so
+    // scrolling first (the template's way) got undone. The template also measured once at load (it went to the top).
+    let scrollToList = false;
+    const top = () => (el ? Math.max(0, el.getBoundingClientRect().top + window.scrollY - 8) : 0);
+    function scrollIfAsked() {
+        if(!scrollToList) return;
+        scrollToList = false;
+        window.scrollTo({left: 0, top: top(), behavior: 'smooth'});
+    }
 
 	const setShow = (val) => {
 		show = val;
@@ -269,12 +281,12 @@
 			<h5>Recent Waivers</h5>
 		{/if}
 
-		<Pagination {perPage} total={totalTransactions} bind:page={page} target={top} scroll={false} />
+		<Pagination {perPage} total={totalTransactions} bind:page={page} scroll={false} />
 		<div class="transactions-child">
 			<!-- AAA-Raymond: the filtered list too, so a day split across pages shows its real total ("8 of 11 waivers") -->
 			<TransactionFeed transactions={displayTransactions} allTransactions={subsetTransactions} {players} {leagueTeamManagers} />
 		</div>
-		<Pagination {perPage} total={totalTransactions} bind:page={page} target={top} scroll={true} />
+		<Pagination {perPage} total={totalTransactions} bind:page={page} scroll={false} onchange={() => (scrollToList = true)} />
 
 	</div>
 

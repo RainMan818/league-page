@@ -125,11 +125,11 @@
       const playoffWeekStart = regularSeasonLength(season.leagueData) + 1;
       // a regular-season week in the URL goes back to that week's matchups (the template went to week 1)
       if (queryWeek && queryWeek > 0 && queryWeek < playoffWeekStart) {
-        goto(`/matchups?week=${queryWeek}`, { noscroll: true });
+        goto(`/matchups?week=${queryWeek}`, { noScroll: true });
         selection = "regular";
         return;
       }
-      goto(`/matchups?week=${playoffWeekStart}`, { noscroll: true });
+      goto(`/matchups?week=${playoffWeekStart}`, { noScroll: true });
       await loadSeason(season);
     } catch (err) {
       console.error(err);

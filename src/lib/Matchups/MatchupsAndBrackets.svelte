@@ -40,12 +40,12 @@
         if(s == 'regular') {
             const back = lastRegularWeek || Math.min(Math.max(Number(week) || 1, 1), regularSeasonLength || 1);
             queryWeek = back;
-            goto(`/matchups?week=${back}`, {noscroll: true});
+            goto(`/matchups?week=${back}`, {noScroll: true});
         } else if(selection == 'regular') {
             const shown = Number(new URL(window.location.href).searchParams.get('week'));
             if(shown > 0 && shown <= regularSeasonLength) lastRegularWeek = shown;
             queryWeek = 99;
-            goto(`/matchups?week=99`, {noscroll: true});
+            goto(`/matchups?week=99`, {noScroll: true});
         }
         selection = s;
     }

@@ -75,7 +75,7 @@
             } else {
                 direction = -1;
             }
-            goto(`/blog?page=${dest + 1}&filter=${filterKey}`, {noscroll: true,  keepfocus: true});
+            goto(`/blog?page=${dest + 1}&filter=${filterKey}`, {noScroll: true,  keepFocus: true});
         }
     }
 

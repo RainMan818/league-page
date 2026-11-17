@@ -391,9 +391,11 @@
     }
   }
 
+  /* AAA-Raymond: not "auto" side margins — inside the Rosters card (a flex column) they make the box grow to the
+     table's full width and the whole page slides sideways on phones; with 0 the table scrolls in its own box */
   @media (max-width: 400px) {
     .team {
-      margin: 4px auto 10px;
+      margin: 4px 0 10px;
     }
   }
 

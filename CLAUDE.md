@@ -338,7 +338,13 @@ All data comes live from the public Sleeper API.
 - Wiring: `src/routes/+page.svelte`, `src/routes/+error.svelte`, `src/routes/constitution/+page.svelte`, `src/routes/awards/` (season awards only), `src/routes/standings/+page.js` (passes `fetch`), `src/routes/trends/` (new), `src/routes/rosters/+page.js`
   (standings only) and `+page.svelte` (renders `RayRosters`), `src/routes/resources/+page.svelte` (renders `RayResources`), `src/lib/components.js`, `src/lib/utils/helper.js`, `src/lib/utils/tabs.js` (nav tabs; the template's "League Info" menu is renamed "Clubhouse" and has Players),
   `src/lib/Matchups/MatchupsAndBrackets.svelte`, `src/lib/Drafts/index.svelte`,
-  `src/lib/Transactions/TransactionsPage.svelte`.
+  `src/lib/Transactions/TransactionsPage.svelte` (also: the bottom page buttons scroll to the list's heading, measured
+  when clicked and done after the URL update; the template measured once at load and scrolled to the page top).
+- `src/lib/Pagination.svelte`: an `onchange(dest)` prop, called when a page is picked.
+- `goto` options are `noScroll` / `keepFocus` (camelCase). The template wrote `noscroll` / `keepfocus`, which SvelteKit
+  ignores, so changing the Matchups week, the bracket buttons, Rivalry managers and Trades & Waivers pages/search all
+  jumped to the page top; fixed in the files the site uses (Nov 16). With `noScroll`, SvelteKit restores the scroll
+  position from when `goto` started once navigation ends, so scroll yourself after `await goto(...)`, not before.
 - `src/lib/utils/helperFunctions/leagueMatchups.js` keeps extra fields per team (`players`, `playersPoints`,
   `matchup_id`, `total`) for the bench and the shared matchups loader.
 - `src/lib/BarChart.svelte` (`controlsOnTop`).
@@ -440,6 +446,9 @@ reports a modify/delete conflict: keep the deletion (`git rm <file>`).
   or `teams` from `loadLeagueContext`), never from `users[...].display_name`: that's the manager's real name
   (leagueInfo.js), and teams without a Sleeper team name default to "Team <username>" (`user_name`).
 - Files use Windows (CRLF) line endings; keep them.
+- No `margin: auto` sideways on a box inside a flex column (e.g. the Rosters card): it stops the box stretching, so it
+  grows to its widest content (a wide table) and the whole page slides sideways on phones. RosterAnalysis had this
+  under 400px (fixed Nov 16).
 - Prefix class names in custom components (`rr-`): the template has global rules on generic names
   (e.g. `.slot { width: 22px !important }`) that will break your layout.
 - Svelte 5 scoped styles only add one class of specificity, so global rules like the shared table styles can win
