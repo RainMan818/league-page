@@ -11,6 +11,8 @@ All data comes live from the public Sleeper API.
 - `npm run build` / `npm run preview` — production build
 - Raymond runs commands in **Git Bash** (Windows): give bash syntax, not PowerShell (`VAR=1 cmd`, heredocs such as
   `git commit -F- <<'EOF'` are fine).
+- After a change, give Raymond **only the `git commit` command** (a `git commit -F- <<'EOF' … EOF` block with the
+  message): no `cd`, `npm test` or `git add` chain (Nov 16). He stages and tests himself.
 - SvelteKit 2.70.4 with `@sveltejs/adapter-vercel` 6.3.5 (Nov 15), so `npm run build` works locally on Node 24
   (adapter 5.x refused Node 24 outside Vercel; Node 24 support arrived in 6.2.0). Update the two together: adapter
   6.3.1+ reads `builder.config.kit.experimental.remoteFunctions`, which old SvelteKit (2.16) doesn't have, so the
@@ -52,7 +54,7 @@ All data comes live from the public Sleeper API.
   Recap = weekly recap (`Insights/RecapPanel` + `WeeklyRecap`, previous/next and a week picker) ending with
   "Movers" (`RayStandings/StandingsMovers`: risers / fallers that week, from `placesByWeek()` + `movesForWeek()` in
   `utils/leagueTrends.js`; hidden for week 1 and playoff weeks) and season awards;
-  Power Rankings = `RayPowerRankings` (in a card); Standings = `Insights` (playoff projection bracket
+  Power Rankings = `RayPowerRankings` (straight on the page like the other tabs: no card, Nov 16); Standings = `Insights` (playoff projection bracket
   + sortable Team Breakdown table); Payouts = `RayPayouts` (below). The last pick is remembered (localStorage
   `rr-home-view`); `/?view=recap|rankings|standings|payouts` opens one directly. A section is built the first time it's opened, then kept. The sidebar's "Recent Moves" is
   `RayTransactions/RecentMoves` (newest 6 waivers + 6 trades, `RECENT_PER_TYPE`), swapped in via `components.js`.
