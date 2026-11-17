@@ -16,21 +16,29 @@
 	let left = $state();
 	let top = $state();
 
-	$effect(() => {
-		top = el?.getBoundingClientRect() ? el?.getBoundingClientRect().top  : 0;
-		const bottom = el?.getBoundingClientRect() ? el?.getBoundingClientRect().bottom  : 0;
-
-		height = bottom - top + 1;
-
-		left = el?.getBoundingClientRect() ? el?.getBoundingClientRect().left  : 0;
-		const right = el?.getBoundingClientRect() ? el?.getBoundingClientRect().right  : 0;
-
-		width = right - left;
-	});
+	// AAA-Raymond: place the drop-down under the menu tab, measured against .parent (where the menu is positioned),
+	// again whenever the window is resized or the menu opens. The template measured once, from the window's edge,
+	// so the menu drifted away from the tab after a resize.
+	let parentEl = $state();
+	const place = () => {
+		if(!el || !parentEl) return;
+		const tab = el.getBoundingClientRect();
+		const box = parentEl.getBoundingClientRect();
+		top = tab.top - box.top;
+		height = tab.bottom - box.top + 1;
+		left = tab.left - box.left;
+		width = tab.width;
+	};
 
 	let innerWidth = $state();
 
+	$effect(() => {
+		innerWidth; // re-measure on resize
+		place();
+	});
+
 	const open = () => {
+		place();
 		display = !display;
 	}
 
@@ -74,7 +82,8 @@
 		position: absolute;
 		z-index: 5;
 		background-color: var(--fff);
-		transition: all 0.4s;
+		/* AAA-Raymond: animate opening only (was "all", which also slid the menu sideways after a resize) */
+		transition: max-height 0.4s, box-shadow 0.4s;
 	}
 
 	.overlay {
@@ -103,7 +112,7 @@
 
 <div tabindex="0" role="button" class="overlay" style="display: {display ? "block" : "none"};" onclick={() => open(true)}></div>
 
-<div class="parent">
+<div class="parent" bind:this={parentEl}>
 	<TabBar class="navBar" {tabs} key={(tab) => tab.key} bind:active>
 		{#snippet tab(tab)}
 			{#if tab.nest}

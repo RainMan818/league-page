@@ -113,13 +113,15 @@
 {/snippet}
 
 {#snippet bars(r)}
-  <span class="rr-bars" style="--pos: {posColor(r.group)}" aria-label="Snap share and points, weeks {firstWeek}–{through}">
+  <!-- bar height = that week's points, scaled to his best week shown (Raymond's call, Nov 16); snaps in the hover text -->
+  {@const top = Math.max(1, ...r.weeks.filter((w) => w.played).map((w) => w.pts))}
+  <span class="rr-bars" style="--pos: {posColor(r.group)}" aria-label="Points each week, weeks {firstWeek}–{through}">
     {#each r.weeks as w (w.week)}
-      <span class="rr-barCol" title={w.bye ? `Week ${w.week}: bye` : w.played ? `Week ${w.week}: ${w.snap}% of snaps, ${fmt(w.pts)} points` : `Week ${w.week}: didn't play`}>
+      <span class="rr-barCol" title={w.bye ? `Week ${w.week}: bye` : w.played ? `Week ${w.week}: ${fmt(w.pts)} points, ${w.snap}% of snaps` : `Week ${w.week}: didn't play`}>
         <span class="rr-barBox">
           {#if w.bye}<span class="rr-bye">bye</span>
           {:else if !w.played}<span class="rr-bar rr-none"></span>
-          {:else}<span class="rr-bar" class:rr-recent={w.recent} style="height: {Math.max(4, w.snap)}%"></span>{/if}
+          {:else}<span class="rr-bar" class:rr-recent={w.recent} style="height: {Math.max(4, (100 * Math.max(0, w.pts)) / top)}%"></span>{/if}
         </span>
         <span class="rr-barPts" class:rr-recentPts={w.recent}>{w.played ? (w.pts >= 10 ? Math.round(w.pts) : fmt(w.pts)) : ""}</span>
       </span>
@@ -163,7 +165,7 @@
           <span role="columnheader">Player</span>
           <span role="columnheader" class="rr-statHead"><span>Total</span><span>Per game</span><span>Last 3</span></span>
           <span role="columnheader">Snaps <small>last 2</small></span>
-          <span role="columnheader">Weeks {firstWeek}–{through} <small>snaps · pts</small></span>
+          <span role="columnheader">Weeks {firstWeek}–{through} <small>points</small></span>
           <span role="columnheader">Notes</span>
         </div>
         {#each bestVisible.slice(0, bestShown) as r, i (r.id)}
@@ -235,7 +237,7 @@
           <span role="columnheader">Player</span>
           <span role="columnheader">Snaps <small>last 2</small></span>
           <span role="columnheader">Pts / game <small>last 3</small></span>
-          <span role="columnheader">Weeks {firstWeek}–{through} <small>snaps · pts</small></span>
+          <span role="columnheader">Weeks {firstWeek}–{through} <small>points</small></span>
           <span role="columnheader">Why</span>
         </div>
         {#each visible.slice(0, shown) as r, i (r.id)}
@@ -263,7 +265,7 @@
         <button type="button" class="rr-more" onclick={() => (shown += FIRST)}>Show {Math.min(FIRST, visible.length - shown)} more ▾</button>
       {/if}
       <p class="rr-foot">
-        Snaps = share of his team's snaps on his side of the ball (bars; his recent games bright, points under them). Shown when snaps are up
+        Snaps = share of his team's snaps on his side of the ball. Bars = points each week (his recent games bright). Shown when snaps are up
         {TREND_RULES.minSnapJump}+ points or points per game up {TREND_RULES.minPointJump}+, with {TREND_RULES.minRecentSnaps}%+ of snaps and a typical recent game of
         {TREND_RULES.minTypicalPoints}+ points. Fill-in = a teammate at his position who was playing {TREND_RULES.starterSnaps}%+ of snaps missed one of his recent games.
         Through week {through}.
