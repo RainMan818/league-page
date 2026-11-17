@@ -48,14 +48,29 @@ All data comes live from the public Sleeper API.
 
 ### Pages
 - **Home** — `RayHome` is the only custom line in `src/routes/+page.svelte`. One section at a time, picked with
-  Recap / Power Rankings / Standings tabs under the league title (a fixed bottom bar under 760px wide):
+  Recap / Power Rankings / Standings / Payouts tabs under the league title (a fixed bottom bar under 760px wide):
   Recap = weekly recap (`Insights/RecapPanel` + `WeeklyRecap`, previous/next and a week picker) ending with
   "Movers" (`RayStandings/StandingsMovers`: risers / fallers that week, from `placesByWeek()` + `movesForWeek()` in
   `utils/leagueTrends.js`; hidden for week 1 and playoff weeks) and season awards;
   Power Rankings = `RayPowerRankings` (in a card); Standings = `Insights` (playoff projection bracket
-  + sortable Team Breakdown table). The last pick is remembered (localStorage `rr-home-view`); `/?view=recap|rankings|standings`
-  opens one directly. A section is built the first time it's opened, then kept. The sidebar's "Recent Moves" is
+  + sortable Team Breakdown table); Payouts = `RayPayouts` (below). The last pick is remembered (localStorage
+  `rr-home-view`); `/?view=recap|rankings|standings|payouts` opens one directly. A section is built the first time it's opened, then kept. The sidebar's "Recent Moves" is
   `RayTransactions/RecentMoves` (newest 6 waivers + 6 trades, `RECENT_PER_TYPE`), swapped in via `components.js`.
+  **Payouts tab** (Nov 16, canvas option B) — `RayPayouts/index.svelte`, the Constitution's in-season prizes
+  (`RayConstitution/content.js` "In-season payouts"; amounts in `PAYOUTS`, `utils/payouts.js`, `tests/payouts.test.js`).
+  Money list = **only prizes already paid** (Raymond's call): each final week's top score ($10; a tied week splits
+  it), and once the regular season is fully scored (`bracketIsSet`) the highest single week, top offensive / IDP
+  player and division winners; the Toilet Bowl once its final is decided (`toiletBowl` in `utils/seasonAwards.js`,
+  losers bracket requested only after the regular season). Then the 14 weekly cards (paid / LIVE leader / to come),
+  and the races: highest single-week score (leader only, final weeks only: no runner-up, no live score), top
+  offensive and IDP players (top 3, rostered players only), division leaders as a Division / team / record table
+  (seeded with the league's tiebreakers, `seedTeams`), Toilet Bowl ("decided in week 17" until then). **Top players:
+  credited to the team that has him now, and all his regular-season points count, bench weeks included** (Raymond,
+  Nov 16); points from `/api/fetch_trending` (the Players page route, cached on the server). "Highest score of the
+  regular season" = best single week (confirmed with the league). Data: standings (final weeks' scores and records),
+  `getLeagueMatchups` (the live week, already cached on the homepage), the trending route: no extra Sleeper
+  requests during the season. Layout sizes by the room it gets (`container-type`; the homepage sidebar sits beside
+  it on desktop, so it stacks there).
   End of season (`seasonPhase` in `utils/seasonData.js`, from Sleeper's `last_scored_leg` and the NFL state):
   once every regular-season week is scored, the recap gains the playoff weeks (winners-bracket games only) and
   `SeasonAwards/HomeAwards` shows the regular-season awards below it. Once the championship is decided the awards

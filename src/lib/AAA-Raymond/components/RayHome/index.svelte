@@ -4,7 +4,8 @@
    - Recap: weekly recap (ending with standings movers for that week) and season awards
    - Power Rankings: rest-of-season Power Rankings
    - Standings: playoff projection and Team Breakdown
-  The last pick is remembered in this browser; /?view=recap|rankings|standings opens a section directly.
+   - Payouts: in-season prizes paid so far, the top score each week and the season-long races (RayPayouts)
+  The last pick is remembered in this browser; /?view=recap|rankings|standings|payouts opens a section directly.
   A section is only built the first time it's opened, then kept (so switching back is instant).
   Roster Analysis lives at the top of the /rosters page.
 
@@ -22,6 +23,7 @@
   import PowerRankings from "../RayPowerRankings/index.svelte";
   import Insights from "../Insights/index.svelte";
   import HomeAwards from "../SeasonAwards/HomeAwards.svelte";
+  import Payouts from "../RayPayouts/index.svelte";
   import { loadLeagueBasics } from "../../utils/leagueContext.js";
   import { seasonPhase } from "../../utils/seasonData.js";
 
@@ -35,6 +37,7 @@
     { id: "recap", label: "Recap", icon: "article" },
     { id: "rankings", label: "Power Rankings", icon: "bar_chart" },
     { id: "standings", label: "Standings", icon: "emoji_events" },
+    { id: "payouts", label: "Payouts", icon: "payments" },
   ];
   const STORAGE_KEY = "rr-home-view";
   const isView = (v) => VIEWS.some((x) => x.id === v);
@@ -140,6 +143,12 @@
   </div>
 {/if}
 
+{#if opened.payouts}
+  <div id="rr-panel-payouts" role="tabpanel" aria-label="Payouts" class="rr-panel" hidden={view !== "payouts"}>
+    <Payouts {standingsData} {leagueTeamManagersData} />
+  </div>
+{/if}
+
 {@render switcher("rr-homeBar")}
 
 <style>
@@ -147,7 +156,7 @@
   .rr-homeTabs {
     display: flex;
     gap: 4px;
-    max-width: 640px;
+    max-width: 760px;
     margin: 0 auto 28px;
     padding: 4px;
     border: 1px solid var(--or-toggle-border, var(--or-table-border));
@@ -202,7 +211,7 @@
       bottom: 0;
       z-index: 50;
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       padding-bottom: env(safe-area-inset-bottom);
       border-top: 2px solid var(--or-pink);
       background: var(--fff);
