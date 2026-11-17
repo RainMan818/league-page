@@ -397,7 +397,7 @@ export const SECTIONS = [
                                 ['Top-scoring team each week (weeks 1–14)', '$10 a week ($140)'],
                                 ['Each division winner', '$20 each ($60)'],
                                 ['Toilet Bowl winner', '$10'],
-                                ['Highest score of the regular season', '$10'],
+                                ['Highest single-week score of the regular season', '$10'],
                                 ['Team with the highest-scoring offensive player (regular season)', '$10'],
                                 ['Team with the highest-scoring IDP player (regular season)', '$10'],
                             ],
