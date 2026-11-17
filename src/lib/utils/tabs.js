@@ -40,7 +40,8 @@ export const tabs = [
     },
     {
         icon: 'view_comfy',
-        label: 'League Info',
+        // AAA-Raymond: renamed from "League Info" (Raymond's call)
+        label: 'Clubhouse',
         nest: true,
         key: 'league_info',
         children: [
@@ -48,6 +49,12 @@ export const tabs = [
                 icon: 'storage',
                 label: 'Rosters',
                 dest: '/rosters',
+            },
+            {
+                // AAA-Raymond: Players page (Trending free agents free agents)
+                icon: 'person_search',
+                label: 'Players',
+                dest: '/players',
             },
             {
                 icon: 'format_list_numbered',

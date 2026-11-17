@@ -178,6 +178,24 @@ All data comes live from the public Sleeper API.
   Home + Go back (Try again for 5xx). SvelteKit's own "Not Found" / "Internal Error" messages are hidden; any other
   `error.message` is shown.
   Don't use a `<nav>` element in page content: the theme styles every `nav` as the header.
+- **Players** (`/players`, in the Clubhouse menu after Rosters, Nov 15) — `RayPlayers/index.svelte` (canvas option A "leaderboard";
+  rendered by `src/routes/players/+page.svelte`): **Trending free agents** = free agents (on no roster) whose role is growing.
+  Raymond's rules (`TREND_RULES` in `utils/trending.js`, `tests/trending.test.js`): snaps over his team's last **2**
+  games against its earlier games, points per game over the last **3** against earlier; listed when snaps are up 15+
+  points or points per game up 4+, with 40%+ of snaps and a typical (median) recent game of 5+ points, so one spike
+  week doesn't carry a quiet player; ranked by snap jump / 10 + (typical recent game − earlier average). Missed games
+  count as 0 (that's the point: a bigger role). Injury fill-in = a teammate at the same position (CB ≠ S, DE ≠ DT
+  when both are specific) who played 55%+ of snaps before his recent games, then missed one; shown with that
+  player's status: "now Out / on IR" (players map `is`), "back for the latest game: his snaps may drop", or "not
+  listed injured". Also his own injury status and Sleeper's most-added count (24 h). Filter chips (All / Offense /
+  IDP / position), "Include injury fill-ins" switch, 15 rows then "Show 15 more"; names open the player card.
+  Phone: name, then snaps and points side by side, bars, reasons. **Data: `src/routes/api/fetch_trending/+server.js`**
+  downloads Sleeper's weekly stats files (`api.sleeper.com/stats/nfl/<season>/<week>`, every player, ~1.6 MB each) for
+  the finished weeks (`completedWeeks`), trims each to `[playerID, team, snap %, league points]` (`trimWeek`, ~25 KB a
+  week; 9 weeks = 212 KB) and keeps them in server memory (the last two weeks refresh every 6 hours for stat
+  corrections, older weeks never), 4 at a time; plus `players/nfl/trending/add` (hourly). The answer has
+  `cache-control: public, max-age=600, s-maxage=3600, stale-while-revalidate=86400`, so visitors share the CDN copy.
+  A cold start fetches nflState + league + every finished week (12 requests at week 10; 1.3 s locally).
 - **Player card** (every page, Nov 15) — `PlayerCard/index.svelte` (option A with tabs; canvas boards PlayerCardA4 /
   PlayerCardRB / PlayerCardIDP), mounted once in `src/routes/+layout.svelte`. **Any element with
   `data-player-id="<Sleeper ID>"` opens it** (the card listens for clicks and Enter / Space on the page, capture phase,
@@ -296,7 +314,7 @@ All data comes live from the public Sleeper API.
   the week you were on (else the current week) instead of week 1; `src/routes/matchups/+page.js`
   no longer loads `getBrackets()`.
 - Wiring: `src/routes/+page.svelte`, `src/routes/+error.svelte`, `src/routes/constitution/+page.svelte`, `src/routes/awards/` (season awards only), `src/routes/standings/+page.js` (passes `fetch`), `src/routes/trends/` (new), `src/routes/rosters/+page.js`
-  (standings only) and `+page.svelte` (renders `RayRosters`), `src/routes/resources/+page.svelte` (renders `RayResources`), `src/lib/components.js`, `src/lib/utils/helper.js`, `src/lib/utils/tabs.js` (nav tabs),
+  (standings only) and `+page.svelte` (renders `RayRosters`), `src/routes/resources/+page.svelte` (renders `RayResources`), `src/lib/components.js`, `src/lib/utils/helper.js`, `src/lib/utils/tabs.js` (nav tabs; the template's "League Info" menu is renamed "Clubhouse" and has Players),
   `src/lib/Matchups/MatchupsAndBrackets.svelte`, `src/lib/Drafts/index.svelte`,
   `src/lib/Transactions/TransactionsPage.svelte`.
 - `src/lib/utils/helperFunctions/leagueMatchups.js` keeps extra fields per team (`players`, `playersPoints`,
@@ -344,6 +362,7 @@ All data comes live from the public Sleeper API.
 - News (Resources): `src/lib/utils/helperFunctions/news.js` only calls `/api/fetch_serverside_news`, which now also
   fetches Reddit (blocked from the browser by CORS; usually blocked server-side too, so it adds nothing) and lets any
   failed feed add nothing instead of breaking the section. Feed titles get HTML entities decoded (`decodeEntities`).
+- `src/routes/api/fetch_trending/+server.js` (new, ours) and `src/routes/players/` (new): the Players page.
 - `src/routes/api/fetch_players_info/+server.js`: a projection entry without an opponent (player listed out that week)
   gets it from that week's schedule built from every other entry (team -> opponent); bye weeks stay null. Browsers
   keep player data 24 hours (`playersInfo` in localStorage), so fixes here show up after that.
