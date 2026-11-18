@@ -387,6 +387,8 @@ All data comes live from the public Sleeper API.
   `src/lib/Transactions/TransactionsPage.svelte` (also: the bottom page buttons scroll to the list's heading, measured
   when clicked and done after the URL update; the template measured once at load and scrolled to the page top).
 - `src/lib/Pagination.svelte`: an `onchange(dest)` prop, called when a page is picked.
+- `src/lib/Footer.svelte`: Raymond's credit line under the template's (kept) copyright / "Built by" lines: "Outrun
+  redesign and custom features by RainMan · Buy me a coffee" (https://buymeacoffee.com/rainman001), Nov 17.
 - League switching (Nov 16): `src/lib/utils/leagueInfo.js` (profiles), `src/lib/stores.js`, `src/lib/Nav/index.svelte`
   (logo from the profile), `NavLarge` / `NavSmall` / `Footer` (Managers always shown), `src/routes/+page.svelte`
   (champ click), `src/routes/managers/` and `src/routes/manager/` (Sleeper managers), `src/routes/constitution/+page.js`,
