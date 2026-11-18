@@ -387,6 +387,15 @@ All data comes live from the public Sleeper API.
   `src/lib/Transactions/TransactionsPage.svelte` (also: the bottom page buttons scroll to the list's heading, measured
   when clicked and done after the URL update; the template measured once at load and scrolled to the page top).
 - `src/lib/Pagination.svelte`: an `onchange(dest)` prop, called when a page is picked.
+- `src/lib/Nav/index.svelte` (Nov 17): under 950px it renders `AAA-Raymond/components/PhoneNav` (option C from the
+  canvas "Site pages on phones" row) instead of the template's ☰ drawer; `src/lib/Nav/NavSmall.svelte` is no longer
+  used (left in place). PhoneNav: an icon row under the logo (Home, Matchups, Standings, Trends, "Moves" = Trades &
+  Waivers, More); More drops a panel of the nested menu's pages (the desktop "Clubhouse" dropdown, plus Blog when
+  it's on) as tiles. **Only the page you're on is pink** (row button or tile; `/manager` counts as Managers); More gets
+  a cyan outline while open. Pages come from `tabs.js` (`phoneNav.js` `rowAndMore` / `isCurrent`,
+  tests/phoneNav.test.js). Plain links (preload on hover); Escape, a tap outside or picking a page closes the panel.
+  Colors are theme variables (`--or-toggle-*`, `--or-footer-bg`), so day mode works. The homepage's phone bottom bar
+  (RayHome) is unchanged for now: its redesign is the canvas row "Homepage views on phones".
 - `src/lib/Footer.svelte`: Raymond's credit line under the template's (kept) copyright / "Built by" lines: "Outrun
   redesign and custom features by RainMan · Buy me a coffee" (https://buymeacoffee.com/rainman001), Nov 17.
 - League switching (Nov 16): `src/lib/utils/leagueInfo.js` (profiles), `src/lib/stores.js`, `src/lib/Nav/index.svelte`

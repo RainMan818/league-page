@@ -1,5 +1,6 @@
 <script>
-	import NavSmall from './NavSmall.svelte';
+	// AAA-Raymond (Nov 17): phones and tablets get an icon row + More panel instead of the template's ☰ drawer (NavSmall)
+	import PhoneNav from '$lib/AAA-Raymond/components/PhoneNav/index.svelte';
 	import NavLarge from './NavLarge.svelte';
     import { page } from '$app/state';
 	import IconButton from '@smui/icon-button';
@@ -96,7 +97,7 @@
 	</div>
 
 	<div class="small">
-		<NavSmall />
+		<PhoneNav />
 	</div>
 
 </nav>
