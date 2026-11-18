@@ -1,6 +1,10 @@
 import { get } from 'svelte/store';
 import {players} from '$lib/stores';
 import { browser } from '$app/environment';
+// AAA-Raymond: player projections are scored with the league's settings, so the saved copy is tagged with its league
+// ("playersLeague") and downloaded again for another league (one copy only: it's about 2.7M characters)
+import { leagueID } from '$lib/utils/leagueInfo';
+import { playersBelongTo } from '$lib/AAA-Raymond/utils/leagueStorage.js';
 
 export const loadPlayers = async (servFetch, refresh = false) => {     
 	if(get(players)[1426]) {
@@ -16,8 +20,14 @@ export const loadPlayers = async (servFetch, refresh = false) => {
     let playersInfo = null;
     let expiration = null;
     if(browser) {
-        playersInfo = JSON.parse(localStorage.getItem("playersInfo"));
-        expiration = parseInt(localStorage.getItem("expiration"));
+        try {
+            if(playersBelongTo(localStorage.getItem("playersLeague"), leagueID)) {
+                playersInfo = JSON.parse(localStorage.getItem("playersInfo"));
+                expiration = parseInt(localStorage.getItem("expiration"));
+            }
+        } catch (err) {
+            playersInfo = null;
+        }
     }
 
     if(playersInfo && playersInfo[1426] && expiration && now > expiration && !refresh) {
@@ -36,12 +46,16 @@ export const loadPlayers = async (servFetch, refresh = false) => {
         }
 
         if(browser) {
-            localStorage.setItem("playersInfo", JSON.stringify(data))
-
             const ts = Math.round(new Date().getTime() / 1000);
             const newExpiration = ts + (24 * 3600);
-
-            localStorage.setItem("expiration", newExpiration)  
+            try {
+                localStorage.removeItem("playersInfo"); // room for the new copy before writing it
+                localStorage.setItem("playersInfo", JSON.stringify(data))
+                localStorage.setItem("expiration", newExpiration)
+                localStorage.setItem("playersLeague", String(leagueID))
+            } catch (err) {
+                console.error(err); // storage full: keep it for this visit only
+            }
 
             players.update(() => data);
         }
@@ -56,4 +70,4 @@ export const loadPlayers = async (servFetch, refresh = false) => {
         players: playersInfo,
         stale: false
     };
-}
+}

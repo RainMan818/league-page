@@ -2,8 +2,11 @@ import ColorScale from "color-scales";
 import { colorsGYR } from "../../utils/colorScale.js";
 import { rosterGroup, OFFENSE_GROUPS } from "../../utils/rosterBreakdown.js";
 
-export function getAgeData(managerData, rosters) {
-  return {
+// AAA-Raymond: idp = false (a league without IDP) keeps the offensive positions only
+const keepGroups = (data, idp) => (idp ? data : { ...data, datasets: data.datasets.filter((d) => OFFENSE_GROUPS.includes(d.name)) });
+
+export function getAgeData(managerData, rosters, idp = true) {
+  return keepGroups({
     labels: rosters.map(({ ownerName }) => ownerName),
     datasets: [
       {
@@ -49,11 +52,11 @@ export function getAgeData(managerData, rosters) {
         ),
       },
     ],
-  };
+  }, idp);
 }
 
-export function getCountData(managerData, rosters) {
-  return {
+export function getCountData(managerData, rosters, idp = true) {
+  return keepGroups({
     labels: rosters.map(({ ownerName }) => ownerName),
     datasets: [
       {
@@ -85,21 +88,29 @@ export function getCountData(managerData, rosters) {
         values: managerData.map((manager) => manager.ageLists.DB.length),
       },
     ],
-  };
+  }, idp);
 }
+
+// AAA-Raymond: color-scales throws when min = max (every team the same, e.g. no DL players in a league without IDP),
+// and gets NaN when a position has no players at all; both get a harmless 0..1 range
+const scale = (lo, hi) => {
+  const a = Number.isFinite(lo) ? lo : 0;
+  const b = Number.isFinite(hi) ? hi : 0;
+  return new ColorScale(Math.min(a, b), a === b ? a + 1 : Math.max(a, b), colorsGYR);
+};
 
 export function getColorScales(min, max) {
   return {
-    colorsTeam: new ColorScale(min.Team, max.Team, colorsGYR),
-    colorsOff: new ColorScale(min.Off, max.Off, colorsGYR),
-    colorsDef: new ColorScale(min.Def, max.Def, colorsGYR),
-    colorsQB: new ColorScale(min.QB, max.QB, colorsGYR),
-    colorsRB: new ColorScale(min.RB, max.RB, colorsGYR),
-    colorsWR: new ColorScale(min.WR, max.WR, colorsGYR),
-    colorsTE: new ColorScale(min.TE, max.TE, colorsGYR),
-    colorsDL: new ColorScale(min.DL, max.DL, colorsGYR),
-    colorsLB: new ColorScale(min.LB, max.LB, colorsGYR),
-    colorsDB: new ColorScale(min.DB, max.DB, colorsGYR),
+    colorsTeam: scale(min.Team, max.Team),
+    colorsOff: scale(min.Off, max.Off),
+    colorsDef: scale(min.Def, max.Def),
+    colorsQB: scale(min.QB, max.QB),
+    colorsRB: scale(min.RB, max.RB),
+    colorsWR: scale(min.WR, max.WR),
+    colorsTE: scale(min.TE, max.TE),
+    colorsDL: scale(min.DL, max.DL),
+    colorsLB: scale(min.LB, max.LB),
+    colorsDB: scale(min.DB, max.DB),
   };
 }
 

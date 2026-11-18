@@ -118,8 +118,8 @@
 					{/if}
 				{:else}
 					{#each tab.children as child}
-                        <!-- Shouldn't show Managers tab unless managers has been populated -->
-				        {#if child.label != "Managers" || managers.length > 0}
+                        <!-- AAA-Raymond: Managers always shows (a league without managers in leagueInfo.js gets them from Sleeper) -->
+				        {#if true}
 							{#if child.label == "Go to Sleeper"}
 								<li><div class="navLink" onclick={() => window.location = child.dest}>{child.label}</div></li>
 							{:else}

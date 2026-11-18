@@ -1,4 +1,7 @@
-import { managers as managersObj } from '$lib/utils/leagueInfo';
+import { managers as configuredManagers } from '$lib/utils/leagueInfo';
+// AAA-Raymond: Sleeper's teams when leagueInfo.js has no managers for this league (same list as the Managers pages)
+import { managersFor } from '$lib/AAA-Raymond/utils/siteManagers.js';
+const managersObj = configuredManagers;
 import { goto } from "$app/navigation";
 import { stringDate } from './news';
 
@@ -38,6 +41,7 @@ const max = (stats, roundOverride) => {
 }
 
 export const gotoManager = ({leagueTeamManagers, managerID, rosterID, year}) => {
+    const managersObj = managersFor(configuredManagers, leagueTeamManagers);
     if(!managersObj.length) return;
     let managersIndex = -1;
 

@@ -1,5 +1,6 @@
 import { getLeagueData } from './leagueData';
-import { leagueID } from '$lib/utils/leagueInfo';
+import { leagueID, houseRules } from '$lib/utils/leagueInfo';
+import { isDynasty } from '$lib/AAA-Raymond/utils/siteTitle.js';
 import { waitForAll } from './multiPromise';
 import { get } from 'svelte/store';
 import {upcomingDraft, previousDrafts} from '$lib/stores';
@@ -41,6 +42,12 @@ export const getUpcomingDraft = async () => {
 
     const rosters = rosterRes.rosters;
 
+	// AAA-Raymond (Nov 17): a redraft or keeper league's next draft order isn't earned from the standings, so there's
+	// nothing to project once this season's draft is done (the Drafts page says so instead of showing a board)
+	if(officialDraft.status == "complete" && !isDynasty(leagueData)) {
+		return { year: year + 1, draft: null, draftOrder: [], notProjected: true };
+	}
+
 	if(officialDraft.status == "complete") {
 		year = year + 1;
 		// AAA-Raymond: pass league settings and the winners bracket for the league's draft-order rule
@@ -60,7 +67,8 @@ export const getUpcomingDraft = async () => {
 	// AAA-Raymond: the Toilet Bowl winner's extra pick (3.13). It comes from this season's Toilet Bowl while the next
 	// draft is still a projection, or from last season's once Sleeper has set up the new draft.
 	let extraPicks = [];
-	if(year >= TOILET_BOWL_PICK.firstDraft) {
+	// (AAA-Raymond: a Dynasty League house rule; other leagues have no extra pick)
+	if(houseRules && year >= TOILET_BOWL_PICK.firstDraft) {
 		const bowlLeague = officialDraft.status == "complete" ? (bracketIsSet(leagueData) ? leagueID : null) : leagueData.previous_league_id;
 		const losers = bowlLeague
 			? await sleeperFetch(`https://api.sleeper.app/v1/league/${bowlLeague}/losers_bracket`, {compress: true}).then((r) => r.json()).catch(() => [])

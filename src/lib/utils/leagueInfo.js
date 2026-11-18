@@ -1,16 +1,21 @@
+// AAA-Raymond: the plain math modules follow the league's own rules or plain ones (set from the profile below)
+import { setHouseRules } from '$lib/AAA-Raymond/utils/leagueRules.js';
+
 /*   STEP 1   */
-export const leagueID = "1314319869289717760"; // your league ID
-export const leagueName = "The Dynasty League IDP SF"; // your league name
+// AAA-Raymond: pick the league here (keep one line live). A league needs only its ID: the name, header logo and
+// homepage line come from Sleeper (siteTitle.js), and so do the lineup (IDP or not, superflex), teams, divisions and
+// history. A profile in LEAGUES at the bottom of this file overrides those words and adds managers / house rules.
+// Saved browser data is kept per league.
+export const leagueID = "1314319869289717760"; // The Dynasty League IDP SF
+// export const leagueID = "1313863224373841920"; // The Gang Attempts Dynasty FF
+// export const leagueID = "1328172065781448704"; // Nerd Fantasy League
+// export const leagueID = "1345085981237207040"; // Dynasty Test
 export const dues = 50; // (optional) used in template constitution page
 export const dynasty = true; // true for dynasty leagues, false for redraft and keeper
 export const enableBlog = false; // requires VITE_CONTENTFUL_ACCESS_TOKEN and VITE_CONTENTFUL_SPACE environment variables
 
 /*   STEP 2   */
-export const homepageText = `
-  <div style="text-align: center;">
-  <i>2026 12-Team Dynasty Half-PPR</i>
-  </div>
-`;
+// AAA-Raymond: homepage text is per league now (homepageText in LEAGUES below)
 
 /*   STEP 3   */
 /*
@@ -21,7 +26,8 @@ https://github.com/nmelhado/league-page/blob/master/TRAINING_WHEELS.md#ii-adding
 
 // To omit an optional field, set it's value to null
 
-export const managers = [
+// AAA-Raymond: The Dynasty League's managers (used by its profile in LEAGUES below)
+const dynastyLeagueManagers = [
   {
     managerID: "388461715769032704", // ID of the roster that the manager manages (look at the order of the power rankings graph)
     name: "Raymond C.",
@@ -279,3 +285,44 @@ export const managers = [
     //   "preferredContact": "Text",  // (optional) 'Text', 'WhatsApp', 'Sleeper', 'Email', 'Phone', 'Discord', and 'Carrier Pigeon' are currently supplied in the template
     // },
     
+
+/*   AAA-Raymond: LEAGUE PROFILES   */
+// Optional, one entry per league ID; every field is optional. leagueName / logo / homepageText replace the ones built
+// from Sleeper (siteTitle.js). houseRules = The Dynasty League's own rules: the Constitution page, the homepage Payouts
+// tab, the Toilet Bowl winner's extra 3rd-round pick, the points-wildcard playoff seed and the max-PF rookie draft
+// order. Without them a league gets plain rules: division winners then best records, draft in reverse order of finish.
+// managers: [] or left out = the Managers pages use each team's Sleeper name and avatar (add bios like the list above).
+const LEAGUES = {
+  "1314319869289717760": {
+    leagueName: "The Dynasty League IDP SF",
+    logo: { title: "DYNASTY", subtitle: "LEAGUE · IDP SF" },
+    homepageText: `
+  <div style="text-align: center;">
+  <i>2026 12-Team Dynasty Half-PPR</i>
+  </div>
+`,
+    houseRules: true,
+    managers: dynastyLeagueManagers,
+  },
+  "1313863224373841920": {
+    leagueName: "The Gang Attempts Dynasty FF",
+    logo: { title: "THE GANG", subtitle: "ATTEMPTS DYNASTY" },
+    homepageText: `
+  <div style="text-align: center;">
+  <i>2026 14-Team Dynasty Half-PPR</i>
+  </div>
+`,
+    houseRules: false,
+    managers: [],
+  },
+};
+
+const profile = LEAGUES[leagueID] ?? {};
+// the site shows data.site from src/routes/+layout.js (this profile filled in from Sleeper); these are the profile's
+export const leagueProfile = profile;
+export const leagueName = profile.leagueName ?? "Fantasy League"; // template leftovers (blog); pages use data.site.name
+export const logo = profile.logo ?? null; // header logo words { title, subtitle }: letters, digits, spaces, · and -
+export const homepageText = profile.homepageText ?? null;
+export const houseRules = profile.houseRules ?? false;
+setHouseRules(houseRules);
+export const managers = profile.managers ?? [];

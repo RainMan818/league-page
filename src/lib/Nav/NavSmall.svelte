@@ -67,7 +67,7 @@
 
 <Drawer variant="modal" class="nav-drawer" fixed={true} bind:open>
 	<Header>
-		<Title>{leagueName}</Title>
+		<Title>{page.data.site?.name ?? leagueName}</Title> <!-- AAA-Raymond: profile or Sleeper name (+layout.js) -->
 	</Header>
 	<Content>
 		<List>
@@ -85,12 +85,11 @@
 					<Subheader>{tab.label}</Subheader>
 					{#each tab.children as subTab}
 						{#if subTab.label == 'Managers'}
-							{#if managers.length}
-								<Item href="javascript:void(0)" onSMUIAction={() => selectTab(subTab)} activated={active == subTab.dest}  ontouchstart={() => preloadData(subTab.dest)} onmouseover={() => preloadData(subTab.dest)}>
-									<Graphic class="material-icons{active == subTab.dest ? "" : " nav-item"}" aria-hidden="true">{subTab.icon}</Graphic>
-									<Text class="{active == subTab.dest ? "" : "nav-item"}">{subTab.label}</Text>
-								</Item>
-							{/if}
+							<!-- AAA-Raymond: always shown (a league without managers in leagueInfo.js gets them from Sleeper) -->
+							<Item href="javascript:void(0)" onSMUIAction={() => selectTab(subTab)} activated={active == subTab.dest}  ontouchstart={() => preloadData(subTab.dest)} onmouseover={() => preloadData(subTab.dest)}>
+								<Graphic class="material-icons{active == subTab.dest ? "" : " nav-item"}" aria-hidden="true">{subTab.icon}</Graphic>
+								<Text class="{active == subTab.dest ? "" : "nav-item"}">{subTab.label}</Text>
+							</Item>
 						{:else}
 							<Item href="javascript:void(0)" onSMUIAction={() => selectTab(subTab)} activated={active == subTab.dest}  ontouchstart={() => {if(subTab.label != 'Go to Sleeper') preloadData(subTab.dest)}} onmouseover={() => {if(subTab.label != 'Go to Sleeper') preloadData(subTab.dest)}}>
 								<Graphic class="material-icons{active == subTab.dest ? "" : " nav-item"}" aria-hidden="true">{subTab.icon}</Graphic>

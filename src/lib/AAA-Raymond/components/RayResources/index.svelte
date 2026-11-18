@@ -4,7 +4,8 @@
   src/routes/resources/+page.svelte; makes no Sleeper requests.
 -->
 <script>
-  import { dynasty } from "$lib/utils/leagueInfo";
+  import { page } from "$app/state";
+  import { dynasty as dynastyDefault } from "$lib/utils/leagueInfo";
   import { resourceGroups } from "./links.js";
   import { newsItems, sourceCounts } from "../../utils/newsFeed.js";
   import Loading from "../Shared/Loading.svelte";
@@ -13,7 +14,9 @@
 
   const FIRST = 9;
   const MORE = 15;
-  const groups = resourceGroups(dynasty);
+  // dynasty or redraft links: from Sleeper's league type unless the league's profile says (src/routes/+layout.js)
+  const dynasty = $derived(page.data.site?.dynasty ?? dynastyDefault);
+  const groups = $derived(resourceGroups(dynasty));
 
   let status = $state("loading"); // loading | ready
   let items = $state.raw([]);
@@ -46,7 +49,7 @@
 
 <div class="rr-resources">
   <h1 class="rr-pageTitle">Resources</h1>
-  <p class="rr-sub">Dynasty tools, and the latest from the dynasty sites</p>
+  <p class="rr-sub">{dynasty ? "Dynasty tools, and the latest from the dynasty sites" : "Fantasy tools, and the latest fantasy football news"}</p>
 
   <div class="rr-groups">
     {#each groups as g (g.title)}

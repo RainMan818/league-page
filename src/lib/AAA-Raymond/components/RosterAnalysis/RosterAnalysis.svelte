@@ -12,6 +12,7 @@
     digestData,
   } from "./utils";
   import { getTeamNameFromTeamManagers } from "$lib/utils/helperFunctions/universalFunctions";
+  import { hasIdpSlots } from "../../utils/positions.js";
 
   export let rostersData,
     leagueData,
@@ -21,6 +22,8 @@
     standingsData;
 
   let loading = true;
+  // AAA-Raymond: a league without IDP shows offense only (no Off. / Def. / DL / LB / DB columns or bars)
+  const idp = hasIdpSlots(leagueData?.roster_positions);
   let playerScores = {};
 
   let maxAges = {
@@ -181,8 +184,8 @@
     }
 
     const managerData = Object.values(currentManagers);
-    ageData = getAgeData(managerData, rosters);
-    countData = getCountData(managerData, rosters);
+    ageData = getAgeData(managerData, rosters, idp);
+    countData = getCountData(managerData, rosters, idp);
 
     loading = false;
   });
@@ -325,6 +328,7 @@
           {currentManagers}
           {dataType}
           {leagueTeamManagers}
+          {idp}
         />
       </div>
     {:else if chartType === "stack"}

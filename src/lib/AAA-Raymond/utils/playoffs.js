@@ -8,6 +8,7 @@
 
 import { predictScores } from './predictOptimalScore.js';
 import { playedEntries } from './matchupEntries.js';
+import { houseRulesOn } from './leagueRules.js';
 
 // League seeding rules:
 //  1. Division winners take the top seeds (ordered by record).
@@ -15,8 +16,10 @@ import { playedEntries } from './matchupEntries.js';
 //  3. The last POINTS_WILDCARD_SEEDS seed(s) go to the highest points for among teams not already in,
 //     regardless of record.
 // Record ties are broken by points for. Byes go to the top seeds.
+// Rule 3 is The Dynasty League's own (house rules, leagueRules.js); other leagues have no points wildcard.
 export const DIVISION_WINNERS_GET_TOP_SEEDS = true;
 export const POINTS_WILDCARD_SEEDS = 1;
+export const pointsWildcardSeeds = () => (houseRulesOn() ? POINTS_WILDCARD_SEEDS : 0);
 
 /* ---------------------------------------------------------------- bracket & seeding */
 
@@ -70,7 +73,7 @@ export const rankTeams = (teams) => [...teams].sort((a, b) => winPts(b) - winPts
 export function seedTeams(teams, {
     divisionWinnersFirst = DIVISION_WINNERS_GET_TOP_SEEDS,
     playoffTeams = null,
-    pointsWildcards = POINTS_WILDCARD_SEEDS,
+    pointsWildcards = pointsWildcardSeeds(),
 } = {}) {
     const ranked = rankTeams(teams);
     let divisionWinners = [];
@@ -193,7 +196,7 @@ function normalSampler(rand) {
  */
 export function simulateSeason({
     teams, schedule, expected, sd, playoffTeams, playoffWeeks = [],
-    medianGame = false, divisionWinnersFirst = DIVISION_WINNERS_GET_TOP_SEEDS, pointsWildcards = POINTS_WILDCARD_SEEDS,
+    medianGame = false, divisionWinnersFirst = DIVISION_WINNERS_GET_TOP_SEEDS, pointsWildcards = pointsWildcardSeeds(),
     sims = 10000, seed = 2026,
 }) {
     const seedRules = { divisionWinnersFirst, playoffTeams, pointsWildcards };

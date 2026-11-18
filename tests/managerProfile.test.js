@@ -1,7 +1,7 @@
 // Run with: npm test
 import assert from 'assert/strict';
 import { test } from 'node:test';
-import { careerStats, managerTrophies, titleYears, managerRecords, rosterLineup, seasonHistory, isPlaceholderText, winPct } from '../src/lib/AAA-Raymond/utils/managerProfile.js';
+import { careerStats, managerTrophies, titleYears, managerRecords, rosterLineup, seasonHistory, isPlaceholderText, winPct, hadMedianGame } from '../src/lib/AAA-Raymond/utils/managerProfile.js';
 
 // manager "a" ran roster 1 every season; manager "b" took over roster 2 in 2024 (roster 2 was someone else before)
 const runs = { a: { 1: [2022, 2023, 2024, 2025] }, b: { 2: [2024, 2025] } };
@@ -127,9 +127,12 @@ test('season history: finished seasons the manager ran, with ranks and league av
     // median-game seasons use the head-to-head record (11-7 with the median, 6-3 without)
     const withMedian = seasonHistory(recs, (rosterID) => rosterID === '1', () => true).find((s) => s.year === 2026);
     assert.equal(withMedian.wins, 11);
+    assert.equal(withMedian.median, false); // no head-to-head record saved yet: can't tell
     recs.regularSeasonData.leagueRosterRecords[1].years[0] = { ...recs.regularSeasonData.leagueRosterRecords[1].years[0], h2hWins: 6, h2hLosses: 3, h2hTies: 0 };
     const h2hOnly = seasonHistory(recs, (rosterID) => rosterID === '1', () => true).find((s) => s.year === 2026);
     assert.deepEqual([h2hOnly.wins, h2hOnly.losses], [6, 3]);
+    assert.equal(h2hOnly.median, true); // 18 games with the median, 9 head-to-head
+    assert.equal(hadMedianGame({ wins: 6, losses: 3, ties: 0, h2hWins: 6, h2hLosses: 3, h2hTies: 0 }), false); // no median game
 });
 
 test('placeholder bios are hidden', () => {

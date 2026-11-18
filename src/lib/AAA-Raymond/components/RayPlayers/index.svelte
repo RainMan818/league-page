@@ -10,15 +10,21 @@
 -->
 <script>
   import { loadLeagueBasics } from "../../utils/leagueContext.js";
+  import { leagueID } from "$lib/utils/leagueInfo";
   import { trendingPlayers, bestAvailable, matchesFilter, weeksLabel, TREND_RULES, BEST_RULES } from "../../utils/trending.js";
-  import { posColor } from "../../utils/positions.js";
+  import { posColor, hasIdpSlots } from "../../utils/positions.js";
   import Loading from "../Shared/Loading.svelte";
 
-  const FILTERS = ["All", "Offense", "IDP", "QB", "RB", "WR", "TE", "DL", "LB", "DB"];
+  const IDP_FILTERS = ["All", "Offense", "IDP", "QB", "RB", "WR", "TE", "DL", "LB", "DB"];
+  const OFFENSE_FILTERS = ["All", "QB", "RB", "WR", "TE"];
   const FIRST = 15;
   const STATUS = { IR: "on IR", Out: "Out", Doubtful: "Doubtful", Questionable: "Questionable", PUP: "on PUP", Sus: "suspended", NA: "inactive" };
 
   let status = $state("loading"); // loading | ready | error
+  // a league without IDP (Nov 16): offense only, no IDP / DL / LB / DB chips
+  let idp = $state(true);
+  const FILTERS = $derived(idp ? IDP_FILTERS : OFFENSE_FILTERS);
+  const forLeague = (list) => (idp ? list : list.filter((r) => matchesFilter(r, "Offense")));
   let rows = $state.raw([]);
   let players = $state.raw({});
   let through = $state(0);
@@ -34,7 +40,8 @@
   $effect(() => {
     let cancelled = false;
     Promise.all([
-      fetch("/api/fetch_trending").then((r) => {
+      // ?league: the browser caches the answer for 10 minutes, so another league's copy is never reused
+      fetch(`/api/fetch_trending?league=${leagueID}`).then((r) => {
         if (!r.ok) throw new Error(`trending ${r.status}`);
         return r.json();
       }),
@@ -45,7 +52,8 @@
         const rostered = Object.values(basics.rosters ?? {}).flatMap((r) => r?.players ?? []);
         players = basics.players;
         through = data.through;
-        rows = trendingPlayers({ weeks: data.weeks, players: basics.players, rostered, adds: data.adds });
+        idp = hasIdpSlots(basics.leagueData?.roster_positions);
+        rows = forLeague(trendingPlayers({ weeks: data.weeks, players: basics.players, rostered, adds: data.adds }));
         source = { weeks: data.weeks, players: basics.players, rostered, adds: data.adds };
         status = "ready";
       })
@@ -63,7 +71,7 @@
     shown = FIRST;
   };
 
-  const best = $derived(source ? bestAvailable({ ...source, sort: bestSort }) : []);
+  const best = $derived(source ? forLeague(bestAvailable({ ...source, sort: bestSort })) : []);
   const bestVisible = $derived(best.filter((r) => matchesFilter(r, bestFilter)));
   const pickBest = (f) => {
     bestFilter = f;

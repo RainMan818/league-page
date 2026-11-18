@@ -10,6 +10,13 @@
   import { record, pts } from "../Shared/format.js";
   import "../Shared/common.css";
   import { streakValue, streakLabel } from "../../utils/teamStats.js";
+  import { page } from "$app/state";
+  import { houseRules } from "$lib/utils/leagueInfo";
+  // rookie draft pick: dynasty leagues only (data.site from src/routes/+layout.js); the rule depends on house rules
+  const showPick = $derived(page.data.site?.dynasty ?? true);
+  const PICK_TITLE = houseRules
+    ? "Rookie draft pick: non-playoff teams by lowest max PF, then playoff finish (projected by seed until decided)"
+    : "Rookie draft pick: reverse order of finish (playoff places projected by seed until decided)";
 
   let { rows, teams, playoffTeams = 0, showDivisions = false, onTeamClick = null } = $props();
 
@@ -27,7 +34,7 @@
       { key: "pa", label: "PA", title: "Points against", get: (r) => r.fptsAgainst },
       { key: "max", label: "Max PF", title: "Points with the best possible lineup each week", get: (r) => r.potentialPoints },
       { key: "streak", label: "Strk", title: "Current streak", get: (r) => streakValue(r.streak) },
-      { key: "pick", label: "Pick", title: "Rookie draft pick: non-playoff teams by lowest max PF, then playoff finish (projected by seed until decided)", get: (r) => r.pick || 99, firstDir: 1 },
+      { key: "pick", label: "Pick", title: PICK_TITLE, get: (r) => r.pick || 99, firstDir: 1, show: showPick },
       { key: "allplay", label: "All-play", title: "Win % if you played every team every week", get: (r) => r.allPlay?.apPct ?? -1, show: rows.some((r) => r.allPlay) },
       { key: "eff", label: "Efficiency", title: "Points scored ÷ best possible lineup", get: (r) => r.eff?.efficiency ?? -1, show: rows.some((r) => r.eff) },
     ].filter((c) => c.show !== false)

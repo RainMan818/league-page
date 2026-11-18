@@ -2,6 +2,8 @@
 // Breakdown and the Drafts board's upcoming draft:
 //   picks 1-6: teams that miss the playoffs, lowest max points for first (Tankathon tiebreakers)
 //   picks 7-12: 5th place, 6th place, 3rd, 4th, runner-up, champion
+// That's The Dynasty League's house rule (leagueRules.js). Other leagues draft in reverse order of finish: teams
+// that miss the playoffs worst record first, then playoff teams worst place first.
 // Before the playoffs are decided, playoff teams are projected by seed (the better seed wins every game left);
 // played bracket games replace the projection as they finish.
 // Plain functions, no site imports (tested in tests/draftOrder.test.js).
@@ -9,8 +11,9 @@
 // teams: [{ rosterID, wins, losses, ties, fpts, potentialPoints, division }] (standings rows or Sleeper roster settings)
 // bracket: Sleeper /league/<id>/winners_bracket: [{ r, m, t1, t2, w, l, p, t1_from: { w|l: m }, t2_from }]
 
-import { seedTeams } from './playoffs.js';
+import { seedTeams, POINTS_WILDCARD_SEEDS } from './playoffs.js';
 import { tankathonOrder } from './teamStats.js';
+import { houseRulesOn } from './leagueRules.js';
 
 /** Playoff place of each pick after the non-playoff teams, by playoff size (default: worst place first). */
 const PLACE_PICKS = { 6: [5, 6, 3, 4, 2, 1] };
@@ -50,9 +53,9 @@ export function playoffPlaces(bracket = [], seedOf = {}) {
  * Roster IDs in draft order (index 0 = pick 1), plus each team's seed and (projected) playoff place.
  * Returns { order: [rosterID], seeds: { id: seed }, places: { id: place } }.
  */
-export function leagueDraftOrder(teams = [], { playoffTeams = 6, bracket = [] } = {}) {
+export function leagueDraftOrder(teams = [], { playoffTeams = 6, bracket = [], houseRules = houseRulesOn() } = {}) {
     const rows = teams.map((t) => ({ ...t, rosterID: String(t.rosterID) }));
-    const { order: seeded } = seedTeams(rows, { playoffTeams });
+    const { order: seeded } = seedTeams(rows, { playoffTeams, pointsWildcards: houseRules ? POINTS_WILDCARD_SEEDS : 0 });
     const seeds = Object.fromEntries(seeded.map((t, i) => [t.rosterID, i + 1]));
     const inPlayoffs = seeded.slice(0, playoffTeams).map((t) => t.rosterID);
     const out = seeded.slice(playoffTeams);
@@ -61,9 +64,12 @@ export function leagueDraftOrder(teams = [], { playoffTeams = 6, bracket = [] } 
     const places = {};
     for (const id of inPlayoffs) places[id] = bracketPlaces[id] ?? seeds[id]; // by seed until the bracket says otherwise
 
-    const placePicks = PLACE_PICKS[inPlayoffs.length] ?? [...inPlayoffs.keys()].map((i) => inPlayoffs.length - i);
+    const worstFirst = [...inPlayoffs.keys()].map((i) => inPlayoffs.length - i);
+    const placePicks = (houseRules && PLACE_PICKS[inPlayoffs.length]) || worstFirst;
     const playoffOrder = [...inPlayoffs].sort((a, b) => placePicks.indexOf(places[a]) - placePicks.indexOf(places[b]) || seeds[b] - seeds[a]);
-    return { order: [...tankathonOrder(out), ...playoffOrder], seeds, places };
+    // non-playoff teams: lowest max PF first (house rule), else worst record first (seeds run best to worst)
+    const missed = houseRules ? tankathonOrder(out) : [...out].reverse().map((t) => t.rosterID);
+    return { order: [...missed, ...playoffOrder], seeds, places };
 }
 
 /**

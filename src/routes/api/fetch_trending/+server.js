@@ -8,13 +8,18 @@ import { json, error } from '@sveltejs/kit';
 import { leagueID } from '$lib/utils/leagueInfo';
 import { completedWeeks, trimWeek } from '$lib/AAA-Raymond/utils/trending.js';
 import { lastFantasyWeek } from '$lib/AAA-Raymond/utils/playerCard.js';
+import { hasIdpSlots } from '$lib/AAA-Raymond/utils/positions.js';
 
-const POSITIONS = ['QB', 'RB', 'WR', 'TE', 'DL', 'LB', 'DB'].map((p) => `position[]=${p}`).join('&');
+// defenders only for a league that starts them (a smaller download and answer otherwise)
+const query = (list) => list.map((p) => `position[]=${p}`).join('&');
+const IDP_POSITIONS = query(['QB', 'RB', 'WR', 'TE', 'DL', 'LB', 'DB']);
+const OFFENSE_POSITIONS = query(['QB', 'RB', 'WR', 'TE']);
 const HOUR = 3600e3;
 const RECENT_REFRESH = 6 * HOUR;
 
-const weekCache = new Map(); // `${season}/${week}` -> { at, rows }
-let basics = null; // { at, nflState, league }
+// AAA-Raymond: keyed by league too (points use the league's scoring), so switching leagues never mixes them
+const weekCache = new Map(); // `${leagueID}/${season}/${week}` -> { at, rows }
+let basics = null; // { at, leagueID, nflState, league }
 let adds = null; // { at, data }
 
 async function sleeper(url) {
@@ -24,20 +29,20 @@ async function sleeper(url) {
 }
 
 async function loadBasics() {
-    if (basics && Date.now() - basics.at < 10 * 60e3) return basics;
+    if (basics && basics.leagueID === leagueID && Date.now() - basics.at < 10 * 60e3) return basics;
     const [nflState, league] = await Promise.all([
         sleeper('https://api.sleeper.app/v1/state/nfl'),
         sleeper(`https://api.sleeper.app/v1/league/${leagueID}`),
     ]);
-    basics = { at: Date.now(), nflState, league };
+    basics = { at: Date.now(), leagueID, nflState, league };
     return basics;
 }
 
-async function loadWeek(season, week, scoring, recent) {
-    const key = `${season}/${week}`;
+async function loadWeek(season, week, scoring, recent, positions) {
+    const key = `${leagueID}/${season}/${week}`;
     const saved = weekCache.get(key);
     if (saved && (!recent || Date.now() - saved.at < RECENT_REFRESH)) return saved.rows;
-    const data = await sleeper(`https://api.sleeper.com/stats/nfl/${season}/${week}?season_type=regular&${POSITIONS}`);
+    const data = await sleeper(`https://api.sleeper.com/stats/nfl/${season}/${week}?season_type=regular&${positions}`);
     const rows = trimWeek(Array.isArray(data) ? data : [], scoring);
     weekCache.set(key, { at: Date.now(), rows });
     return rows;
@@ -60,13 +65,14 @@ export async function GET({ setHeaders }) {
         const { nflState, league } = await loadBasics();
         const season = league.season;
         const scoring = league.scoring_settings ?? {};
+        const positions = hasIdpSlots(league.roster_positions) ? IDP_POSITIONS : OFFENSE_POSITIONS;
         const finished = completedWeeks(nflState, season, lastFantasyWeek(league.settings));
         const last = finished[finished.length - 1] ?? 0;
         // four weeks at a time (big files; a cold start late in the season has ~16 to fetch), most come from memory
         const weeks = {};
         for (let i = 0; i < finished.length; i += 4) {
             const batch = finished.slice(i, i + 4);
-            const rows = await Promise.all(batch.map((w) => loadWeek(season, w, scoring, w >= last - 1)));
+            const rows = await Promise.all(batch.map((w) => loadWeek(season, w, scoring, w >= last - 1, positions)));
             batch.forEach((w, j) => (weeks[w] = rows[j]));
         }
         setHeaders({ 'cache-control': 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400' });

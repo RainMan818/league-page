@@ -1,4 +1,9 @@
 import { writable } from 'svelte/store';
+// AAA-Raymond: these stores also live in the dev server's memory between requests. Importing leagueInfo.js means
+// switching the league there resets them too (Vite reloads every module that imports a changed file), so the
+// server never renders the previous league's data.
+import { leagueID } from '$lib/utils/leagueInfo';
+export const storesLeague = leagueID;
 
 export const awards = writable({});
 export const leagueData = writable({});

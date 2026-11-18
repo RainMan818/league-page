@@ -147,9 +147,9 @@
 <div id="home">
   <div id="main">
     <div class="text">
-      <h6>{leagueName}</h6>
-      <!-- homepageText contains the intro text for your league, this gets edited in /src/lib/utils/leagueInfo.js -->
-      {@html homepageText }
+      <!-- AAA-Raymond: name and intro line from the league's profile in leagueInfo.js, else from Sleeper (+layout.js) -->
+      <h6>{data.site?.name ?? leagueName}</h6>
+      {@html data.site?.homepageText ?? homepageText ?? "" }
       <!-- Most recent Blog Post (if enabled) -->
       {#if enableBlog}
         <HomePost />
@@ -189,8 +189,8 @@
           <div
             id="champ"
             onclick={() => {
-              if (managers.length)
-                gotoManager({
+              // AAA-Raymond: always (a league without managers in leagueInfo.js gets them from Sleeper)
+              gotoManager({
                   year: podiums[0].year,
                   leagueTeamManagers,
                   rosterID: parseInt(podiums[0].champion),

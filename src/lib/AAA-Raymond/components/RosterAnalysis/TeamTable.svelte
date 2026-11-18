@@ -4,7 +4,8 @@
 
   // AAA-Raymond: leagueTeamManagers so a team's name opens its manager page (gotoManager takes an object; it was
   // given the row number and threw)
-  export let currentManagers, dataType, colorScales, leagueTeamManagers;
+  // AAA-Raymond: idp = the league starts defenders; without IDP the offense / defense / DL / LB / DB columns are hidden
+  export let currentManagers, dataType, colorScales, leagueTeamManagers, idp = true;
 </script>
 
 <DataTable class="teamInner" table$aria-label="Team Name">
@@ -13,15 +14,15 @@
       <!-- AAA-Raymond: the rows are teams; the first number is the whole roster -->
       <Cell class="header">Team</Cell>
       <Cell class="header">All</Cell>
-      <Cell class="header">Off.</Cell>
+      {#if idp}<Cell class="header">Off.</Cell>{/if}
       <Cell class="header">QB</Cell>
       <Cell class="header">RB</Cell>
       <Cell class="header">WR</Cell>
       <Cell class="header">TE</Cell>
-      <Cell class="header">Def.</Cell>
-      <Cell class="header">DL</Cell>
-      <Cell class="header">LB</Cell>
-      <Cell class="header">DB</Cell>
+      {#if idp}<Cell class="header">Def.</Cell>{/if}
+      {#if idp}<Cell class="header">DL</Cell>{/if}
+      {#if idp}<Cell class="header">LB</Cell>{/if}
+      {#if idp}<Cell class="header">DB</Cell>{/if}
     </Row>
   </Head>
   <Body>
@@ -59,6 +60,7 @@
             </div>
           {/if}
         </Cell>
+        {#if idp}
         <Cell class="age-cell">
           {#if dataType == "age"}
             <div
@@ -82,6 +84,7 @@
             {manager.ageLists.Off.length}
           {/if}
         </Cell>
+        {/if}
         <Cell class="age-cell">
           {#if dataType == "age"}
             <div
@@ -174,6 +177,7 @@
             {manager.ageLists.TE.length}
           {/if}
         </Cell>
+        {#if idp}
         <Cell class="age-cell">
           {#if dataType == "age"}
             <div
@@ -197,6 +201,8 @@
             {manager.ageLists.Def.length}
           {/if}
         </Cell>
+        {/if}
+        {#if idp}
         <Cell class="age-cell">
           {#if dataType == "age"}
             <div
@@ -220,6 +226,8 @@
             {manager.ageLists.DL.length}
           {/if}
         </Cell>
+        {/if}
+        {#if idp}
         <Cell class="age-cell">
           {#if dataType == "age"}
             <div
@@ -243,6 +251,8 @@
             {manager.ageLists.LB.length}
           {/if}
         </Cell>
+        {/if}
+        {#if idp}
         <Cell class="age-cell">
           {#if dataType == "age"}
             <div
@@ -266,6 +276,7 @@
             {manager.ageLists.DB.length}
           {/if}
         </Cell>
+        {/if}
       </Row>
     {/each}
   </Body>

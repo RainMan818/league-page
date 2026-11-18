@@ -36,7 +36,12 @@
 	</div>
 {:then [upcomingDraft, leagueTeamManagers, {players}] }
     <h4>Upcoming {upcomingDraft.year} Draft</h4>
-    <Draft draftData={upcomingDraft} {leagueTeamManagers} year={upcomingDraft.year} {players} />
+    {#if upcomingDraft.draft}
+        <Draft draftData={upcomingDraft} {leagueTeamManagers} year={upcomingDraft.year} {players} />
+    {:else}
+        <!-- AAA-Raymond: redraft / keeper league, no projected order (leagueDrafts.js) -->
+        <h6>The draft order is set on Sleeper before the draft.</h6>
+    {/if}
 {:catch error}
 	<!-- promise was rejected -->
 	<p>Something went wrong: {error.message}</p>

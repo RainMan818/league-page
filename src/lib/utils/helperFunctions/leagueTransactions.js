@@ -10,6 +10,8 @@ import { getLeagueTeamManagers } from './leagueTeamManagers';
 import { transactionsMeta, canTopUp, latestLegs, mergeTransactions, newestFirst } from '$lib/AAA-Raymond/utils/transactionsCache.js';
 // AAA-Raymond: one request per Sleeper URL per page load (shared with every other loader)
 import { sleeperFetch } from '$lib/AAA-Raymond/utils/sleeperFetch.js';
+// AAA-Raymond: saved per league ("transactions:<league ID>"), so switching leagues in leagueInfo.js keeps both
+import { readLeagueItem, writeLeagueItem } from '$lib/AAA-Raymond/utils/leagueStorage.js';
 
 // AAA-Raymond: one refresh at a time; pages that ask while it runs share it
 let pendingRefresh = null;
@@ -58,7 +60,8 @@ export const getLeagueTransactions = async (preview, refresh = false) => {
 // AAA-Raymond: the saved copy, or null (private mode, bad JSON)
 const readSavedTransactions = () => {
 	try {
-		return JSON.parse(localStorage.getItem("transactions"));
+		// a copy saved under the old shared name moves to the league it was downloaded for
+		return readLeagueItem(localStorage, "transactions", leagueID, { belongs: (saved) => saved?.meta?.leagueID === String(leagueID) });
 	} catch (err) {
 		return null;
 	}
@@ -97,11 +100,9 @@ const refreshTransactions = async () => {
 		meta: transactionsMeta({ leagueID }),
 	};
 
-	try {
-		// update localStorage
-		localStorage.setItem("transactions", JSON.stringify(transactionPackage));
-	} catch (err) {
-		console.error(err);
+	// update localStorage (AAA-Raymond: this league's entry)
+	if(!writeLeagueItem(localStorage, "transactions", leagueID, transactionPackage)) {
+		console.error("Couldn't save transactions in the browser");
 	}
 
 	// update the store

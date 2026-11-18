@@ -3,12 +3,13 @@
     import {Manager} from '$lib/components';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	// AAA-Raymond: Sleeper's teams when leagueInfo.js has no managers for this league
+	import { managersFor } from '$lib/AAA-Raymond/utils/siteManagers.js';
 
 	export let data;
 	const {managers, manager, managersInfo} = data;
 
     onMount(() => {
-        if(!managers.length) goto('/');
         if(manager < 0) goto("/managers");
     })
 </script>
@@ -34,11 +35,14 @@
                 <LinearProgress indeterminate />
             </div>
         {:then [rostersData, leagueTeamManagers, leagueData, transactionsData, awards, records]}
-            {#if managers.length && manager > -1}
-                <Manager {awards} {records} {manager} {managers} {rostersData} {leagueTeamManagers} rosterPositions={leagueData.roster_positions} {transactionsData} />
+            {@const list = managersFor(managers, leagueTeamManagers)}
+            {#if manager > -1 && manager < list.length}
+                <Manager {awards} {records} {manager} managers={list} {rostersData} {leagueTeamManagers} rosterPositions={leagueData.roster_positions} {transactionsData} />
+            {:else}
+                <p>No manager number {manager}. <a href="/managers">All managers</a></p>
             {/if}
         {:catch error}
             <!-- promise was rejected -->
             <p>Something went wrong: {error.message}</p>
         {/await}
-</div>
+</div>

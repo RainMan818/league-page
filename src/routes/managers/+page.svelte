@@ -3,15 +3,12 @@
     import {AllManagers} from '$lib/components';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	// AAA-Raymond: Sleeper's teams when leagueInfo.js has no managers for this league
+	import { managersFor } from '$lib/AAA-Raymond/utils/siteManagers.js';
 
 	export let data;
 	const {managers, leagueTeamManagersData} = data;
 
-    onMount(() => {
-        if(!managers.length) {
-            goto('/');
-        }
-    })
 </script>
 
 <style>
@@ -35,11 +32,9 @@
             <LinearProgress indeterminate />
         </div>
     {:then leagueTeamManagers}
-        {#if managers.length}
-            <AllManagers {managers}  {leagueTeamManagers}/>
-        {/if}
+        <AllManagers managers={managersFor(managers, leagueTeamManagers)} {leagueTeamManagers}/>
     {:catch error}
         <!-- promise was rejected -->
         <p>Something went wrong: {error.message}</p>
     {/await}
-</div>
+</div>

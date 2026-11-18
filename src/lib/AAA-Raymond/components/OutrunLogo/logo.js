@@ -14,11 +14,13 @@ export function logoSvg({ title = 'DYNASTY', subtitle = 'LEAGUE · IDP SF' } = {
     const sub = layoutText(subtitle, 26);
     const subWidth = sub.width * subScale;
 
-    const width = Math.ceil(main.width + skew + depth.x + pad * 2);
+    // AAA-Raymond (Nov 17): wide enough for the subtitle too (a long league name from Sleeper), title centered
+    const titleWidth = main.width + skew + depth.x;
+    const width = Math.ceil(Math.max(titleWidth, subWidth) + pad * 2);
     const titleTop = pad;
     const subTop = titleTop + 100 + 22;
     const height = Math.ceil(subTop + 100 * subScale + pad);
-    const titleLeft = pad + skew;
+    const titleLeft = (width - titleWidth) / 2 + skew;
     const subLeft = (width - subWidth) / 2;
     const ruleY = subTop + 15;
 

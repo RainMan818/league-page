@@ -7,6 +7,7 @@
 -->
 <script>
   import { onMount } from "svelte";
+  import { leagueID } from "$lib/utils/leagueInfo";
   import { loadLeagueContext } from "../../utils/leagueContext.js";
   import { leagueTrends, leagueAverage } from "../../utils/leagueTrends.js";
   import { niceTicks } from "./chartGeometry.js";
@@ -17,7 +18,8 @@
 
   let { standingsData, leagueTeamManagersData } = $props();
 
-  const STORAGE_KEY = "rr-trends-hidden";
+  // per league: roster numbers mean different teams in another league
+  const STORAGE_KEY = `rr-trends-hidden:${leagueID}`;
   const short = (s, k) => (s.length > k ? s.slice(0, k - 1) + "…" : s);
   const POS_LABEL = { OFF: "Total offense", DEF: "Total defense" };
 
@@ -64,7 +66,7 @@
         playoffTeams: leagueData.settings?.playoff_teams || 6,
         medianGame: leagueData.settings?.league_average_match == 1,
         // colors follow roster order, so a team keeps its color everywhere and from week to week
-        teams: rosterIDs.map((id, i) => ({ id, name: teams[id].name, color: i % 12 })),
+        teams: rosterIDs.map((id, i) => ({ id, name: teams[id].name, color: i % 16 })), // 16 colors (leagues up to 16 teams)
       };
       status = "ready";
     } catch (err) {
@@ -153,7 +155,9 @@
     const pct = (v) => `${v.toFixed(0)}%`;
     const effPick = effMode === "week" ? (s) => s.effWeek : (s) => s.effCum;
     const effR = rangeFor(effPick);
-    const sides = ["OFF", "DEF"].map((p) => {
+    // offense vs defense only when the lineup starts defenders (IDP or a team defense); otherwise offense = points for
+    const defense = t.positions.some((p) => ["DL", "LB", "DB", "DEF"].includes(p));
+    const sides = (defense ? ["OFF", "DEF"] : []).map((p) => {
       const pick = (s) => s.pos[p];
       return { key: p, label: POS_LABEL[p], range: rangeFor(pick), series: rankedSeries(pick), refs: [{ label: "League avg", vals: leagueAverage(t, pick) }] };
     });
@@ -276,7 +280,8 @@
 
     <section class="rr-card">
       <h3>Position averages</h3>
-      <p class="rr-note">Points per week, season average after each week · totals include the flex slots · dashed = league average</p>
+      <p class="rr-note">Points per week, season average after each week{charts.sides.length ? " · totals include the flex slots" : ""} · dashed = league average</p>
+      {#if charts.sides.length}
       <div class="rr-grid2 rr-sides">
         {#each charts.sides as c (c.key)}
           <div>
@@ -285,6 +290,7 @@
           </div>
         {/each}
       </div>
+      {/if}
       <div class="rr-minis">
         {#each charts.positions as c (c.key)}
           <div>
@@ -313,6 +319,10 @@
     --rr-team-9: #ff7cb6;
     --rr-team-10: #6d7df5;
     --rr-team-11: #e6d3ff;
+    --rr-team-12: #f5a3ff;
+    --rr-team-13: #7fffd4;
+    --rr-team-14: #ffcf33;
+    --rr-team-15: #c9c9d6;
     max-width: 1140px;
     margin: 0 auto;
     padding: 0 16px 4em;
@@ -335,6 +345,10 @@
     --rr-team-9: #c2186b;
     --rr-team-10: #3b47b8;
     --rr-team-11: #6b5a8e;
+    --rr-team-12: #a3389f;
+    --rr-team-13: #0f7a5a;
+    --rr-team-14: #9a6a00;
+    --rr-team-15: #5c5c6e;
   }
 
   .rr-pageTitle {

@@ -164,14 +164,18 @@ export function rosterLineup(roster, rosterPositions = [], players = {}) {
 // head-to-head record (no weekly median game; seasons before the median game have no h2h fields and don't need them)
 const h2h = (y) => ({ wins: Number(y.h2hWins ?? y.wins) || 0, losses: Number(y.h2hLosses ?? y.losses) || 0, ties: Number(y.h2hTies ?? y.ties) || 0 });
 const SEASON_STATS = { wins: (y) => h2h(y).wins, pf: (y) => Number(y.fpts) || 0, maxPF: (y) => Number(y.potentialPoints) || 0 };
+const games = (r) => r.wins + r.losses + r.ties;
+/** A season with the weekly median game: Sleeper's record has more games than the head-to-head one (any league). */
+export const hadMedianGame = (y) =>
+    y?.h2hWins != null && games({ wins: Number(y.wins) || 0, losses: Number(y.losses) || 0, ties: Number(y.ties) || 0 }) > games(h2h(y));
 
 /**
  * Regular-season numbers for each finished season this manager ran a team, oldest first, for the season charts.
  * Each stat comes with the team's league rank that season (1 = best; ties share a rank) and the league average.
  * records: getLeagueRecords(); leagueRosterRecords[rosterID].years = [{ year, wins, losses, ties, fpts, potentialPoints }]
  * isComplete(year): whether that season is over (the in-progress season is left out).
- * Wins, losses and ties are head-to-head only: the weekly league-median game (from 2026) is left out.
- * Returns [{ year, rosterID, wins, losses, ties, pf, maxPF, teams, rank: { wins, pf, maxPF }, avg: { wins, pf, maxPF } }]
+ * Wins, losses and ties are head-to-head only: the weekly league-median game is left out (median: that season had it).
+ * Returns [{ year, rosterID, wins, losses, ties, median, pf, maxPF, teams, rank: { wins, pf, maxPF }, avg: { wins, pf, maxPF } }]
  */
 export function seasonHistory(records, owns, isComplete = () => true) {
     const byYear = {};
@@ -198,6 +202,7 @@ export function seasonHistory(records, owns, isComplete = () => true) {
             year,
             rosterID: mine.rosterID,
             ...h2h(mine.y),
+            median: hadMedianGame(mine.y),
             pf: value(mine.y, 'pf'),
             maxPF: value(mine.y, 'maxPF'),
             teams: teams.length,

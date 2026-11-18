@@ -15,6 +15,16 @@ export const IDP_GROUPS = ['DL', 'LB', 'DB'];
 export const groupOf = (pos) => POSITION_GROUPS[pos] ?? pos;
 
 /**
+ * Does the league start defensive players (Sleeper roster_positions has DL / LB / DB / DE / CB ... or IDP_FLEX)?
+ * Pages hide everything IDP (columns, charts, awards, filters) when it doesn't (Nov 16: leagues without IDP).
+ */
+export const hasIdpSlots = (rosterPositions = []) =>
+    (rosterPositions ?? []).some((slot) => slot === 'IDP_FLEX' || IDP_GROUPS.includes(groupOf(slot)));
+
+/** Does the lineup have a superflex slot (QB-eligible flex)? Labels say "QB+SF" only then. */
+export const hasSuperflex = (rosterPositions = []) => (rosterPositions ?? []).includes('SUPER_FLEX');
+
+/**
  * A player's group among `allowed`: their listed position first, then their other fantasy positions
  * (Sleeper lists some players as e.g. pos 'LB' with positions ['LB', 'DL']). null if none fits.
  */

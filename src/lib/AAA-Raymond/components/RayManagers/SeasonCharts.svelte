@@ -1,7 +1,7 @@
 <!--
   Manager page "Season by season" card: one small chart per stat for each finished season the manager ran, with the
   league rank under each year and that season's league average dashed. Wins are bars from zero, head-to-head only
-  (the weekly league-median game from 2026 is left out, so seasons compare evenly); points for and max PF are lines on a zoomed scale with labeled gridlines (seasons differ by ~5%, which bars from zero would hide). Hovering (or tapping) a season highlights it in every chart and shows a tooltip with all its numbers.
+  (the weekly league-median game is left out, so seasons compare evenly); points for and max PF are lines on a zoomed scale with labeled gridlines (seasons differ by ~5%, which bars from zero would hide). Hovering (or tapping) a season highlights it in every chart and shows a tooltip with all its numbers.
   "Table" swaps the charts for the same numbers as a table. Data from utils/managerProfile.js seasonHistory().
 -->
 <script>
@@ -81,8 +81,8 @@
 
   const eff = (s) => (s.maxPF > 0 ? `${((s.pf * 100) / s.maxPF).toFixed(1)}%` : "–");
   const rankText = (s, key) => `${ordinal(s.rank[key])} of ${s.teams}`;
-  const MEDIAN_FROM = 2026; // first season with the weekly league-median game
-  const anyMedian = $derived(seasons.some((s) => s.year >= MEDIAN_FROM));
+  // seasons with the weekly median game come from the records themselves (managerProfile.js hadMedianGame), any league
+  const anyMedian = $derived(seasons.some((s) => s.median));
 </script>
 
 <section class="rr-card rr-seasons">

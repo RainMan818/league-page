@@ -2,7 +2,9 @@
 // https://api.sleeper.com/stats/nfl/player/<id>?season_type=regular&season=<year>&grouping=week|season
 // One request returns a player's whole season. Requests go through sleeperFetch (one per URL per page load, so
 // reopening a card costs nothing). Finished seasons' totals never change, so they're saved in the browser for good
-// (savedSeasons.js, key "pstats/v1/<id>/<season>"), trimmed to the stats the card uses (trimStats in playerCard.js).
+// (savedSeasons.js, key "pstats/v1/<league ID>/<id>/<season>"), trimmed to the stats the card uses (trimStats in
+// playerCard.js), which depend on the league's scoring, hence the league ID in the key.
+import { leagueID } from '$lib/utils/leagueInfo';
 import { sleeperFetch } from './sleeperFetch.js';
 import { pastSeasons } from './savedSeasons.js';
 import { trimStats } from './playerCard.js';
@@ -34,7 +36,7 @@ export async function weeklyStats(playerID, season, scoring) {
 
 /** A finished season's totals (trimmed), saved for good once downloaded. null if the player has no stats that season. */
 export async function seasonTotals(playerID, season, scoring) {
-    const key = `pstats/v${PLAYER_STATS_VERSION}/${playerID}/${season}`;
+    const key = `pstats/v${PLAYER_STATS_VERSION}/${leagueID}/${playerID}/${season}`;
     const saved = pastSeasons.read(key);
     if (saved) return saved.stats;
     const data = await statsJson(statsUrl(playerID, season, 'season'));

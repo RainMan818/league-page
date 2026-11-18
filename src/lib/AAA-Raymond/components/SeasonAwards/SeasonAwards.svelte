@@ -60,25 +60,36 @@
     ];
   });
 
+  // a league without IDP (Nov 16): no defensive awards, and the offensive ones lose the "Offensive" prefix. Read from
+  // the awards themselves (the All-League team has defensive slots only when the league starts defenders), so saved awards work.
+  const DEFENSE_GROUPS = ["DL", "LB", "DB"];
+  const IDP_SLOTS = ["DL", "LB", "DB", "IDP_FLEX", "DE", "DT", "CB", "S"];
+  const idp = $derived(
+    awards?.regular?.allLeague?.length
+      ? awards.regular.allLeague.some((s) => IDP_SLOTS.includes(s.slot))
+      : !!awards?.post?.defMvp
+  );
+  const forLeague = (list) =>
+    list.filter((a) => idp || !a.defense).map((a) => (idp ? a : { ...a, title: a.title.replace("Offensive ", "") }));
+
   const regularPlayers = $derived.by(() => {
     const r = awards?.regular;
     if (!r) return [];
     const p = (x) => x;
-    return [
+    return forLeague([
       { title: "MVP", icon: "star", tone: "hot", why: "Most points in a starting lineup", player: p(r.mvp), stat: pts(r.mvp?.points), sub: r.mvp && `${r.mvp.games} starts` },
-      { title: "Defensive Player of the Year", icon: "shield", tone: "good", why: "Top IDP in a starting lineup", player: p(r.dpoy), stat: pts(r.dpoy?.points), sub: r.dpoy && `${r.dpoy.games} starts` },
+      { defense: true, title: "Defensive Player of the Year", icon: "shield", tone: "good", why: "Top IDP in a starting lineup", player: p(r.dpoy), stat: pts(r.dpoy?.points), sub: r.dpoy && `${r.dpoy.games} starts` },
       { title: "Offensive Rookie of the Year", icon: "fiber_new", tone: "good", why: "Top rookie QB, RB, WR or TE", player: p(r.oroy), stat: pts(r.oroy?.points), sub: r.oroy && `${r.oroy.games} starts` },
-      { title: "Defensive Rookie of the Year", icon: "new_releases", tone: "good", why: "Top rookie DL, LB or DB", player: p(r.droy), stat: pts(r.droy?.points), sub: r.droy && `${r.droy.games} starts` },
+      { defense: true, title: "Defensive Rookie of the Year", icon: "new_releases", tone: "good", why: "Top rookie DL, LB or DB", player: p(r.droy), stat: pts(r.droy?.points), sub: r.droy && `${r.droy.games} starts` },
       { title: "Best Single Game", icon: "bolt", tone: "hot", why: "Highest one-week score by a starter", player: p(r.bestGame), stat: pts(r.bestGame?.points), sub: r.bestGame && `Week ${r.bestGame.week}` },
       { title: "Offensive Pickup of the Year", icon: "person_add", tone: "good", why: "Most starter points after a waiver or free-agent add (QB, RB, WR, TE)", player: p(r.offPickup), stat: pts(r.offPickup?.points), sub: r.offPickup && "starter points after the add" },
-      { title: "Defensive Pickup of the Year", icon: "group_add", tone: "good", why: "Most starter points after a waiver or free-agent add (DL, LB, DB)", player: p(r.defPickup), stat: pts(r.defPickup?.points), sub: r.defPickup && "starter points after the add" },
+      { defense: true, title: "Defensive Pickup of the Year", icon: "group_add", tone: "good", why: "Most starter points after a waiver or free-agent add (DL, LB, DB)", player: p(r.defPickup), stat: pts(r.defPickup?.points), sub: r.defPickup && "starter points after the add" },
       { title: "Offensive Bench Legend", icon: "event_seat", tone: "bad", why: "Most points scored while on the bench (QB, RB, WR, TE)", player: p(r.offBenchLegend), stat: pts(r.offBenchLegend?.points), sub: r.offBenchLegend && `${r.offBenchLegend.games} weeks on the bench` },
-      { title: "Defensive Bench Legend", icon: "weekend", tone: "bad", why: "Most points scored while on the bench (DL, LB, DB)", player: p(r.defBenchLegend), stat: pts(r.defBenchLegend?.points), sub: r.defBenchLegend && `${r.defBenchLegend.games} weeks on the bench` },
-    ];
+      { defense: true, title: "Defensive Bench Legend", icon: "weekend", tone: "bad", why: "Most points scored while on the bench (DL, LB, DB)", player: p(r.defBenchLegend), stat: pts(r.defBenchLegend?.points), sub: r.defBenchLegend && `${r.defBenchLegend.games} weeks on the bench` },
+    ]);
   });
 
   // All-League Team: offense in the left column (QB ... SF), defense in the right (IDP, DL, LB, DB)
-  const DEFENSE_GROUPS = ["DL", "LB", "DB"];
   const lineupColumns = $derived.by(() => {
     const all = awards?.regular?.allLeague ?? [];
     return [all.filter((s) => !DEFENSE_GROUPS.includes(s.pos)), all.filter((s) => DEFENSE_GROUPS.includes(s.pos))].filter((c) => c.length);
@@ -112,11 +123,11 @@
   const postPlayers = $derived.by(() => {
     const p = awards?.post;
     if (!p) return [];
-    return [
+    return forLeague([
       { title: "Offensive Playoff MVP", icon: "sports_football", tone: "hot", why: "Most starter points in playoff games (QB, RB, WR, TE)", player: p.offMvp, stat: pts(p.offMvp?.points), sub: p.offMvp && `${p.offMvp.games} playoff starts` },
-      { title: "Defensive Playoff MVP", icon: "security", tone: "good", why: "Most starter points in playoff games (DL, LB, DB)", player: p.defMvp, stat: pts(p.defMvp?.points), sub: p.defMvp && `${p.defMvp.games} playoff starts` },
+      { defense: true, title: "Defensive Playoff MVP", icon: "security", tone: "good", why: "Most starter points in playoff games (DL, LB, DB)", player: p.defMvp, stat: pts(p.defMvp?.points), sub: p.defMvp && `${p.defMvp.games} playoff starts` },
       { title: "Championship Hero", icon: "military_tech", tone: "hot", why: "The champion's top scorer in the final", player: p.champHero, stat: pts(p.champHero?.points), sub: "in the final" },
-    ];
+    ]);
   });
 </script>
 

@@ -3,8 +3,8 @@ import {
     managers,
 } from '$lib/utils/helper';
 
+// AAA-Raymond: a league without managers in leagueInfo.js gets them from Sleeper (siteManagers.js), so always load
 export async function load() {
-    if(!managers.length) return {managers};
     const leagueTeamManagersData = getLeagueTeamManagers();
 
     const props = {
@@ -13,4 +13,4 @@ export async function load() {
     }
 
     return props;
-}
+}

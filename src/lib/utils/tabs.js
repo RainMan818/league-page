@@ -1,4 +1,5 @@
-import { leagueID } from '$lib/utils/leagueInfo';
+// AAA-Raymond: houseRules = The Dynasty League's own rules (the Constitution page is only for that league)
+import { leagueID, houseRules } from '$lib/utils/leagueInfo';
 
 export const tabs = [
     {
@@ -82,11 +83,11 @@ export const tabs = [
                 label: 'Records',
                 dest: '/records',
             },
-            {
+            ...(houseRules ? [{
                 icon: 'history_edu',
                 label: 'Constitution',
                 dest: '/constitution',
-            },
+            }] : []),
             {
                 icon: 'lightbulb',
                 label: 'Resources',

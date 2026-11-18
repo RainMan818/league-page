@@ -5,7 +5,9 @@
 	import IconButton from '@smui/icon-button';
 	import { Icon } from '@smui/common';
 	import OutrunLogo from '$lib/AAA-Raymond/components/OutrunLogo/index.svelte';
+	// AAA-Raymond: the league's name and logo words (profile in leagueInfo.js, filled in from Sleeper: src/routes/+layout.js)
 	import { leagueName } from '$lib/utils/leagueInfo';
+	const site = $derived(page.data.site ?? { name: leagueName, logo: { title: 'FANTASY', subtitle: 'LEAGUE' } });
 
 	// toggle between outrun night (default) and sunset day; the choice is saved in localStorage
 	// and applied before first paint by the inline script in src/app.html
@@ -29,7 +31,7 @@
 </script>
 
 <svelte:head>
-	<title>{!page.url.pathname[1] ? 'Home' : page.url.pathname[1].toUpperCase() + page.url.pathname.slice(2)} | {leagueName}</title>
+	<title>{!page.url.pathname[1] ? 'Home' : page.url.pathname[1].toUpperCase() + page.url.pathname.slice(2)} | {site.name}</title>
 </svelte:head>
 
 <style>
@@ -75,7 +77,7 @@
 </style>
 
 <nav>
-	<a href="/" aria-label="{leagueName} home"><OutrunLogo /></a>
+	<a href="/" aria-label="{site.name} home"><OutrunLogo title={site.logo.title} subtitle={site.logo.subtitle} /></a>
 
 	<div class="container">
 		<IconButton

@@ -21,7 +21,7 @@
 // Trade of the Year is the other exception: it counts everything a traded player scored after the trade.
 
 import { predictScores } from './predictOptimalScore.js';
-import { playerGroup, groupOf } from './positions.js';
+import { playerGroup, groupOf, hasIdpSlots } from './positions.js';
 import { allPlayRecords } from './teamStats.js';
 import { seedTeams } from './playoffs.js';
 import { pickValue, pickShare, PICK_VALUES } from './pickValues.js';
@@ -52,13 +52,20 @@ export const playedWeek = (entries) => {
     return list.some((e) => e.points > 0) ? list : [];
 };
 
-/** The player's position group: DE -> DL, CB -> DB, ... */
-export const groupFor = (player) => (player ? playerGroup(player, GROUPS) ?? groupOf(player.pos) : null);
+/**
+ * The groups a league's players count in: all of them, or no defenders when the lineup has no IDP slots (Nov 16),
+ * so a WR who is also listed at CB (Travis Hunter) is a WR there and the defensive awards stay empty.
+ */
+export const leagueGroups = (rosterPositions = []) =>
+    !rosterPositions?.length || hasIdpSlots(rosterPositions) ? GROUPS : GROUPS.filter((g) => !DEFENSE.includes(g));
+
+/** The player's position group: DE -> DL, CB -> DB, ... (within the league's groups) */
+export const groupFor = (player, allowed = GROUPS) => (player ? playerGroup(player, allowed) ?? groupOf(player.pos) : null);
 
 /** Every group a player can fill (a LB who is also listed at DL can fill both). */
-const groupsFor = (player) => {
+const groupsFor = (player, allowed = GROUPS) => {
     if (!player) return [];
-    const all = [player.pos, ...(player.positions ?? [])].map(groupOf).filter((g) => GROUPS.includes(g));
+    const all = [player.pos, ...(player.positions ?? [])].map(groupOf).filter((g) => allowed.includes(g));
     return [...new Set(all)];
 };
 
@@ -187,21 +194,23 @@ function playerTotals(list) {
  * Fixed-position slots are filled first, then the flex slots (narrowest first).
  */
 export function allLeagueTeam(totals, players, rosterPositions) {
+    const allowed = leagueGroups(rosterPositions);
     const slots = starterSlots(rosterPositions).map((slot, i) => ({ slot, i, groups: SLOT_GROUPS[slot] ?? [slot] }));
     const ranked = [...totals].sort((a, b) => b.points - a.points);
     const used = new Set();
     const lineup = new Array(slots.length).fill(null);
     for (const s of [...slots].sort((a, b) => a.groups.length - b.groups.length || a.i - b.i)) {
-        const pick = ranked.find((t) => !used.has(t.playerID) && groupsFor(players[t.playerID]).some((g) => s.groups.includes(g)));
+        const pick = ranked.find((t) => !used.has(t.playerID) && groupsFor(players[t.playerID], allowed).some((g) => s.groups.includes(g)));
         if (!pick) continue;
         used.add(pick.playerID);
-        lineup[s.i] = { slot: s.slot, playerID: pick.playerID, points: pick.points, rosterID: pick.rosterID, pos: groupFor(players[pick.playerID]) };
+        lineup[s.i] = { slot: s.slot, playerID: pick.playerID, points: pick.points, rosterID: pick.rosterID, pos: groupFor(players[pick.playerID], allowed) };
     }
     return lineup.filter(Boolean);
 }
 
 export function regularSeasonAwards(input) {
     const { weeks = {}, players = {}, rosterPositions = [], regularSeasonLength, season, currentSeason, transactions = [] } = input;
+    const allowed = leagueGroups(rosterPositions);
     const weekNumbers = [];
     for (let w = 1; w <= regularSeasonLength; w++) if (playedWeek(weeks[w]).length) weekNumbers.push(w);
     if (!weekNumbers.length) return null;
@@ -237,9 +246,9 @@ export function regularSeasonAwards(input) {
     const starts = apps.filter((a) => a.starter);
     const starterTotals = playerTotals(starts);
     const benchTotals = playerTotals(apps.filter((a) => !a.starter));
-    const withInfo = (t) => (t ? { ...t, name: playerName(players, t.playerID), pos: groupFor(players[t.playerID]) } : null);
+    const withInfo = (t) => (t ? { ...t, name: playerName(players, t.playerID), pos: groupFor(players[t.playerID], allowed) } : null);
     const topIn = (list, groups, filter = () => true) =>
-        withInfo(best(list.filter((t) => groups.includes(groupFor(players[t.playerID])) && filter(t)), (t) => t.points));
+        withInfo(best(list.filter((t) => groups.includes(groupFor(players[t.playerID], allowed)) && filter(t)), (t) => t.points));
     const rookie = (t) => isRookie(players[t.playerID], season, currentSeason);
 
     // ---- acquisitions: waivers and trades
@@ -267,7 +276,7 @@ export function regularSeasonAwards(input) {
         waiverWizard = { rosterID: wizard[0], points: wizard[1], top: withInfo(top) };
     }
     const topPickup = (groups) => {
-        const pick = best(pickups.filter((p) => groups.includes(groupFor(players[p.playerID]))), (p) => p.points);
+        const pick = best(pickups.filter((p) => groups.includes(groupFor(players[p.playerID], allowed))), (p) => p.points);
         return pick && pick.points > 0 ? withInfo(pick) : null;
     };
 
@@ -283,7 +292,7 @@ export function regularSeasonAwards(input) {
     };
     const scoredFrom = (playerID, leg) =>
         sum(Object.entries(weekPts[playerID] ?? {}).filter(([w]) => Number(w) >= leg).map(([, v]) => v));
-    const playerInfo = (tr, p) => ({ playerID: p, name: playerName(players, p), pos: groupFor(players[p]), points: scoredFrom(p, tr.leg) });
+    const playerInfo = (tr, p) => ({ playerID: p, name: playerName(players, p), pos: groupFor(players[p], allowed), points: scoredFrom(p, tr.leg) });
     // one team's side of a trade: what it received and sent, and its net
     const tradeSide = (tr, rosterID) => {
         const received = Object.keys(tr.adds).filter((p) => tr.adds[p] === rosterID).map((p) => playerInfo(tr, p));
@@ -356,7 +365,7 @@ export function regularSeasonAwards(input) {
         dpoy: topIn(starterTotals, DEFENSE),
         oroy: topIn(starterTotals, OFFENSE, rookie),
         droy: topIn(starterTotals, DEFENSE, rookie),
-        bestGame: bestGame && { ...bestGame, name: playerName(players, bestGame.playerID), pos: groupFor(players[bestGame.playerID]) },
+        bestGame: bestGame && { ...bestGame, name: playerName(players, bestGame.playerID), pos: groupFor(players[bestGame.playerID], allowed) },
         offPickup: topPickup(OFFENSE),
         defPickup: topPickup(DEFENSE),
         offBenchLegend: topIn(benchTotals, OFFENSE),
@@ -426,6 +435,7 @@ export function bracketGames({ winnersBracket = [], weeks = {}, playoffWeekStart
 /** Post-season awards, or null until the championship has a winner. */
 export function postseasonAwards(input) {
     const { weeks = {}, players = {}, rosterPositions = [] } = input;
+    const allowed = leagueGroups(rosterPositions);
     const bracket = bracketGames(input);
     const { games, seeds, byes } = bracket;
     const final = games.find((g) => g.place === 1);
@@ -500,8 +510,8 @@ export function postseasonAwards(input) {
         }
     }
     const totals = playerTotals(starts);
-    const withInfo = (t) => (t ? { ...t, name: playerName(players, t.playerID), pos: groupFor(players[t.playerID]) } : null);
-    const topIn = (list, groups) => withInfo(best(list.filter((t) => groups.includes(groupFor(players[t.playerID]))), (t) => t.points));
+    const withInfo = (t) => (t ? { ...t, name: playerName(players, t.playerID), pos: groupFor(players[t.playerID], allowed) } : null);
+    const topIn = (list, groups) => withInfo(best(list.filter((t) => groups.includes(groupFor(players[t.playerID], allowed))), (t) => t.points));
     // the champion's top scorer in the final
     const finalTotals = playerTotals(starts.filter((s) => s.game === final && s.rosterID === final.winner));
     const gameName = (g) => {
@@ -534,9 +544,9 @@ export function postseasonAwards(input) {
                     if (swing > margin && (!benchBlunder || swing > benchBlunder.swing)) {
                         benchBlunder = {
                             rosterID: g.loser, opponent: g.winner, week, round: g.round, place: g.place, game: gameName(g), margin, swing,
-                            bench: { playerID: benchID, name: playerName(players, benchID), pos: groupFor(players[benchID]), points: benchPts },
+                            bench: { playerID: benchID, name: playerName(players, benchID), pos: groupFor(players[benchID], allowed), points: benchPts },
                             starter: starterID && starterID !== '0'
-                                ? { playerID: starterID, name: playerName(players, starterID), pos: groupFor(players[starterID]), points: starterPts }
+                                ? { playerID: starterID, name: playerName(players, starterID), pos: groupFor(players[starterID], allowed), points: starterPts }
                                 : null,
                             slot: slots[i],
                         };

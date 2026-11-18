@@ -18,9 +18,10 @@
   import { sleeperJson } from "../../utils/sleeperFetch.js";
   import { predictLineup } from "../../utils/predictOptimalScore.js";
   import { starterSlots } from "../../utils/positionAverages.js";
-  import { playerPhoto } from "../../utils/positions.js";
+  import { playerPhoto, hasIdpSlots, hasSuperflex } from "../../utils/positions.js";
   import {
     BREAKDOWN_ROWS,
+    OFFENSE_GROUPS,
     ROSTER_GROUPS,
     rosterAgeCounts,
     leagueRanks,
@@ -40,7 +41,7 @@
   let { standingsData } = $props();
 
   const ALL = "all";
-  const STORE_KEY = "rr-rosters-team";
+  const STORE_KEY = `rr-rosters-team:${leagueID}`; // per league: roster numbers mean different teams
 
   let status = $state("loading"); // loading | ready | error
   let errorMessage = $state("");
@@ -114,7 +115,11 @@
         },
       ])
     );
-    const slotKeys = ["QB+Flex", "WRT", "IDP"].filter((k) => ids.some((id) => slotPpw[id]?.[k] != null));
+    // lineup-slot rows: QB+SF only with a superflex (otherwise it's the QB row again), IDP only in an IDP league
+    const idp = hasIdpSlots(leagueData.roster_positions);
+    const slotKeys = ["QB+Flex", "WRT", "IDP"]
+      .filter((k) => (k !== "QB+Flex" || hasSuperflex(leagueData.roster_positions)) && (k !== "IDP" || idp))
+      .filter((k) => ids.some((id) => slotPpw[id]?.[k] != null));
     const slots = Object.fromEntries(slotKeys.map((k) => [k, rank((id) => slotPpw[id]?.[k] ?? 0)]));
 
     // season-level projections: per game over the rest of the regular season, byes skipped
@@ -127,7 +132,7 @@
     const picks = ownedPicks({ rosterIDs: ids, tradedPicks, seasons, rounds: Number(leagueData.settings?.draft_rounds) || 0 });
 
     return {
-      ids, order, rosters, leagueData, managers, teams, places, ages, ppw, slotPpw, breakdown, slots, hasPoints,
+      ids, order, rosters, leagueData, managers, teams, places, ages, ppw, slotPpw, breakdown, slots, hasPoints, idp,
       throughWeek: (standings?.week ?? 1) - 1, weeks, picks, onTeamClick,
       fpts: Object.fromEntries(ids.map((id) => [id, standings?.standingsInfo?.[id]?.fpts ?? null])),
     };
@@ -244,7 +249,9 @@
   const breakdownRows = $derived.by(() => {
     if (!view) return [];
     const id = view.id;
-    return BREAKDOWN_ROWS.map((k) => {
+    // no IDP: Team and the offensive positions only (offense = team, and there are no defenders)
+    const rows = data.idp ? BREAKDOWN_ROWS : BREAKDOWN_ROWS.filter((k) => k === "Team" || OFFENSE_GROUPS.includes(k));
+    return rows.map((k) => {
       const b = data.breakdown[k];
       const a = data.ages[id][k];
       return {

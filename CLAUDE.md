@@ -24,11 +24,57 @@ All data comes live from the public Sleeper API.
   Node, and Node 26 broke the `smui-theme` build step (yargs `require is not defined`).
 
 ## League facts
-- Sleeper league ID `1314319869289717760`, set in `src/lib/utils/leagueInfo.js` with manager bios
+- Sleeper league ID `1314319869289717760`, set in `src/lib/utils/leagueInfo.js` with manager bios (the site can also
+  run another league: see "Switching leagues" below)
 - 12 teams, dynasty, half-PPR, superflex, IDP, **3 divisions of 4** (Sleeper settings), plus a weekly
   league-median game (records are 2 games per week). The rules are on the Constitution page.
 - Starting lineup (Sleeper `roster_positions`): QB, RB×2, WR×2, TE, FLEX×3, SUPER_FLEX, IDP_FLEX, DL×3, LB×3, DB×3.
   Code reads the lineup from `roster_positions`; nothing hard-codes slot indexes any more.
+
+## Switching leagues (Nov 16)
+- `src/lib/utils/leagueInfo.js`: keep one `export const leagueID = ...` line live. **A league needs only its ID**
+  (Nov 17): `src/routes/+layout.js` passes `data.site` = { name, logo: { title, subtitle }, homepageText, dynasty } to
+  every page, from the league's profile in `LEAGUES` with anything missing filled in from Sleeper (`utils/siteTitle.js`:
+  name = Sleeper's league name, logo = first words up to 9 letters / the rest (`logoWords`, "THE" never alone),
+  homepage line like "2026 12-Team Redraft Half-PPR Superflex" (`leagueLine`), dynasty = Sleeper league type 2).
+  Profile fields (all optional): `leagueName`, `logo`, `homepageText`, `dynasty`, `houseRules`, `managers` (`[]` or
+  missing = built from Sleeper). Header (Nav), phone menu title (NavSmall), homepage name/line and Resources read
+  `data.site`; don't use leagueInfo's `leagueName` / `logo` / `homepageText` exports in pages (profile-only values).
+  Logo glyphs: A-Z (Q added Nov 17), digits, space, · and -; apostrophes are dropped, anything else becomes a space.
+  The logo is as wide as its wider line (a long subtitle no longer spills). Third league: Nerd Fantasy League
+  `1328172065781448704` (12 teams, redraft, 3 divisions, no median, QB/RB×2/WR×2/FLEX×2/SUPER_FLEX/DEF, no TE slot).
+- Redraft / keeper leagues (`data.site.dynasty` false): no projected next draft (`getUpcomingDraft` returns
+  `{ draft: null, notProjected: true }` once this season's draft is done; the Drafts page says the order is set on
+  Sleeper), no Pick column on Standings / Team Breakdown, redraft links on Resources.
+- Median game seasons are read from the records (`hadMedianGame` in managerProfile.js: Sleeper's record has more
+  games than the head-to-head one), not a year, so manager-page notes work for any league. Second league: The Gang Attempts Dynasty FF
+  `1313863224373841920` (14 teams, 2 named divisions, median game, no superflex, no IDP, 6 playoff teams, 4 rookie
+  rounds, $1000 FAAB, history back to 2019). Local switching only (Raymond, Nov 16); the leagueID line should be The
+  Dynasty League when committing, since Vercel deploys it.
+- **houseRules** (The Dynasty League's own rules, `utils/leagueRules.js`, set by leagueInfo.js when it loads; on by
+  default so tests are unchanged): Constitution page (nav entry; `/constitution` redirects home otherwise; its
+  `+page.js` must keep `prerender = true` as a literal, a computed value broke every page), homepage Payouts tab (the
+  phone bottom bar sizes to the number of tabs), Toilet Bowl 3rd-round pick (`leagueDrafts.js`), the points-wildcard
+  seed (`pointsWildcardSeeds()` in playoffs.js) and the max-PF draft order. Without them: division winners then best
+  records, and the draft in reverse order of finish (`leagueDraftOrder(..., { houseRules })`, tests/leagueRules.test.js).
+- **IDP is read from the lineup**, nothing to configure: `hasIdpSlots` / `hasSuperflex` (positions.js). Without IDP:
+  Standings averages drop defensive columns and the offense/defense split, "QB+SF" becomes "QB" (`lineupColumns` in
+  positionAverages.js); Trends drops Total offense/defense; Rosters drops the Defense/DL/LB/DB breakdown rows, the QB+SF
+  and IDP slot rows, and RosterAnalysis's Off./Def./DL/LB/DB columns and bars; awards drop the defensive cards and the
+  "Offensive" prefix (SeasonAwards decides from the All-League team's slots; seasonAwards.js `leagueGroups` counts a
+  WR/CB like Travis Hunter as a WR there; awards cache v11); Players shows offense only and `/api/fetch_trending`
+  downloads offense-only stats. tests/lineupColumns.test.js.
+- **Managers**: `utils/siteManagers.js` `managersFor(configured, leagueTeamManagers)`: the profile's list, else one per
+  current team from Sleeper (owner's name, team avatar, roster order). Used by the Managers routes, manager pages,
+  `gotoManager`; the nav / footer always show Managers now.
+- **Saved data per league** (`utils/leagueStorage.js`): `transactions:<leagueID>` (an old shared copy moves to the
+  league in its meta), `records:<leagueID>` (the old shared copy is dropped: one rebuild), `pstats/v1/<leagueID>/...`,
+  `rr-trends-hidden:<id>`, `rr-rosters-team:<id>`. Player data (`playersInfo`, ~2.7M chars) stays one copy tagged
+  `playersLeague`, downloaded again when the league changes (both leagues' copies wouldn't fit in localStorage).
+  `/api/fetch_trending` caches by league and is fetched with `?league=` so the browser's 10-minute cache can't cross.
+  `src/lib/stores.js` imports leagueInfo.js so the dev server resets its stores when the league changes.
+- The Pick column's tooltip follows house rules (max-PF rule or reverse order of finish).
+- Trends has 16 team colors (`--rr-team-0..15`). RosterAnalysis's color scales survive min = max (all-zero groups).
 
 ## Where custom code lives
 - **All custom work goes in `src/lib/AAA-Raymond/`.** This keeps merges from the upstream template easy.
@@ -153,7 +199,7 @@ All data comes live from the public Sleeper API.
   (`seasonProjection` + `predictLineup`), so a bye week never benches a starter; no projections (offseason) → Sleeper's
   current lineup. Math in `utils/rosterBreakdown.js` (`tests/rosterBreakdown.test.js`). `RosterAnalysis/utils.js`
   groups players the same way (`rosterGroup`; single-position DL players used to be counted on offense).
-- **Managers** (`/managers`) and **manager pages** (`/manager?manager=N`, N = index in leagueInfo.js `managers`) —
+- **Managers** (`/managers`) and **manager pages** (`/manager?manager=N`, N = index in `managersFor(...)`: leagueInfo.js `managers`, or Sleeper's teams) —
   `RayManagers/ManagersList` (option A "trading cards": team, years in the league, favorite NFL team, all-time
   record, titles, this season's record; sort by league order / titles / all-time win % / this season) and
   `RayManagers/ManagerPage` (banner with facts, bio and previous/next; tiles for all-time, playoffs, titles, points
@@ -341,6 +387,13 @@ All data comes live from the public Sleeper API.
   `src/lib/Transactions/TransactionsPage.svelte` (also: the bottom page buttons scroll to the list's heading, measured
   when clicked and done after the URL update; the template measured once at load and scrolled to the page top).
 - `src/lib/Pagination.svelte`: an `onchange(dest)` prop, called when a page is picked.
+- League switching (Nov 16): `src/lib/utils/leagueInfo.js` (profiles), `src/lib/stores.js`, `src/lib/Nav/index.svelte`
+  (logo from the profile), `NavLarge` / `NavSmall` / `Footer` (Managers always shown), `src/routes/+page.svelte`
+  (champ click), `src/routes/managers/` and `src/routes/manager/` (Sleeper managers), `src/routes/constitution/+page.js`,
+  `leagueTransactions.js` / `leagueRecords.js` / `players.js` (per-league storage), `leagueDrafts.js` (Toilet Bowl pick
+  only with house rules; no projected draft for redraft leagues), `universalFunctions.js` (`gotoManager`), and (Nov 17)
+  the new root `src/routes/+layout.js`, `src/routes/+page.svelte` / `NavSmall` (name and line from `data.site`),
+  `src/lib/Drafts/index.svelte` (redraft note).
 - `goto` options are `noScroll` / `keepFocus` (camelCase). The template wrote `noscroll` / `keepfocus`, which SvelteKit
   ignores, so changing the Matchups week, the bracket buttons, Rivalry managers and Trades & Waivers pages/search all
   jumped to the page top; fixed in the files the site uses (Nov 16). With `noScroll`, SvelteKit restores the scroll

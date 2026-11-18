@@ -141,11 +141,12 @@
 			{/if}
 		{/snippet}
 	</TabBar>
-	<div class="subMenu" style="max-height: {display ? 49 * tabChildren.length - 1 - (managers.length ? 0 : 48) : 0}px; width: {width}px; top: {height}px; left: {left}px; box-shadow: 0 0 {display ? "3px" : "0"} 0 var(--navAccent, #00316b); border: {display ? "1px" : "0"} solid var(--navAccent, #00316b); border-top: none;">
+	<div class="subMenu" style="max-height: {display ? 49 * tabChildren.length - 1 : 0}px; width: {width}px; top: {height}px; left: {left}px; box-shadow: 0 0 {display ? "3px" : "0"} 0 var(--navAccent, #00316b); border: {display ? "1px" : "0"} solid var(--navAccent, #00316b); border-top: none;">
 		<List>
 			{#each tabChildren as subTab, ix}
 				{#if subTab.label == 'Managers'}
-					<Item class="{managers.length ? '' : 'dontDisplay'}" onSMUIAction={() => subGoto(subTab.dest)} ontouchstart={() => preloadData(subTab.dest)} onmouseover={() => preloadData(subTab.dest)}>
+					<!-- AAA-Raymond: always shown (a league without managers in leagueInfo.js gets them from Sleeper) -->
+					<Item onSMUIAction={() => subGoto(subTab.dest)} ontouchstart={() => preloadData(subTab.dest)} onmouseover={() => preloadData(subTab.dest)}>
 						<Graphic class="material-icons">{subTab.icon}</Graphic>
 						<Text class="subText">{subTab.label}</Text>
 					</Item>

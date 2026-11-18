@@ -16,6 +16,8 @@ import { isRecordsFresh, recordsMeta } from '$lib/AAA-Raymond/utils/recordsCache
 import { seasonScores, isFinishedLeague } from '$lib/AAA-Raymond/utils/savedSeasons.js';
 // AAA-Raymond: head-to-head record per team-season (Sleeper's record also counts the league-median game)
 import { headToHeadRecords } from '$lib/AAA-Raymond/utils/recordBook.js';
+// AAA-Raymond: saved per league ("records:<league ID>"); the old shared copy can't be told apart, so it's dropped
+import { readLeagueItem, writeLeagueItem } from '$lib/AAA-Raymond/utils/leagueStorage.js';
 
 /**
  * getLeagueRecords obtains all the record for a league since it was first created
@@ -41,7 +43,7 @@ export const getLeagueRecords = async (refresh = false) => {
 	if(!refresh && browser) {
 		let localRecords = null;
 		try {
-			localRecords = JSON.parse(localStorage.getItem("records"));
+			localRecords = readLeagueItem(localStorage, "records", leagueID, { dropShared: true });
 		} catch (err) {
 			localRecords = null;
 		}
@@ -147,7 +149,7 @@ export const getLeagueRecords = async (refresh = false) => {
 
     if(browser) {
         // update localStorage
-        localStorage.setItem("records", JSON.stringify(recordsData));
+        writeLeagueItem(localStorage, "records", leagueID, recordsData);
     
         records.update(() => recordsData);
     }

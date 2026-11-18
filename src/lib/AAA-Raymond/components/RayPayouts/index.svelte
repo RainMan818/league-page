@@ -60,7 +60,7 @@
 
       const [matchups, trending, bracket] = await Promise.all([
         getLeagueMatchups().catch((e) => (console.error(e), null)),
-        fetch("/api/fetch_trending")
+        fetch(`/api/fetch_trending?league=${leagueID}`)
           .then((r) => (r.ok ? r.json() : null))
           .catch((e) => (console.error(e), null)),
         regularDone ? losersBracket() : Promise.resolve([]),

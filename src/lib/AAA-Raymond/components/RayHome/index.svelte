@@ -26,6 +26,7 @@
   import Payouts from "../RayPayouts/index.svelte";
   import { loadLeagueBasics } from "../../utils/leagueContext.js";
   import { seasonPhase } from "../../utils/seasonData.js";
+  import { houseRules } from "$lib/utils/leagueInfo";
 
   let { standingsData, leagueTeamManagersData } = $props();
 
@@ -37,7 +38,8 @@
     { id: "recap", label: "Recap", icon: "article" },
     { id: "rankings", label: "Power Rankings", icon: "bar_chart" },
     { id: "standings", label: "Standings", icon: "emoji_events" },
-    { id: "payouts", label: "Payouts", icon: "payments" },
+    // the Payouts tab is The Dynasty League's prize money (house rules in leagueInfo.js); other leagues don't get it
+    ...(houseRules ? [{ id: "payouts", label: "Payouts", icon: "payments" }] : []),
   ];
   const STORAGE_KEY = "rr-home-view";
   const isView = (v) => VIEWS.some((x) => x.id === v);
@@ -105,7 +107,7 @@
 {/snippet}
 
 {#snippet switcher(cls)}
-  <div class={cls} role="tablist" aria-label="Homepage section">
+  <div class={cls} role="tablist" aria-label="Homepage section" style="--rr-tabs: {VIEWS.length}">
     {#each VIEWS as v (v.id)}
       <button type="button" role="tab" aria-selected={view === v.id} aria-controls="rr-panel-{v.id}" class:rr-on={view === v.id} onclick={() => choose(v.id)}>
         <span class="material-icons" aria-hidden="true">{v.icon}</span>
@@ -143,7 +145,7 @@
   </div>
 {/if}
 
-{#if opened.payouts}
+{#if houseRules && opened.payouts}
   <div id="rr-panel-payouts" role="tabpanel" aria-label="Payouts" class="rr-panel" hidden={view !== "payouts"}>
     <Payouts {standingsData} {leagueTeamManagersData} />
   </div>
@@ -211,7 +213,7 @@
       bottom: 0;
       z-index: 50;
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(var(--rr-tabs, 4), minmax(0, 1fr));
       padding-bottom: env(safe-area-inset-bottom);
       border-top: 2px solid var(--or-pink);
       background: var(--fff);

@@ -5,13 +5,14 @@
 <script>
   import { onMount } from "svelte";
   import { loadLeagueContext, loadWinnersBracket } from "../../utils/leagueContext.js";
-  import { seedTeams, POINTS_WILDCARD_SEEDS } from "../../utils/playoffs.js";
+  import { seedTeams, pointsWildcardSeeds } from "../../utils/playoffs.js";
   import { allPlayRecords, lineupEfficiency } from "../../utils/teamStats.js";
   import { leagueDraftOrder } from "../../utils/draftOrder.js";
   import Loading from "../Shared/Loading.svelte";
   import StandingsTable from "./StandingsTable.svelte";
   import PositionAverages from "../PositionAverages/index.svelte";
   import { rosterPositionAveragesColumnOrder, playerPositionAveragesColumnOrder } from "./constants";
+  import { lineupColumns } from "../../utils/positionAverages.js";
   import "../Shared/common.css";
 
   let { standingsData, leagueTeamManagersData } = $props();
@@ -47,7 +48,7 @@
       const allPlay = byId(allPlayRecords(standings.matchups ?? []));
       const efficiency = byId(lineupEfficiency(standings.standingsInfo));
 
-      const recordSpots = playoffTeams - Math.min(POINTS_WILDCARD_SEEDS, playoffTeams - divisionWinners.length);
+      const recordSpots = playoffTeams - Math.min(pointsWildcardSeeds(), playoffTeams - divisionWinners.length);
       const rows = order.map((t, i) => {
         const seed = i + 1;
         let tag = "";
@@ -68,8 +69,12 @@
         onTeamClick,
         playoffTeams,
         showDivisions: divisions > 1,
+        medianGame: settings.league_average_match === 1,
         playerAverages: standings.positionalData,
         rosterAverages: standings.rosterPositionAveragesData,
+        // only the positions this league starts (no IDP columns in a league without IDP)
+        playerColumns: lineupColumns(playerPositionAveragesColumnOrder, leagueData.roster_positions, "player"),
+        rosterColumns: lineupColumns(rosterPositionAveragesColumnOrder, leagueData.roster_positions, "roster"),
       };
       status = "ready";
     } catch (err) {
@@ -90,7 +95,7 @@
   <Loading message="Couldn't load the standings: {errorMessage}" progress={false} />
 {:else}
   <div class="rr-standingsPage">
-    <p class="rr-pageSub">Ordered by playoff seed · click a column to sort · records include the weekly median game</p>
+    <p class="rr-pageSub">Ordered by playoff seed · click a column to sort{view.medianGame ? " · records include the weekly median game" : ""}</p>
     <StandingsTable
       rows={view.rows}
       teams={view.teams}
@@ -101,7 +106,7 @@
 
     <PositionAverages
       headerLabel="Per-player position averages"
-      columnOrder={playerPositionAveragesColumnOrder}
+      columnOrder={view.playerColumns}
       averagesData={view.playerAverages}
       week={view.week}
       teams={view.teams}
@@ -110,7 +115,7 @@
 
     <PositionAverages
       headerLabel="Per-roster position averages"
-      columnOrder={rosterPositionAveragesColumnOrder}
+      columnOrder={view.rosterColumns}
       averagesData={view.rosterAverages}
       week={view.week}
       teams={view.teams}

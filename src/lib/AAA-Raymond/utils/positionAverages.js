@@ -25,6 +25,20 @@ const SLOT_BUCKETS = {
     DEF: { roster: 'DEF', player: 'DEF', side: 'Def' },
 };
 
+/**
+ * The averages columns this lineup has (Nov 16, leagues without IDP): positions it never starts are dropped, the
+ * offense / defense split only shows when it starts defenders (otherwise offense = total), and the QB column says
+ * "QB+SF" only with a superflex. columns: [{ name, field }]; view: 'roster' (by slot) or 'player' (by position).
+ */
+export function lineupColumns(columns = [], rosterPositions = [], view = 'roster') {
+    const buckets = slotBuckets(rosterPositions);
+    const defense = buckets.some((b) => b.side === 'Def');
+    const have = new Set(['Team', ...(defense ? ['Off', 'Def'] : [])]);
+    for (const b of buckets) if (b[view]) have.add(b[view]);
+    const superflex = starterSlots(rosterPositions).includes('SUPER_FLEX');
+    return columns.filter((c) => have.has(c.field)).map((c) => (c.field === 'QB+Flex' && !superflex ? { ...c, name: 'QB' } : c));
+}
+
 /** Starting slots in lineup order (everything before the first bench spot). */
 export function starterSlots(rosterPositions = []) {
     const firstBench = rosterPositions.indexOf('BN');

@@ -26,3 +26,15 @@ test('logo SVG: sized to the title, labelled for screen readers', () => {
     const width = (s) => Number(s.match(/viewBox="0 0 (\d+) /)[1]);
     assert.ok(width(logoSvg({ title: 'DYNASTYDYNASTY' })) > width(svg));
 });
+
+test('every letter A-Z has a glyph (league names from Sleeper)', () => {
+    for (const ch of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') assert.ok(GLYPHS[ch], ch);
+});
+
+test('a long subtitle widens the logo instead of spilling past it; the usual logo is unchanged', () => {
+    const width = (s) => Number(s.match(/viewBox="0 0 (\d+) /)[1]);
+    const short = logoSvg({ title: 'NERD', subtitle: 'LEAGUE' });
+    const long = logoSvg({ title: 'NERD', subtitle: 'FANTASY FOOTBALL LEAGUE OF EXTRAORDINARY GENTLEMEN' });
+    assert.ok(width(long) > width(short));
+    assert.match(logoSvg(), /translate\(36 18\) skewX/); // DYNASTY: title left edge = pad + slant, as before
+});

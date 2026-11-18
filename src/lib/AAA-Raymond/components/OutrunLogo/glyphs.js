@@ -1,7 +1,7 @@
 // Block letterforms for the outrun logo, drawn on a 100-unit-tall grid with 20-unit strokes.
 // Each glyph: { w: width, d: [polygon, ...] }. Polygons are drawn with fill-rule="evenodd",
 // so a polygon placed inside another one becomes a hole (e.g. the middle of A, D, O).
-// Letters not listed here are skipped. Add new ones on the same grid.
+// Characters not listed here are skipped. Add new ones on the same grid.
 
 const g = (w, ...d) => ({ w, d });
 
@@ -29,6 +29,10 @@ export const GLYPHS = {
     N: g(72, [[0,100],[0,0],[22,0],[52,62],[52,0],[72,0],[72,100],[50,100],[20,38],[20,100]]),
     O: g(72,
         [[0,22],[22,0],[50,0],[72,22],[72,78],[50,100],[22,100],[0,78]],
+        [[20,28],[28,20],[44,20],[52,28],[52,72],[44,80],[28,80],[20,72]]),
+    // AAA-Raymond (Nov 17): Q = O with a tail at the bottom right, for league names from Sleeper
+    Q: g(80,
+        [[0,22],[22,0],[50,0],[72,22],[72,74],[66,80],[80,100],[22,100],[0,78]],
         [[20,28],[28,20],[44,20],[52,28],[52,72],[44,80],[28,80],[20,72]]),
     P: g(72,
         [[0,0],[56,0],[72,16],[72,48],[56,64],[20,64],[20,100],[0,100]],

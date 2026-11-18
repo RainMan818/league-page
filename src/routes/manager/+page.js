@@ -8,8 +8,9 @@ import {
     getLeagueRecords,
     managers as managersObj
 } from '$lib/utils/helper';
+// AAA-Raymond: a league without managers in leagueInfo.js gets them from Sleeper (siteManagers.js), so the index is
+// checked on the page once the teams have loaded
 export async function load({ url }) {
-    if(!managersObj.length) return false;
     const managersInfo = waitForAll(
         getLeagueRosters(),    
         getLeagueTeamManagers(),
@@ -22,10 +23,10 @@ export async function load({ url }) {
     const manager = url?.searchParams?.get('manager');
 
     const props = {
-        manager: manager && manager < managersObj.length ? manager : -1,
+        manager: manager != null && manager !== '' && Number(manager) >= 0 ? manager : -1,
         managers: managersObj,
         managersInfo
     }
 
     return props;
-}
+}
