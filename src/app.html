@@ -60,7 +60,16 @@
 					document.write('<link rel="stylesheet" id="theme" href="/smui.css" />');
 				}
 			} catch (e) {}
+			// AAA-Raymond: a visitor who switched to their own league (Settings) gets the deployed league from the
+			// server first; hide the page until the app has loaded theirs (+layout.svelte shows it; 5s safety net)
+			try {
+				if (localStorage.getItem('rr-league-id')) {
+					document.documentElement.classList.add('rr-otherLeague');
+					setTimeout(function () { document.documentElement.classList.remove('rr-otherLeague'); }, 5000);
+				}
+			} catch (e) {}
 		</script>
+		<style>html.rr-otherLeague body { visibility: hidden; }</style>
 		%sveltekit.head%
 	</head>
 	<body>

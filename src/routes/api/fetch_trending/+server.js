@@ -5,7 +5,9 @@
 // are refreshed every 6 hours (stat corrections). The answer is also cached by the CDN for an hour, so visitors share
 // it and Sleeper sees a handful of requests per hour at most. Also passes on Sleeper's most-added players (24 hours).
 import { json, error } from '@sveltejs/kit';
-import { leagueID } from '$lib/utils/leagueInfo';
+// AAA-Raymond: the league comes from the request (?league=, a visitor's own league from Settings), else the deployed one
+import { deployedLeagueID } from '$lib/utils/leagueInfo';
+import { leagueFromRequest } from '$lib/AAA-Raymond/utils/leagueOverride.js';
 import { completedWeeks, trimWeek } from '$lib/AAA-Raymond/utils/trending.js';
 import { lastFantasyWeek } from '$lib/AAA-Raymond/utils/playerCard.js';
 import { hasIdpSlots } from '$lib/AAA-Raymond/utils/positions.js';
@@ -19,7 +21,7 @@ const RECENT_REFRESH = 6 * HOUR;
 
 // AAA-Raymond: keyed by league too (points use the league's scoring), so switching leagues never mixes them
 const weekCache = new Map(); // `${leagueID}/${season}/${week}` -> { at, rows }
-let basics = null; // { at, leagueID, nflState, league }
+const basicsCache = new Map(); // leagueID -> { at, nflState, league }
 let adds = null; // { at, data }
 
 async function sleeper(url) {
@@ -28,17 +30,20 @@ async function sleeper(url) {
     return res.json();
 }
 
-async function loadBasics() {
-    if (basics && basics.leagueID === leagueID && Date.now() - basics.at < 10 * 60e3) return basics;
+async function loadBasics(leagueID) {
+    const cached = basicsCache.get(leagueID);
+    if (cached && Date.now() - cached.at < 10 * 60e3) return cached;
     const [nflState, league] = await Promise.all([
         sleeper('https://api.sleeper.app/v1/state/nfl'),
         sleeper(`https://api.sleeper.app/v1/league/${leagueID}`),
     ]);
-    basics = { at: Date.now(), leagueID, nflState, league };
+    if (!league?.league_id) throw new Error(`Sleeper has no league ${leagueID}`);
+    const basics = { at: Date.now(), nflState, league };
+    basicsCache.set(leagueID, basics);
     return basics;
 }
 
-async function loadWeek(season, week, scoring, recent, positions) {
+async function loadWeek(leagueID, season, week, scoring, recent, positions) {
     const key = `${leagueID}/${season}/${week}`;
     const saved = weekCache.get(key);
     if (saved && (!recent || Date.now() - saved.at < RECENT_REFRESH)) return saved.rows;
@@ -60,9 +65,10 @@ async function loadAdds() {
     return adds.data;
 }
 
-export async function GET({ setHeaders }) {
+export async function GET({ url, setHeaders }) {
     try {
-        const { nflState, league } = await loadBasics();
+        const leagueID = leagueFromRequest(url, deployedLeagueID);
+        const { nflState, league } = await loadBasics(leagueID);
         const season = league.season;
         const scoring = league.scoring_settings ?? {};
         const positions = hasIdpSlots(league.roster_positions) ? IDP_POSITIONS : OFFENSE_POSITIONS;
@@ -72,7 +78,7 @@ export async function GET({ setHeaders }) {
         const weeks = {};
         for (let i = 0; i < finished.length; i += 4) {
             const batch = finished.slice(i, i + 4);
-            const rows = await Promise.all(batch.map((w) => loadWeek(season, w, scoring, w >= last - 1, positions)));
+            const rows = await Promise.all(batch.map((w) => loadWeek(leagueID, season, w, scoring, w >= last - 1, positions)));
             batch.forEach((w, j) => (weeks[w] = rows[j]));
         }
         setHeaders({ 'cache-control': 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400' });

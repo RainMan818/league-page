@@ -1,4 +1,7 @@
-import { leagueID } from "$lib/utils/leagueInfo"
+// AAA-Raymond: the league comes from the request (?league=, a visitor's own league from Settings), else the deployed
+// one; projections are scored with that league's settings
+import { deployedLeagueID } from "$lib/utils/leagueInfo"
+import { leagueFromRequest } from "$lib/AAA-Raymond/utils/leagueOverride.js"
 import { round } from "$lib/utils/helperFunctions/universalFunctions"
 import { waitForAll } from "$lib/utils/helperFunctions/multiPromise"
 import { json, error } from '@sveltejs/kit';
@@ -6,7 +9,8 @@ import { computePlayersHelper } from "$lib/AAA-Raymond/utils/fetchPlayersUtils";
 // AAA-Raymond: fill a missing opponent from that week's schedule (utils/playerSchedule.js)
 import { weekSchedule, opponentFor } from "$lib/AAA-Raymond/utils/playerSchedule.js";
 
-export async function GET() {
+export async function GET({ url, setHeaders }) {
+    const leagueID = leagueFromRequest(url, deployedLeagueID);
     // get NFL state from sleeper (week and year)
     const [nflStateRes, leagueDataRes, playoffsRes] = await waitForAll(
         fetch(`https://api.sleeper.app/v1/state/nfl`, {compress: true}),
@@ -51,6 +55,9 @@ export async function GET() {
 
     const scoringSettings = leagueData.scoring_settings;
 
+    // AAA-Raymond: the CDN keeps each league's answer for an hour (about 25 Sleeper requests per build), so visitors
+    // trying their own league on Settings can't pile requests onto Sleeper; browsers keep their copy 24h themselves
+    setHeaders({ 'cache-control': 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400' });
     return json(computePlayers(playerData, weeklyData, scoringSettings));
 }
 
@@ -106,4 +113,4 @@ const calculateProjection = (projectedStats, scoreSettings) => {
         score += projectedStats[stat] * multiplier;
     }
     return round(score);
-}
+}

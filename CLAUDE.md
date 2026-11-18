@@ -32,7 +32,8 @@ All data comes live from the public Sleeper API.
   Code reads the lineup from `roster_positions`; nothing hard-codes slot indexes any more.
 
 ## Switching leagues (Nov 16)
-- `src/lib/utils/leagueInfo.js`: keep one `export const leagueID = ...` line live. **A league needs only its ID**
+- `src/lib/utils/leagueInfo.js`: keep one `export const deployedLeagueID = ...` line live (renamed Nov 17; `leagueID`
+  is that or the visitor's Settings choice, see below). **A league needs only its ID**
   (Nov 17): `src/routes/+layout.js` passes `data.site` = { name, logo: { title, subtitle }, homepageText, dynasty } to
   every page, from the league's profile in `LEAGUES` with anything missing filled in from Sleeper (`utils/siteTitle.js`:
   name = Sleeper's league name, logo = first words up to 9 letters / the rest (`logoWords`, "THE" never alone),
@@ -49,8 +50,8 @@ All data comes live from the public Sleeper API.
 - Median game seasons are read from the records (`hadMedianGame` in managerProfile.js: Sleeper's record has more
   games than the head-to-head one), not a year, so manager-page notes work for any league. Second league: The Gang Attempts Dynasty FF
   `1313863224373841920` (14 teams, 2 named divisions, median game, no superflex, no IDP, 6 playoff teams, 4 rookie
-  rounds, $1000 FAAB, history back to 2019). Local switching only (Raymond, Nov 16); the leagueID line should be The
-  Dynasty League when committing, since Vercel deploys it.
+  rounds, $1000 FAAB, history back to 2019). File switching is local only (Raymond, Nov 16); the deployedLeagueID line
+  should be The Dynasty League when committing, since Vercel deploys it.
 - **houseRules** (The Dynasty League's own rules, `utils/leagueRules.js`, set by leagueInfo.js when it loads; on by
   default so tests are unchanged): Constitution page (nav entry; `/constitution` redirects home otherwise; its
   `+page.js` must keep `prerender = true` as a literal, a computed value broke every page), homepage Payouts tab (the
@@ -73,6 +74,20 @@ All data comes live from the public Sleeper API.
   `playersLeague`, downloaded again when the league changes (both leagues' copies wouldn't fit in localStorage).
   `/api/fetch_trending` caches by league and is fetched with `?league=` so the browser's 10-minute cache can't cross.
   `src/lib/stores.js` imports leagueInfo.js so the dev server resets its stores when the league changes.
+- **Visitor's own league (Settings page, Nov 17, experimental)**: `/settings` (Clubhouse / More tile, `tabs.js`;
+  `RaySettings/index.svelte`) takes a league ID or a Sleeper league link, looks it up once on Sleeper (not found /
+  non-NFL / same league errors), previews it and switches. The ID is saved in localStorage `rr-league-id`
+  (`utils/leagueOverride.js`: `parseLeagueID` 15-20 digits, `readLeagueOverride` ignores bad values and the deployed
+  ID; tests/leagueOverride.test.js) and the site reloads on "/". leagueInfo.js reads it in the browser:
+  `leagueID = override ?? deployedLeagueID`, `leagueOverridden`, `deployedLeagueName`. "Reset to <deployed league>"
+  clears it. While overridden, `RaySettings/LeagueBanner.svelte` (in +layout.svelte) shows "Viewing <name> ·
+  experimental · Settings" under the header (one line; "experimental" hidden under 480px).
+  **The server always renders the deployed league**, so: `app.html` hides the body (class `rr-otherLeague`, 5s safety
+  timeout) when the key exists, and `+layout.svelte` renders nothing until mount for overridden visitors (`ready`
+  gate) so the page is a full client render (hydration would keep the server's `{@html}` logo / homepage line).
+  Server routes take the league from the request: `/api/fetch_trending?league=` and `/api/fetch_players_info?league=`
+  (`leagueFromRequest`, falls back to the deployed league on a bad value; per-league caches; players info has a CDN
+  cache `s-maxage=3600`). Anything else that runs on the server for one league would show the deployed league.
 - The Pick column's tooltip follows house rules (max-PF rule or reverse order of finish).
 - Trends has 16 team colors (`--rr-team-0..15`). RosterAnalysis's color scales survive min = max (all-zero groups).
 
@@ -402,6 +417,10 @@ All data comes live from the public Sleeper API.
   under the league name (RayHome; it replaced the fixed bottom bar the same day).
 - `src/lib/Footer.svelte`: Raymond's credit line under the template's (kept) copyright / "Built by" lines: "Outrun
   redesign and custom features by RainMan · Buy me a coffee" (https://buymeacoffee.com/rainman001), Nov 17.
+- Settings / visitor's league (Nov 17, see "Switching leagues"): `src/app.html` (hide-until-ready script + style),
+  `src/routes/+layout.svelte` (`ready` gate, LeagueBanner), `src/routes/settings/+page.svelte` (new, renders
+  `RaySettings`), `src/lib/utils/tabs.js` (Clubhouse "Settings" after Go to Sleeper), `src/routes/api/fetch_trending`
+  and `src/routes/api/fetch_players_info` (`?league=`), `src/lib/utils/helperFunctions/players.js` (sends `?league=`).
 - League switching (Nov 16): `src/lib/utils/leagueInfo.js` (profiles), `src/lib/stores.js`, `src/lib/Nav/index.svelte`
   (logo from the profile), `NavLarge` / `NavSmall` / `Footer` (Managers always shown), `src/routes/+page.svelte`
   (champ click), `src/routes/managers/` and `src/routes/manager/` (Sleeper managers), `src/routes/constitution/+page.js`,

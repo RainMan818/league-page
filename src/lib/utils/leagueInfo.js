@@ -1,15 +1,23 @@
 // AAA-Raymond: the plain math modules follow the league's own rules or plain ones (set from the profile below)
 import { setHouseRules } from '$lib/AAA-Raymond/utils/leagueRules.js';
+// AAA-Raymond: a visitor's own league from the Settings page (saved in their browser), experimental
+import { readLeagueOverride } from '$lib/AAA-Raymond/utils/leagueOverride.js';
 
 /*   STEP 1   */
-// AAA-Raymond: pick the league here (keep one line live). A league needs only its ID: the name, header logo and
+// AAA-Raymond: pick the DEPLOYED league here (keep one line live): it's what the site shows unless a visitor switched
+// to their own league on the Settings page (then leagueID below is theirs, in their browser only). A league needs only its ID: the name, header logo and
 // homepage line come from Sleeper (siteTitle.js), and so do the lineup (IDP or not, superflex), teams, divisions and
 // history. A profile in LEAGUES at the bottom of this file overrides those words and adds managers / house rules.
 // Saved browser data is kept per league.
-export const leagueID = "1314319869289717760"; // The Dynasty League IDP SF
-// export const leagueID = "1313863224373841920"; // The Gang Attempts Dynasty FF
-// export const leagueID = "1328172065781448704"; // Nerd Fantasy League
-// export const leagueID = "1345085981237207040"; // Dynasty Test
+export const deployedLeagueID = "1314319869289717760"; // The Dynasty League IDP SF
+// export const deployedLeagueID = "1313863224373841920"; // The Gang Attempts Dynasty FF
+// export const deployedLeagueID = "1328172065781448704"; // Nerd Fantasy League
+// export const deployedLeagueID = "1345085981237207040"; // Dynasty Test
+// the league this visitor sees: their saved league (Settings, browser only) or the deployed one; the server always
+// renders the deployed league
+const browserStorage = () => { try { return typeof window === 'undefined' ? null : window.localStorage; } catch (e) { return null; } };
+export const leagueID = readLeagueOverride(browserStorage(), deployedLeagueID) ?? deployedLeagueID;
+export const leagueOverridden = leagueID !== deployedLeagueID;
 export const dues = 50; // (optional) used in template constitution page
 export const dynasty = true; // true for dynasty leagues, false for redraft and keeper
 export const enableBlog = false; // requires VITE_CONTENTFUL_ACCESS_TOKEN and VITE_CONTENTFUL_SPACE environment variables
@@ -318,6 +326,8 @@ const LEAGUES = {
 };
 
 const profile = LEAGUES[leagueID] ?? {};
+// the deployed league's name for the Settings page's reset button (its profile name, else a plain label)
+export const deployedLeagueName = LEAGUES[deployedLeagueID]?.leagueName ?? "the site's league";
 // the site shows data.site from src/routes/+layout.js (this profile filled in from Sleeper); these are the profile's
 export const leagueProfile = profile;
 export const leagueName = profile.leagueName ?? "Fantasy League"; // template leftovers (blog); pages use data.site.name

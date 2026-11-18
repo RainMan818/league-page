@@ -98,6 +98,12 @@ export const tabs = [
                 label: 'Go to Sleeper',
                 dest: `https://sleeper.app/leagues/${leagueID}`,
             },
+            // AAA-Raymond (Nov 17): switch the site to your own league (experimental), RaySettings
+            {
+                icon: 'settings',
+                label: 'Settings',
+                dest: '/settings',
+            },
         ]
     },
 ];

@@ -38,7 +38,8 @@ export const loadPlayers = async (servFetch, refresh = false) => {
     }
     
     if(!playersInfo || !expiration || now > expiration) {
-        const res = await smartFetch(`/api/fetch_players_info`, {compress: true});
+        // AAA-Raymond: ?league = this visitor's league (a league switched to on Settings needs its own projections)
+        const res = await smartFetch(`/api/fetch_players_info?league=${leagueID}`, {compress: true});
         const data = await res.json();
 
         if (!res.ok) {
