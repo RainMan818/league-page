@@ -54,7 +54,7 @@ All data comes live from the public Sleeper API.
 - **houseRules** (The Dynasty League's own rules, `utils/leagueRules.js`, set by leagueInfo.js when it loads; on by
   default so tests are unchanged): Constitution page (nav entry; `/constitution` redirects home otherwise; its
   `+page.js` must keep `prerender = true` as a literal, a computed value broke every page), homepage Payouts tab (the
-  phone bottom bar sizes to the number of tabs), Toilet Bowl 3rd-round pick (`leagueDrafts.js`), the points-wildcard
+  phone toggle just has one button fewer), Toilet Bowl 3rd-round pick (`leagueDrafts.js`), the points-wildcard
   seed (`pointsWildcardSeeds()` in playoffs.js) and the max-PF draft order. Without them: division winners then best
   records, and the draft in reverse order of finish (`leagueDraftOrder(..., { houseRules })`, tests/leagueRules.test.js).
 - **IDP is read from the lineup**, nothing to configure: `hasIdpSlots` / `hasSuperflex` (positions.js). Without IDP:
@@ -96,7 +96,10 @@ All data comes live from the public Sleeper API.
 
 ### Pages
 - **Home** — `RayHome` is the only custom line in `src/routes/+page.svelte`. One section at a time, picked with
-  Recap / Power Rankings / Standings / Payouts tabs under the league title (a fixed bottom bar under 760px wide):
+  Recap / Power Rankings / Standings / Payouts tabs under the league title. Under 760px wide (Nov 17, Raymond: no
+  more fixed bottom bar) it's a pill toggle in the site's segmented-toggle look (Shared/Toggle.svelte, the Matchups
+  Regular Season / Playoffs and Trades / Waivers / Both buttons): uppercase Roboto, selected = solid pink, "Rankings"
+  for Power Rankings so four fit (tighter padding under 380px; checked at 320px). Desktop keeps the icon tabs:
   Recap = weekly recap (`Insights/RecapPanel` + `WeeklyRecap`, previous/next and a week picker) ending with
   "Movers" (`RayStandings/StandingsMovers`: risers / fallers that week, from `placesByWeek()` + `movesForWeek()` in
   `utils/leagueTrends.js`; hidden for week 1 and playoff weeks) and season awards;
@@ -394,8 +397,9 @@ All data comes live from the public Sleeper API.
   it's on) as tiles. **Only the page you're on is pink** (row button or tile; `/manager` counts as Managers); More gets
   a cyan outline while open. Pages come from `tabs.js` (`phoneNav.js` `rowAndMore` / `isCurrent`,
   tests/phoneNav.test.js). Plain links (preload on hover); Escape, a tap outside or picking a page closes the panel.
-  Colors are theme variables (`--or-toggle-*`, `--or-footer-bg`), so day mode works. The homepage's phone bottom bar
-  (RayHome) is unchanged for now: its redesign is the canvas row "Homepage views on phones".
+  Colors are theme variables (`--or-toggle-*`, `--or-footer-bg`), so day mode works. Under 360px the row's labels
+  shrink to 8.5px so "Matchups" / "Standings" don't touch. The homepage's views switch on phones is a pill toggle
+  under the league name (RayHome; it replaced the fixed bottom bar the same day).
 - `src/lib/Footer.svelte`: Raymond's credit line under the template's (kept) copyright / "Built by" lines: "Outrun
   redesign and custom features by RainMan · Buy me a coffee" (https://buymeacoffee.com/rainman001), Nov 17.
 - League switching (Nov 16): `src/lib/utils/leagueInfo.js` (profiles), `src/lib/stores.js`, `src/lib/Nav/index.svelte`

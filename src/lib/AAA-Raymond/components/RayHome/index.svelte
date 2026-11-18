@@ -1,6 +1,7 @@
 <!--
   All custom homepage content, used in src/routes/+page.svelte (standingsData comes from src/routes/+page.js).
-  One section at a time, picked with a switch under the league title (a bottom bar on phones):
+  One section at a time, picked with a switch under the league title (on phones: a pill toggle in the same style as
+  the Matchups / Trades & Waivers buttons, Shared/Toggle.svelte's look; it replaced a fixed bottom bar on Nov 17):
    - Recap: weekly recap (ending with standings movers for that week) and season awards
    - Power Rankings: rest-of-season Power Rankings
    - Standings: playoff projection and Team Breakdown
@@ -36,7 +37,7 @@
 
   const VIEWS = [
     { id: "recap", label: "Recap", icon: "article" },
-    { id: "rankings", label: "Power Rankings", icon: "bar_chart" },
+    { id: "rankings", label: "Power Rankings", short: "Rankings", icon: "bar_chart" },
     { id: "standings", label: "Standings", icon: "emoji_events" },
     // the Payouts tab is The Dynasty League's prize money (house rules in leagueInfo.js); other leagues don't get it
     ...(houseRules ? [{ id: "payouts", label: "Payouts", icon: "payments" }] : []),
@@ -91,10 +92,6 @@
     loadLeagueBasics({ leagueTeamManagersData })
       .then(({ leagueData, nflState }) => (phase = seasonPhase(leagueData, nflState)))
       .catch((err) => console.error(err));
-
-    // room for the phone bottom bar so it never covers the footer
-    document.body.classList.add("rr-hasHomeBar");
-    return () => document.body.classList.remove("rr-hasHomeBar");
   });
 </script>
 
@@ -107,7 +104,7 @@
 {/snippet}
 
 {#snippet switcher(cls)}
-  <div class={cls} role="tablist" aria-label="Homepage section" style="--rr-tabs: {VIEWS.length}">
+  <div class={cls} role="tablist" aria-label="Homepage section">
     {#each VIEWS as v (v.id)}
       <button type="button" role="tab" aria-selected={view === v.id} aria-controls="rr-panel-{v.id}" class:rr-on={view === v.id} onclick={() => choose(v.id)}>
         <span class="material-icons" aria-hidden="true">{v.icon}</span>
@@ -118,6 +115,15 @@
 {/snippet}
 
 {@render switcher("rr-homeTabs")}
+
+<!-- phones: the site's segmented-toggle look (Matchups' Regular Season / Playoffs, Trades / Waivers / Both) -->
+<div class="rr-homeToggle" role="tablist" aria-label="Homepage section">
+  {#each VIEWS as v (v.id)}
+    <button type="button" role="tab" aria-selected={view === v.id} aria-controls="rr-panel-{v.id}" class:rr-on={view === v.id} onclick={() => choose(v.id)}>
+      {v.short ?? v.label}
+    </button>
+  {/each}
+</div>
 
 <div id="rr-panel-recap" role="tabpanel" aria-label="Recap" class="rr-panel rr-recapRankings" hidden={view !== "recap"}>
   {#if phase.regularDone}
@@ -151,7 +157,6 @@
   </div>
 {/if}
 
-{@render switcher("rr-homeBar")}
 
 <style>
   /* ---- section switch: tabs under the title; a fixed bottom bar on phones ---- */
@@ -197,7 +202,8 @@
     box-shadow: 0 0 14px var(--or-glow-pink, transparent);
   }
 
-  .rr-homeBar {
+  /* phones: same look as Shared/Toggle.svelte and the Matchups / Trades & Waivers buttons (theme/outrun.css) */
+  .rr-homeToggle {
     display: none;
   }
 
@@ -206,48 +212,46 @@
       display: none;
     }
 
-    .rr-homeBar {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 50;
-      display: grid;
-      grid-template-columns: repeat(var(--rr-tabs, 4), minmax(0, 1fr));
-      padding-bottom: env(safe-area-inset-bottom);
-      border-top: 2px solid var(--or-pink);
-      background: var(--fff);
-      box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.35);
+    .rr-homeToggle {
+      display: flex;
+      gap: 3px;
+      width: fit-content;
+      max-width: calc(100% - 24px);
+      margin: 16px auto 24px;
+      padding: 3px;
+      box-sizing: border-box;
+      border: 1px solid var(--or-toggle-border, var(--ccc));
+      border-radius: 8px;
+      background: var(--or-toggle-bg, var(--fff));
     }
 
-    .rr-homeBar button {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      min-height: 58px;
+    .rr-homeToggle button {
+      flex: 0 1 auto;
+      min-height: 34px;
+      padding: 0 13px;
       border: 0;
+      border-radius: 6px;
       background: transparent;
-      color: var(--or-toggle-text, var(--or-muted));
-      font: 700 0.62rem "Roboto", sans-serif;
-      letter-spacing: 0.06em;
+      color: var(--or-toggle-text, var(--g555));
+      font: 600 0.75em "Roboto", sans-serif;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
+      white-space: nowrap;
       cursor: pointer;
     }
 
-    .rr-homeBar button .material-icons {
-      font-size: 22px;
+    .rr-homeToggle button.rr-on {
+      background: var(--or-pink, var(--blueOne));
+      color: #fff;
+      box-shadow: 0 0 10px var(--or-glow-pink, transparent);
     }
+  }
 
-    .rr-homeBar button.rr-on {
-      color: var(--or-pink);
-      background: color-mix(in srgb, var(--or-pink) 14%, transparent);
-      box-shadow: inset 0 3px 0 var(--or-pink);
-    }
-
-    :global(body.rr-hasHomeBar) {
-      padding-bottom: calc(62px + env(safe-area-inset-bottom));
+  /* narrow phones: four buttons still fit on one line */
+  @media (max-width: 380px) {
+    .rr-homeToggle button {
+      padding: 0 9px;
+      letter-spacing: 0.05em;
     }
   }
 

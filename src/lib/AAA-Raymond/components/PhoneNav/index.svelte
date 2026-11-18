@@ -133,6 +133,24 @@
     box-shadow: inset 0 0 0 1px var(--or-cyan);
   }
 
+  /* narrow phones (320px): labels like "Matchups" / "Standings" would touch */
+  @media (max-width: 360px) {
+    .rr-pn {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+
+    .rr-pnRow {
+      gap: 1px;
+      padding: 3px;
+    }
+
+    .rr-pnLabel {
+      font-size: 8.5px;
+      letter-spacing: -0.01em;
+    }
+  }
+
   .rr-pnBackdrop {
     position: fixed;
     inset: 0;
