@@ -267,7 +267,7 @@
             {/each}
           </div>
           <div class="rr-sub">
-            {t.week > 1 ? `Week ${t.week}` : "Offseason / week 1"} trade · player points are everything he scored after the trade, for any team
+            {t.week > 1 ? `Week ${t.week}` : "Offseason / week 1"} trade · player points are pts scored after the trade
           </div>
         {:else}
           <div class="rr-sub">No trade paid off this season.</div>
@@ -282,7 +282,7 @@
 
     {#if r.allLeague?.length}
       <div class="rr-groupLabel">All-League Team</div>
-      <p class="rr-note">The top scorer at every lineup spot, counting points in a starting lineup.</p>
+      <p class="rr-note">The top scorer at every lineup spot, counting all his points during the season.</p>
       <div class="rr-card rr-lineup">
         {#each lineupColumns as column, c (c)}
           <div class="rr-lineupCol">

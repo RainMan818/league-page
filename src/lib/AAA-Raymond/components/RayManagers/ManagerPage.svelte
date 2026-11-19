@@ -1,5 +1,6 @@
 <!--
-  /manager?manager=N (option A "profile dashboard"): banner (photo, team, facts, bio, previous/next), five stat
+  /manager?manager=N (option A "profile dashboard"): previous / All managers / next bar on top (again at the
+  bottom), banner (photo, team, facts, bio), five stat
   tiles, then a trophy case + league records and the profile (philosophy, desire to trade, favorite player, rival)
   and season-by-season charts (SeasonCharts) on the left, and the starting lineup + recent moves on the right.
   Same props as the template's Manager.svelte
@@ -178,6 +179,20 @@
 {/snippet}
 
 <div class="rr-managerPage">
+  <!-- above the banner so it's the first thing on the page (Raymond, Nov 18); a div, not <nav>: the template styles
+       every <nav> as the site header -->
+  <div class="rr-topNav" role="navigation" aria-label="Other managers">
+    <button type="button" class="rr-navBtn rr-prev" disabled={idx === 0} onclick={() => changeManager(idx - 1)}>
+      <span aria-hidden="true">←</span><span class="rr-navName">{idx > 0 ? managers[idx - 1].name : "Previous"}</span>
+    </button>
+    <a class="rr-allBtn" href="/managers" aria-label="All managers">
+      <span class="material-icons" aria-hidden="true">groups</span><span class="rr-allText">All managers</span><span class="rr-allShort" aria-hidden="true">All</span>
+    </a>
+    <button type="button" class="rr-navBtn rr-next" disabled={idx === managers.length - 1} onclick={() => changeManager(idx + 1)}>
+      <span class="rr-navName">{idx < managers.length - 1 ? managers[idx + 1].name : "Next"}</span><span aria-hidden="true">→</span>
+    </button>
+  </div>
+
   <section class="rr-hero">
     <span class="rr-avatar">
       <span class="rr-initials" aria-hidden="true">{initials(m.name)}</span>
@@ -200,11 +215,6 @@
         {#if m.preferredContact}<span class="rr-chip">Reach on {m.preferredContact}</span>{/if}
       </div>
       {#if bio}<p class="rr-bio">{@html bio}</p>{/if}
-    </div>
-    <!-- a div, not <nav>: the template styles every <nav> as the site header -->
-    <div class="rr-heroNav" role="navigation" aria-label="Other managers">
-      {@render navButtons(true)}
-      <a class="rr-allLink" href="/managers">All managers</a>
     </div>
   </section>
 
@@ -365,7 +375,7 @@
 
   .rr-hero {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr);
     gap: 26px;
     align-items: center;
     padding: 26px 28px;
@@ -462,7 +472,64 @@
     line-height: 1.5;
   }
 
-  .rr-heroNav,
+  .rr-topNav {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    margin-bottom: -4px;
+  }
+
+  .rr-topNav .rr-navBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .rr-prev {
+    justify-self: start;
+  }
+
+  .rr-next {
+    justify-self: end;
+  }
+
+  .rr-navName {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .rr-allBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 14px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    border: 1px solid var(--or-cyan, #0b8a9a);
+    color: var(--or-cyan, #0b8a9a);
+    font: 600 0.78em "Roboto", sans-serif;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .rr-allBtn:hover {
+    background: color-mix(in srgb, var(--or-cyan, #0b8a9a) 12%, transparent);
+  }
+
+  .rr-allBtn .material-icons {
+    font-size: 20px;
+  }
+
+  .rr-allShort {
+    display: none;
+  }
+
   .rr-bottomNav {
     display: flex;
     flex-direction: column;
@@ -828,13 +895,6 @@
       grid-template-columns: auto minmax(0, 1fr);
     }
 
-    .rr-heroNav {
-      grid-column: 1 / -1;
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: center;
-    }
-
     .rr-tiles {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -856,10 +916,25 @@
       justify-content: center;
     }
 
-    .rr-heroNav {
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
+    /* phones: "All" between the two names */
+    .rr-allText {
+      display: none;
+    }
+
+    .rr-allShort {
+      display: inline;
+    }
+
+    .rr-allBtn {
+      padding: 0 10px;
+    }
+
+    .rr-topNav {
+      gap: 8px;
+    }
+
+    .rr-topNav .rr-navBtn {
+      padding: 8px 10px;
     }
 
     .rr-navBtns {

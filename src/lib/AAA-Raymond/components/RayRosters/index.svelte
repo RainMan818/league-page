@@ -1,8 +1,8 @@
 <!--
   Rosters page (option B, revised): a team strip (seed order; "All teams" shows the Roster analysis table and charts),
   then one team: header, starting lineup (Sleeper's current lineup), position breakdown (points per week from the
-  Standings position averages, average age and players, each with the league average and rank), depth chart and
-  future draft picks. Rendered by src/routes/rosters/+page.svelte. The team is in the URL (?team=<rosterID>) and
+  Standings position averages and average age, each with the league average and rank; player count with the league
+  average only), depth chart and future draft picks. Rendered by src/routes/rosters/+page.svelte. The team is in the URL (?team=<rosterID>) and
   remembered in the browser.
   Depth chart "starting" = the best lineup from season-level projections: projected points per game over the rest of
   the regular season, byes skipped (utils/rosterBreakdown.js seasonProjection + predictLineup), so a bye week doesn't
@@ -262,7 +262,8 @@
         cells: [
           b.points ? { v: one(data.ppw[id]?.[k] ?? 0), avg: one(b.points.avg), rank: rankText(b.points, id), style: shade(b.points, id) } : { v: "–", avg: "–", rank: "–", style: "" },
           { v: one(a.age), avg: one(b.age.avg), rank: rankText(b.age, id), style: shade(b.age, id) },
-          { v: String(a.count), avg: one(b.count.avg), rank: rankText(b.count, id), style: shade(b.count, id) },
+          // a head count: league average for context, no rank or shading (Raymond, Nov 18)
+          { v: String(a.count), avg: one(b.count.avg), rank: null, style: "" },
         ],
       };
     });
@@ -341,7 +342,7 @@
           <section class="rr-card">
             <div class="rr-cardHead"><h2>Position breakdown</h2><span class="rr-muted">Rank among {teamCount} teams · league average in brackets</span></div>
             <div class="rr-bd">
-              <div class="rr-bdRow rr-bdHead"><span></span><span>Points / week</span><span>Average age</span><span>Players</span></div>
+              <div class="rr-bdRow rr-bdHead"><span></span><span>Points / week</span><span>Average age</span><span>Player count</span></div>
               {#each breakdownRows as row (row.key)}
                 <div class="rr-bdRow" class:rr-bdSide={row.side}>
                   {#if row.group}<b class="rr-bdLabel">{row.label}</b>{:else}<span class="rr-chip" style={chipStyle(row.key)}>{row.label}</span>{/if}
@@ -349,7 +350,7 @@
                     <span class="rr-cell">
                       <b class="rr-val" style={c.style}>{c.v}</b>
                       <span class="rr-avg">({c.avg})</span>
-                      <span class="rr-rank">{c.rank}</span>
+                      {#if c.rank}<span class="rr-rank">{c.rank}</span>{/if}
                     </span>
                   {/each}
                 </div>
@@ -373,7 +374,7 @@
             <p class="rr-note">
               Shading like the Standings tables: pink = highest in the league, cyan = lowest.
               {#if data.hasPoints}Points per week through week {data.throughWeek} (Standings' position averages).{:else}Points per week start once a week has been played.{/if}
-              Age and players count the whole roster, taxi and IR included.
+              Age and player count cover the whole roster, taxi and IR included; player count isn't ranked.
             </p>
           </section>
 

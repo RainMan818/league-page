@@ -18,7 +18,9 @@
 //
 // Scoring rule used throughout: player awards count points scored in a starting lineup, so they reward the
 // managers who actually played those guys (Bench Legend is the exception: points scored on the bench).
-// Trade of the Year is the other exception: it counts everything a traded player scored after the trade.
+// Trade of the Year is another exception: it counts everything a traded player scored after the trade. The
+// All-League Team is the third (Raymond, Nov 18): every point a player scored during the season
+// (Sleeper's matchups only list rostered players, so weeks as a free agent don't count).
 
 import { predictScores } from './predictOptimalScore.js';
 import { playerGroup, groupOf, hasIdpSlots } from './positions.js';
@@ -190,7 +192,8 @@ function playerTotals(list) {
 }
 
 /**
- * All-League Team: the top season starter scorers, one per starting slot.
+ * All-League Team: the top season scorers (`totals`: points on a league roster, starting or not), one per starting
+ * slot.
  * Fixed-position slots are filled first, then the flex slots (narrowest first).
  */
 export function allLeagueTeam(totals, players, rosterPositions) {
@@ -246,6 +249,7 @@ export function regularSeasonAwards(input) {
     const starts = apps.filter((a) => a.starter);
     const starterTotals = playerTotals(starts);
     const benchTotals = playerTotals(apps.filter((a) => !a.starter));
+    const rosteredTotals = playerTotals(apps); // starting and bench: the All-League Team
     const withInfo = (t) => (t ? { ...t, name: playerName(players, t.playerID), pos: groupFor(players[t.playerID], allowed) } : null);
     const topIn = (list, groups, filter = () => true) =>
         withInfo(best(list.filter((t) => groups.includes(groupFor(players[t.playerID], allowed)) && filter(t)), (t) => t.points));
@@ -361,7 +365,7 @@ export function regularSeasonAwards(input) {
         tradeOfYear,
         // player
         mvp: withInfo(best(starterTotals, (t) => t.points)),
-        allLeague: allLeagueTeam(starterTotals, players, rosterPositions).map((s) => ({ ...s, name: playerName(players, s.playerID) })),
+        allLeague: allLeagueTeam(rosteredTotals, players, rosterPositions).map((s) => ({ ...s, name: playerName(players, s.playerID) })),
         dpoy: topIn(starterTotals, DEFENSE),
         oroy: topIn(starterTotals, OFFENSE, rookie),
         droy: topIn(starterTotals, DEFENSE, rookie),

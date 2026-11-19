@@ -145,7 +145,9 @@ All data comes live from the public Sleeper API.
 - **Trophy Room** (`/awards`) — just `SeasonAwards/TrophyRoomAwards`: a season picker for every season whose regular
   season is over (2022 onward). Opens on the regular-season awards (`prefer="regular"`); the toggle has Regular season
   on the left everywhere (the homepage still opens on the post-season once the championship is decided).
-  All-League Team: offense in the left column (QB … SF), defense in the right (IDP, DL, LB, DB), stacked on phones. The template's podium list (the deleted `src/lib/Awards/Awards.svelte`, `getAwards()`) is no
+  All-League Team: offense in the left column (QB … SF), defense in the right (IDP, DL, LB, DB), stacked on phones.
+  It counts **every point a player scored during the season** (Raymond, Nov 18; awards cache v12);
+  the other player awards (MVP, DPOY, rookies) still count starting-lineup points only. The template's podium list (the deleted `src/lib/Awards/Awards.svelte`, `getAwards()`) is no
   longer shown; `src/routes/awards/+page.js` only loads team managers. The homepage sidebar's "Fantasy Champ" still
   uses `getAwards()`.
 - **Matchups** — `RayMatchups/MatchupWeeks` + `Matchup` (versus strips; click for every starter with photos;
@@ -211,8 +213,8 @@ All data comes live from the public Sleeper API.
   `RosterAnalysis` table and charts), then one team: header (manager, record, seed, PF; players, taxi / IR, future
   picks), starting lineup (Sleeper's current lineup, slot chips softly tinted in the position colors, flex slots as
   gradients, no points), position breakdown (points per week by player position and by lineup slot from the Standings
-  position averages, then average age, then players; each with the league average and rank, pink = highest / cyan =
-  lowest), depth chart and draft picks. Depth chart "starting" = the best lineup from **season-level** projections:
+  position averages, then average age, each with the league average and rank, pink = highest / cyan = lowest; then
+  "Player count", with the league average only: no rank or shading, Raymond, Nov 18), depth chart and draft picks. Depth chart "starting" = the best lineup from **season-level** projections:
   projected points per game over the rest of the regular season (at least 4 weeks), byes skipped
   (`seasonProjection` + `predictLineup`), so a bye week never benches a starter; no projections (offseason) → Sleeper's
   current lineup. Math in `utils/rosterBreakdown.js` (`tests/rosterBreakdown.test.js`). `RosterAnalysis/utils.js`
@@ -220,7 +222,8 @@ All data comes live from the public Sleeper API.
 - **Managers** (`/managers`) and **manager pages** (`/manager?manager=N`, N = index in `managersFor(...)`: leagueInfo.js `managers`, or Sleeper's teams) —
   `RayManagers/ManagersList` (option A "trading cards": team, years in the league, favorite NFL team, all-time
   record, titles, this season's record; sort by league order / titles / all-time win % / this season) and
-  `RayManagers/ManagerPage` (banner with facts, bio and previous/next; tiles for all-time, playoffs, titles, points
+  `RayManagers/ManagerPage` (a bar above the banner, Nov 18: ← previous manager, All managers ("All" on
+  phones), next →, repeated at the bottom of the page; banner with facts and bio; tiles for all-time, playoffs, titles, points
   for and this season; trophy case + league records; profile; "Season by season" charts (`RayManagers/SeasonCharts`:
   wins as bars from zero, head-to-head only (the weekly median game is left out, Raymond's call: `h2hWins` etc.),
   points for and max PF as zoomed lines, each with league rank and league average, hover tooltip, table view;
@@ -251,6 +254,16 @@ All data comes live from the public Sleeper API.
   page). No Sleeper requests. The FantasyPros trade chart address is built by `fantasyProsChartUrl(date)` with a
   two-digit month (`/2026/03/`; the template wrote `/2026/3/`, which broke the link January through September;
   `tests/resourceLinks.test.js`).
+- **About** (`/about`, last in the Clubhouse menu / phone More panel, Nov 17, canvas option C "list") — `RayAbout`:
+  one line on the player card, then one row per page (icon, name, one-line purpose), Main pages and Clubhouse side
+  by side from 760px. Tap a row to open what the page shows and an Open button (several can be open; lines describe the content,
+  not the buttons: Raymond, Nov 18). **Text lives in
+  `RayAbout/content.js`** (`PAGES`, keyed by the page's address); the list follows `tabs.js` (`aboutPages`: a nav
+  page with no text is left out, external links and About itself too), so new pages need an entry there. A line can
+  be `{ text, when }` with `when` = `houseRules` / `median` / `dynasty` (or `!houseRules` etc.): Payouts, the "M"
+  badge, the Standings Pick column and "plus the next one" on Drafts only show for leagues that have them. median
+  comes from `getLeagueData()` after mount (shared request), dynasty from `data.site`. tests/about.test.js. Raymond
+  dropped the "getting around" tips (only the player card line stayed).
 - **Error page** (404, 500, ...) — `RayError` (wired in by `src/routes/+error.svelte`), "Wide right" (Nov 15):
   an inline SVG of neon goalposts on a starry night field, a dashed kick path and a football sailing past the right
   upright, with the status code in outlined Orbitron beside "NO GOOD". Deliberately unlike the header (no sun, grid
@@ -419,7 +432,8 @@ All data comes live from the public Sleeper API.
   redesign and custom features by RainMan · Buy me a coffee" (https://buymeacoffee.com/rainman001), Nov 17.
 - Settings / visitor's league (Nov 17, see "Switching leagues"): `src/app.html` (hide-until-ready script + style),
   `src/routes/+layout.svelte` (`ready` gate, LeagueBanner), `src/routes/settings/+page.svelte` (new, renders
-  `RaySettings`), `src/lib/utils/tabs.js` (Clubhouse "Settings" after Go to Sleeper), `src/routes/api/fetch_trending`
+  `RaySettings`), `src/lib/utils/tabs.js` (Clubhouse "Settings" after Go to Sleeper, then "About";
+  `src/routes/about/+page.svelte` renders `RayAbout`), `src/routes/api/fetch_trending`
   and `src/routes/api/fetch_players_info` (`?league=`), `src/lib/utils/helperFunctions/players.js` (sends `?league=`).
 - League switching (Nov 16): `src/lib/utils/leagueInfo.js` (profiles), `src/lib/stores.js`, `src/lib/Nav/index.svelte`
   (logo from the profile), `NavLarge` / `NavSmall` / `Footer` (Managers always shown), `src/routes/+page.svelte`
@@ -533,6 +547,8 @@ reports a modify/delete conflict: keep the deletion (`git rm <file>`).
   or `teams` from `loadLeagueContext`), never from `users[...].display_name`: that's the manager's real name
   (leagueInfo.js), and teams without a Sleeper team name default to "Team <username>" (`user_name`).
 - Files use Windows (CRLF) line endings; keep them.
+- Headings: the theme styles every h1-h6 with `html:root :is(h1, ...)` (Orbitron, glow), which beats a component's
+  plain `h2 {}`; scope it under a class (`.rr-group h2`) and set `text-shadow: none` for a label-style heading.
 - No `margin: auto` sideways on a box inside a flex column (e.g. the Rosters card): it stops the box stretching, so it
   grows to its widest content (a wide table) and the whole page slides sideways on phones. RosterAnalysis had this
   under 400px (fixed Nov 16).

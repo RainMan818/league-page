@@ -104,6 +104,12 @@ export const tabs = [
                 label: 'Settings',
                 dest: '/settings',
             },
+            // AAA-Raymond (Nov 17): what each page does and how to use it, RayAbout
+            {
+                icon: 'info',
+                label: 'About',
+                dest: '/about',
+            },
         ]
     },
 ];

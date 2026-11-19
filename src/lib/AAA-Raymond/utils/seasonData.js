@@ -14,7 +14,8 @@ import { sleeperJson } from './sleeperFetch.js';
 import { seasonAwards, roundWeeks, playoffRecapEntries, playoffRoundName } from './seasonAwards.js';
 
 // bump when the award math changes, so browsers drop results saved by the old version
-const CACHE_VERSION = 11; // 9: optimal best-lineup math (max PF); 10: "wild card round" wording; 11: no defenders in leagues without IDP
+const CACHE_VERSION = 12; // 9: optimal best-lineup math (max PF); 10: "wild card round" wording; 11: no defenders in leagues without IDP;
+// 12: All-League Team counts bench points too
 // current-season results are reused for a few hours, then rebuilt (scores can get stat corrections)
 const CURRENT_SEASON_TTL_MS = 3 * 60 * 60 * 1000;
 

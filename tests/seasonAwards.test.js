@@ -131,6 +131,16 @@ test('All-League fills fixed slots first, then flex', () => {
   assert.deepEqual(team.map((s) => `${s.slot}:${s.playerID}`), ['QB:q1', 'RB:r1', 'FLEX:r2', 'DL:d1', 'IDP_FLEX:l3']);
 });
 
+test('All-League counts bench points too (MVP still counts starts only)', () => {
+  // bx scores 60 on team 1's bench in week 1: more than any RB scored as a starter (r2: 18 + 30 = 48)
+  const w1 = week1.map((e) => (e.roster_id === 1 ? E(1, 1, ['q1', 'r1', 'w1', 'd1', 'l1'], ['bx'], { q1: 30, r1: 20, w1: 15, d1: 10, l1: 8, bx: 60 }) : e));
+  const a = regularSeasonAwards({ ...base, weeks: { 1: w1, 2: week2 } });
+  const rb = a.allLeague.find((s) => s.slot === 'RB');
+  assert.equal(rb.playerID, 'bx'); assert.equal(rb.points, 60); assert.equal(rb.rosterID, '1');
+  assert.equal(a.allLeague.find((s) => s.slot === 'FLEX').playerID, 'w4'); // 50, ahead of r2 (48)
+  assert.equal(a.mvp.playerID, 'q3');
+});
+
 /* ------------------------------------------------------------------ playoffs */
 
 // 6-team bracket like Sleeper's: byes for 1 & 2, weeks 15-17
