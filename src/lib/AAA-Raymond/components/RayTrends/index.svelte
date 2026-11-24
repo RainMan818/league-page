@@ -1,6 +1,7 @@
 <!--
   The /trends page (option A, "dashboard grid"): standings place, points for, max PF, lineup efficiency,
-  all-play win %, total offense / defense and every position, week by week.
+  all-play, total offense / defense and every position, week by week. Every chart but standings can show each week
+  on its own as well as the season so far.
   Every team starts shown in its own color; click a team to hide or show it on every chart, hover one to pick out
   its lines. Hidden teams are remembered in this browser (localStorage, optional).
   Data: loadLeagueContext + utils/leagueTrends.js, built from the already-downloaded matchups (no extra requests).
@@ -28,10 +29,10 @@
   let data = $state.raw(null);
   let hidden = $state([]);
   let hoverID = $state(null);
-  // Points for / Max PF: per-week average by default (season totals bunch up as the weeks add up); "Each week" is
+  // Points for / Max PF: per-week average by default (season totals bunch up as the weeks add up); "Weekly" is
   // each week's own score (Raymond, Nov 23-24)
   const SCORE_MODES = [
-    { value: "each", label: "Each week" },
+    { value: "each", label: "Weekly" },
     { value: "week", label: "Avg / week" },
     { value: "total", label: "Total" },
     { value: "avg", label: "vs avg" },
@@ -41,9 +42,12 @@
   // Lineup efficiency: season so far by default (the Standings page's Efficiency column), or each week on its own
   const EFF_MODES = [
     { value: "season", label: "Season" },
-    { value: "week", label: "Each week" },
+    { value: "week", label: "Weekly" },
   ];
   let effMode = $state("season");
+  // All-play and the position charts: season so far by default, or each week on its own (Raymond, Nov 24)
+  let apMode = $state("season");
+  let posMode = $state("season");
 
   onMount(async () => {
     try {
@@ -126,6 +130,15 @@
     return niceTicks(Math.min(...all), Math.max(...all), count);
   };
 
+  /** All-play "each week" axis: every 3 teams (2 in small leagues) up to the top, which is always labeled. */
+  const apTicks = (top) => {
+    const step = top > 8 ? 3 : 2;
+    const ticks = [];
+    for (let v = 0; v <= top; v += step) ticks.push(v);
+    if (top - ticks[ticks.length - 1] >= 2) ticks.push(top);
+    else ticks[ticks.length - 1] = top;
+    return [...new Set(ticks)];
+  };
   const signed = (v, d) => `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(d)}`;
   /**
    * Points for / Max PF in one of the views: season average per week, season total, total minus the league average,
@@ -174,12 +187,13 @@
     const effR = rangeFor(effPick);
     // offense vs defense only when the lineup starts defenders (IDP or a team defense); otherwise offense = points for
     const defense = t.positions.some((p) => ["DL", "LB", "DB", "DEF"].includes(p));
+    const posOf = posMode === "week" ? (s) => s.posWeek : (s) => s.pos;
     const sides = (defense ? ["OFF", "DEF"] : []).map((p) => {
-      const pick = (s) => s.pos[p];
+      const pick = (s) => posOf(s)[p];
       return { key: p, label: POS_LABEL[p], range: rangeFor(pick), series: rankedSeries(pick), refs: [{ label: "League avg", vals: leagueAverage(t, pick) }] };
     });
     const positions = t.positions.map((p) => {
-      const pick = (s) => s.pos[p];
+      const pick = (s) => posOf(s)[p];
       return { key: p, range: rangeFor(pick, 3), series: seriesFor(pick), refs: [{ label: "League avg", vals: leagueAverage(t, pick) }] };
     });
     return {
@@ -196,7 +210,30 @@
         fmt: pct,
         note: effMode === "week" ? "Points started ÷ best possible lineup, each week on its own" : "Points started ÷ best possible lineup, season so far after each week",
       },
-      ap: { series: rankedSeries((s) => s.allPlay), fmt: pct },
+      ap:
+        apMode === "week"
+          ? {
+              // teams beaten that week (ties count half), out of everyone else
+              series: rankedSeries((s) => s.allPlayWeek),
+              min: 0,
+              max: nTeams - 1,
+              ticks: apTicks(nTeams - 1),
+              fmt: (v) => `${Number.isInteger(v) ? v : v.toFixed(1)} of ${nTeams - 1}`,
+              tickFmt: (v) => String(v),
+              mark: { value: (nTeams - 1) / 2, label: "AVERAGE" },
+              note: `Teams you'd have beaten that week, out of ${nTeams - 1}`,
+            }
+          : {
+              series: rankedSeries((s) => s.allPlay),
+              min: 0,
+              max: 100,
+              ticks: [0, 25, 50, 75, 100],
+              fmt: pct,
+              tickFmt: (v) => `${v}%`,
+              mark: { value: 50, label: "AVERAGE" },
+              note: "Your record if you played every team every week (season so far)",
+            },
+      posNote: posMode === "week" ? "Points each week on its own" : "Points per week, season average after each week",
       sides,
       positions,
     };
@@ -289,21 +326,27 @@
         <TrendChart title="Lineup efficiency by week" weeks={data.trends.weeks} series={charts.eff.series} min={charts.eff.range.min} max={charts.eff.range.max} ticks={charts.eff.range.ticks} fmt={charts.eff.fmt} tickFmt={(v) => `${v}%`} {hoverID} />
       </section>
       <section class="rr-card">
-        <h3>All-play win %</h3>
-        <p class="rr-note">Your record if you played every team every week (season so far)</p>
-        <TrendChart title="All-play win percentage by week" weeks={data.trends.weeks} series={charts.ap.series} min={0} max={100} ticks={[0, 25, 50, 75, 100]} fmt={charts.ap.fmt} tickFmt={(v) => `${v}%`} mark={{ value: 50, label: "AVERAGE" }} {hoverID} />
+        <div class="rr-cardHead">
+          <h3>All-play</h3>
+          <Toggle small label="All-play view" options={EFF_MODES} bind:value={apMode} />
+        </div>
+        <p class="rr-note">{charts.ap.note}</p>
+        <TrendChart title="All-play by week" weeks={data.trends.weeks} series={charts.ap.series} min={charts.ap.min} max={charts.ap.max} ticks={charts.ap.ticks} fmt={charts.ap.fmt} tickFmt={charts.ap.tickFmt} mark={charts.ap.mark} {hoverID} />
       </section>
     </div>
 
     <section class="rr-card">
-      <h3>Position averages</h3>
-      <p class="rr-note">Points per week, season average after each week{charts.sides.length ? " · totals include the flex slots" : ""} · dashed = league average</p>
+      <div class="rr-cardHead">
+        <h3>Points by position</h3>
+        <Toggle small label="Points by position view" options={EFF_MODES} bind:value={posMode} />
+      </div>
+      <p class="rr-note">{charts.posNote}{charts.sides.length ? " · totals include the flex slots" : ""} · dashed = league average</p>
       {#if charts.sides.length}
       <div class="rr-grid2 rr-sides">
         {#each charts.sides as c (c.key)}
           <div>
             <span class="rr-posLabel">{c.label}</span>
-            <TrendChart title="{c.label} points per week by week" weeks={data.trends.weeks} series={c.series} refs={c.refs} min={c.range.min} max={c.range.max} ticks={c.range.ticks} {hoverID} />
+            <TrendChart title="{c.label} points by week" weeks={data.trends.weeks} series={c.series} refs={c.refs} min={c.range.min} max={c.range.max} ticks={c.range.ticks} {hoverID} />
           </div>
         {/each}
       </div>
@@ -312,7 +355,7 @@
         {#each charts.positions as c (c.key)}
           <div>
             <span class="rr-posLabel" style="color: var(--or-pos-{c.key}, var(--or-cyan))">{c.key}</span>
-            <TrendChart title="{c.key} points per week by week" weeks={data.trends.weeks} series={c.series} refs={c.refs} min={c.range.min} max={c.range.max} ticks={c.range.ticks} compact labels={false} w={240} h={110} {hoverID} />
+            <TrendChart title="{c.key} points by week" weeks={data.trends.weeks} series={c.series} refs={c.refs} min={c.range.min} max={c.range.max} ticks={c.range.ticks} compact labels={false} w={240} h={110} {hoverID} />
           </div>
         {/each}
       </div>

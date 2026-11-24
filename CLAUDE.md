@@ -173,8 +173,12 @@ All data comes live from the public Sleeper API.
   draws at its real width with a week crosshair + tooltip. End labels lead with the team's latest rank ("3rd Globo_Gym");
   on phones the big charts show just the rank number; the position charts have no end labels (hover for values).
   Points for / Max PF default to the season average per week (totals bunch up as weeks add up), with a small
-  Each week / Avg / week / Total / vs avg switch on each (`Shared/Toggle` with `small`); "Each week" is each week's
+  Weekly / Avg / week / Total / vs avg switch on each (`Shared/Toggle` with `small`); "Weekly" is each week's
   own score (`pfWeek` / `maxWeek`) with that week's league average dashed (Raymond, Nov 23-24).
+  All-play and "Points by position" (was "Position averages") have Season / Weekly switches too (Nov 24; Lineup
+  efficiency's "Each week" was renamed "Weekly" to match): each week's all-play is teams beaten that week out of
+  the rest (`allPlayWeek`, ties half; y axis 0 to teams − 1), each week's position points come from `posWeek`
+  (positionAverages on that one week).
   Data from `utils/leagueTrends.js`.
 - **Trades & Waivers** (and manager pages) — `RayTransactions/TransactionFeed`: one card per day, one line per team
   (waivers: + added / − dropped and FAAB bid; trades: team ← what it received, picks show "via <team>").

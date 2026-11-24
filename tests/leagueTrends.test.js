@@ -68,6 +68,9 @@ test('season series by week', () => {
     // all-play: week 1 team 1 beat all 3, week 2 beat only team 3 -> 4 of 6
     assert.deepEqual(s1.allPlay.map((v) => Math.round(v)), [100, 67]);
     assert.deepEqual(s4.allPlay.map((v) => Math.round(v)), [0, 33]); // week 2 beat teams 1 and 3 -> 2 of 6
+    // each week on its own: teams beaten that week
+    assert.deepEqual(s1.allPlayWeek, [3, 1]);
+    assert.deepEqual(s4.allPlayWeek, [0, 2]);
 });
 
 test('standings place follows the league seeding rule each week', () => {
@@ -87,6 +90,12 @@ test('position, offense and defense averages accumulate week by week', () => {
     assert.deepEqual(p.OFF, [15, 22.5]);
     assert.deepEqual(p.DEF, [5, 7.5]);
     assert.deepEqual(leagueAverage(t, (s) => s.pos.QB), [8.75, 9.875]); // (7.5 + 15 + 7 + 10) / 4 after week 2
+    // each week on its own: week 2 is 20 at QB (average 15 over two weeks after 10 in week 1)
+    const k = t.series['2'].posWeek;
+    assert.deepEqual(k.QB, [10, 20]);
+    assert.deepEqual(k.RB, [5, 10]);
+    assert.deepEqual(k.OFF, [15, 30]);
+    assert.deepEqual(k.DEF, [5, 10]);
 });
 
 test('no completed weeks gives empty series', () => {

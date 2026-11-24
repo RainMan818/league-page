@@ -130,7 +130,9 @@ function seedPlaces(records, ids, divisions, playoffTeams) {
  * Returns {
  *   weeks: [1..n], teamIDs, positions: ['QB', ...],
  *   series: { [rosterID]: { place, wins, losses, ties, pfWeek, pfCum, maxWeek, maxCum, effWeek, effCum, allPlay,
- *                            pos: { QB: [...], ..., OFF: [...], DEF: [...] } } },
+ *                            allPlayWeek (teams beaten that week, ties count half),
+ *                            pos: { QB: [...], ..., OFF: [...], DEF: [...] } (season average per week so far),
+ *                            posWeek: same keys, that week's points } },
  *   median: [league median per week],
  * }  Every array has one value per completed week (index 0 = week 1).
  */
@@ -147,7 +149,9 @@ export function leagueTrends({ matchupsData = [], rosterIDs = [], divisions = {}
 
     const series = Object.fromEntries(ids.map((id) => [id, {
         place: [], wins: [], losses: [], ties: [], pfWeek: [], pfCum: [], maxWeek: [], maxCum: [],
-        effWeek: [], effCum: [], allPlay: [], pos: Object.fromEntries([...positions, 'OFF', 'DEF'].map((p) => [p, []])),
+        effWeek: [], effCum: [], allPlay: [], allPlayWeek: [],
+        pos: Object.fromEntries([...positions, 'OFF', 'DEF'].map((p) => [p, []])),
+        posWeek: Object.fromEntries([...positions, 'OFF', 'DEF'].map((p) => [p, []])),
     }]));
     const totals = Object.fromEntries(ids.map((id) => [id, { max: 0, apW: 0, apG: 0 }])); // max PF, all-play wins / games
     const median = [];
@@ -178,11 +182,14 @@ export function leagueTrends({ matchupsData = [], rosterIDs = [], divisions = {}
             const max = maxBy[id][w] ?? 0;
             t.max += max;
             // all-play: beat everyone who scored less this week
+            let beat = 0;
             for (const o of entries) {
                 if (o === e) continue;
                 t.apG++;
-                t.apW += points > o.points ? 1 : points === o.points ? 0.5 : 0;
+                beat += points > o.points ? 1 : points === o.points ? 0.5 : 0;
             }
+            t.apW += beat;
+            s.allPlayWeek.push(beat);
             s.pfWeek.push(points);
             s.maxWeek.push(max);
             s.effWeek.push(max > 0 ? (points / max) * 100 : 0);
@@ -193,7 +200,7 @@ export function leagueTrends({ matchupsData = [], rosterIDs = [], divisions = {}
         const place = seedPlaces(rec, ids, divisions, playoffTeams);
         for (const id of ids) {
             const t = totals[id], s = series[id], r = rec[id];
-            if (s.pfWeek.length < w + 1) { s.pfWeek.push(0); s.maxWeek.push(0); s.effWeek.push(0); }
+            if (s.pfWeek.length < w + 1) { s.pfWeek.push(0); s.maxWeek.push(0); s.effWeek.push(0); s.allPlayWeek.push(0); }
             s.place.push(place[id]);
             s.wins.push(r.wins); s.losses.push(r.losses); s.ties.push(r.ties);
             s.pfCum.push(r.pf); s.maxCum.push(t.max);
@@ -204,11 +211,18 @@ export function leagueTrends({ matchupsData = [], rosterIDs = [], divisions = {}
         // season averages per position (and offense / defense) after this week
         const sinceStart = weeksData.slice(0, w + 1).reverse(); // positionAverages wants newest first
         const avg = positionAverages(sinceStart, w + 1, rosterPositions, 'player');
+        const thisWeek = positionAverages([weekEntries], 1, rosterPositions, 'player'); // that week's points
         for (const id of ids) {
             const a = avg[id] ?? avg[Number(id)] ?? {};
-            for (const p of positions) series[id].pos[p].push(a[p] ?? 0);
+            const k = thisWeek[id] ?? thisWeek[Number(id)] ?? {};
+            for (const p of positions) {
+                series[id].pos[p].push(a[p] ?? 0);
+                series[id].posWeek[p].push(k[p] ?? 0);
+            }
             series[id].pos.OFF.push(a.Off ?? 0);
             series[id].pos.DEF.push(a.Def ?? 0);
+            series[id].posWeek.OFF.push(k.Off ?? 0);
+            series[id].posWeek.DEF.push(k.Def ?? 0);
         }
     });
 
