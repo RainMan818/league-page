@@ -30,10 +30,12 @@
   let hoverID = $state(null);
   // Points for / Max PF: per-week average by default; season totals bunch up as the weeks add up
   const SCORE_MODES = [
-    { value: "week", label: "Per week" },
+    { value: "week", label: "Avg / week" },
     { value: "total", label: "Total" },
     { value: "avg", label: "vs avg" },
   ];
+  // Max PF can also show each week's own best possible lineup (Raymond, Nov 23)
+  const MAX_MODES = [{ value: "each", label: "Each week" }, ...SCORE_MODES];
   let pfMode = $state("week");
   let maxMode = $state("week");
   // Lineup efficiency: season so far by default (the Standings page's Efficiency column), or each week on its own
@@ -125,9 +127,24 @@
   };
 
   const signed = (v, d) => `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(d)}`;
-  /** Points for / Max PF in one of three views: season average per week, season total, or total minus the league average. */
+  /**
+   * Points for / Max PF in one of the views: season average per week, season total, total minus the league average,
+   * or (Max PF) each week on its own.
+   */
   const scoreChart = (key, mode) => {
     const t = data.trends;
+    if (mode === "each") {
+      const pick = (s) => s.maxWeek;
+      return {
+        range: rangeFor(pick),
+        series: rankedSeries(pick),
+        fmt: (v) => v.toFixed(1),
+        tickFmt: (v) => v.toLocaleString("en-US"),
+        mark: null,
+        refs: [{ label: "League avg", vals: leagueAverage(t, pick) }],
+        note: "Best possible lineup, each week on its own · dashed = league average",
+      };
+    }
     const avg = leagueAverage(t, (s) => s[key]);
     const pick =
       mode === "total" ? (s) => s[key] : mode === "avg" ? (s) => s[key].map((v, w) => v - avg[w]) : (s) => s[key].map((v, w) => v / (w + 1));
@@ -258,7 +275,7 @@
       <section class="rr-card">
         <div class="rr-cardHead">
           <h3>Max PF</h3>
-          <Toggle small label="Max PF view" options={SCORE_MODES} bind:value={maxMode} />
+          <Toggle small label="Max PF view" options={MAX_MODES} bind:value={maxMode} />
         </div>
         <p class="rr-note rr-capFirst">{charts.max.note}</p>
         <TrendChart title="Max PF by week" weeks={data.trends.weeks} series={charts.max.series} refs={charts.max.refs} min={charts.max.range.min} max={charts.max.range.max} ticks={charts.max.range.ticks} fmt={charts.max.fmt} tickFmt={charts.max.tickFmt} mark={charts.max.mark} {hoverID} />
